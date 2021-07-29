@@ -3,16 +3,21 @@ font pango:monospace 8
 exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 exec --no-startup-id nm-applet
 exec --no-startup-id "redshift -O 3500"
-exec --no-startup-id "setxkbmap -layout us,ru -option grp:shifts_toggle"
+exec --no-startup-id "setxkbmap -layout us,ru,de -option grp:shifts_toggle"
 exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate right"
 exec --no-startup-id "~/dotfiles/polybar/launch.sh"
 exec --no-startup-id "nitrogen --restore"
+exec --no-startup-id "picom -b"
+exec_always --no-startup-id flashfocus
+exec --no-startup-id "conky -c ~/dotfiles/conky/conky.conf"
+exec --no-startup-id "conky -c ~/dotfiles/conky/conky2.conf"
+
 for_window [class="Skype"] floating enable border normal
 hide_edge_borders none
 new_window pixel 0
 new_float normal
 workspace_layout stacking
-font xft:Hack 13
+font xft:Hack 11
 
 
 
