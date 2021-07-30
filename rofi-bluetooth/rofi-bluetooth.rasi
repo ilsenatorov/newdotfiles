@@ -28,10 +28,11 @@ window {
 	border:							0px 0px 0px 0px;
 	border-color:					@ac;
     border-radius:                  0px;
-	width:							400px;
+	width:							700px;
+	height:							700px;
     location:                       center;
     x-offset:                       0;
-    y-offset:                       0;
+    y-offset:                       -300;
 }
 
 prompt {
