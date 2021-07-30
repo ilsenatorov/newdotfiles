@@ -4,6 +4,7 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 exec --no-startup-id nm-applet
 exec --no-startup-id "redshift -O 3500"
 exec --no-startup-id "setxkbmap -layout us,ru,de -option grp:shifts_toggle"
+exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate left"
 exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate right"
 exec --no-startup-id "~/dotfiles/polybar/launch.sh"
 exec --no-startup-id "nitrogen --restore"
@@ -58,16 +59,16 @@ bindsym $mod+Tab workspace next
 bindsym $mod+Shift+Tab workspace prev
 
 
-workspace 1 output eDP-1
-workspace 2 output eDP-1
-workspace 3 output eDP-1
-workspace 4 output eDP-1
-workspace 5 output eDP-1
-workspace 6 output DP-3
-workspace 7 output DP-3
-workspace 8 output DP-3
-workspace 9 output DP-3
-workspace 10 output DP-3
+workspace 1 output DP-2
+workspace 2 output DP-2
+workspace 3 output DP-2
+workspace 4 output DP-2
+workspace 5 output DP-2
+workspace 6 output HDMI-0
+workspace 7 output HDMI-0
+workspace 8 output HDMI-0
+workspace 9 output HDMI-0
+workspace 10 output HDMI-0
 
 # alternatively, you can use the cursor keys:
 bindsym $mod+Shift+Left move left
