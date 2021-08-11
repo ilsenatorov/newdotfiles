@@ -3,7 +3,7 @@ font pango:monospace 8
 exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 exec --no-startup-id nm-applet
 exec --no-startup-id "redshift -O 3500"
-exec --no-startup-id "setxkbmap -layout us,ru,de -option grp:shifts_toggle"
+exec --no-startup-id "setxkbmap -layout us,ru -option grp:shifts_toggle"
 exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate left"
 exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate right"
 exec --no-startup-id "~/dotfiles/polybar/launch.sh"
@@ -39,8 +39,8 @@ bindsym --release Shift+Print exec /home/ilya/dotfiles/i3/scrot.sh
 
 
 floating_modifier $mod
-bindsym $mod+Return exec termite
-bindsym $mod+End exec termite
+bindsym $mod+Return exec alacritty
+bindsym $mod+End exec alacritty
 bindsym $mod+Shift+q kill
 bindsym $mod+d exec --no-startup-id "~/dotfiles/rofi/launcher.sh"
 bindsym $mod+z exec --no-startup-id "~/dotfiles/rofi/launcher_scripts.sh"
