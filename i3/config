@@ -1,11 +1,8 @@
 set $mod Mod4
 font pango:monospace 8
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 exec --no-startup-id nm-applet
 exec --no-startup-id "redshift -O 3500"
 exec --no-startup-id "setxkbmap -layout us,ru -option grp:shifts_toggle"
-exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate left"
-exec --no-startup-id "xrandr --auto --output DP-2 --output HDMI-0 --right-of DP-2 --rotate right"
 exec --no-startup-id "~/dotfiles/polybar/launch.sh"
 exec --no-startup-id "nitrogen --restore"
 exec --no-startup-id "picom -b"
@@ -97,6 +94,7 @@ bindsym $mod+space focus mode_toggle
 
 # focus the parent container
 bindsym $mod+a focus parent
+bindsym $mod+g focus child
 
 # Define names for default workspaces for which we configure key bindings later on.
 # We use variables to avoid repeating the names in multiple places.
