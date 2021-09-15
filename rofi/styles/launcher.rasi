@@ -1,18 +1,14 @@
 
 configuration {
 	font:							"Iosevka Nerd Font 14";
-    show-icons:                     true;
-	icon-theme: 					"Papirus";
-    display-drun: 					"";
-    disable-history:                false;
-	sidebar-mode: 					false;
+  show-icons:       true;
+	icon-theme: 		  "Papirus";
 }
 
 
 * {
   width: 800px;
-  height: 800px;
-  cols: 2;
+  cols: 1;
 }
 
 @import "base.rasi"

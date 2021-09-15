@@ -1,18 +1,17 @@
 
 configuration {
-	font:							"Iosevka Nerd Font 14";
-    show-icons:                     true;
-	icon-theme: 					"Papirus";
-    display-drun: 					"";
-    drun-display-format:            "{name}";
-    disable-history:                false;
+	font:							      "Iosevka Nerd Font 14";
+  show-icons:             true;
+	icon-theme: 					  "Papirus";
+  display-drun: 					"";
+  drun-display-format:    "{name}";
+  disable-history:        false;
 	sidebar-mode: 					false;
 }
 
 
 * {
   width: 300px;
-  height: 350px;
   cols: 1;
 }
 

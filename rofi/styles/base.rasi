@@ -1,5 +1,12 @@
 
-@import "colors.rasi"
+* {
+  al:   #00000000;
+  bg:   #141C21FF;
+  bga:  #1E262BFF;
+  fg:   #93A1A1FF;
+  ac:   #D12F2CFF;
+  se:   #333333FF;
+}
 
 window {
     transparency:                   "real";
@@ -12,31 +19,29 @@ window {
     location:                       center;
     x-offset:                       0;
     y-offset:                       0;
-    hover-select:                   true;
-    cycle: true;
-    scroll-method: 2;
+    cycle:                          true;
 }
 
 prompt {
-    enabled: 						true;
-	padding: 						0 10 0 0 ;
+    enabled: 						false;
+	padding: 						0 0 0 0 ;
 	background-color: 				@al;
 	text-color: 					@fg;
+    expand: false;
 }
 
 entry {
     background-color:               @al;
     text-color:                     @fg;
     placeholder-color:              @fg;
-    expand:                         true;
-    horizontal-align:               0;
-    placeholder:                    "";
-    padding:                        0.10% 0% 0% 0%;
+    expand:                         false;
+    placeholder:                    "Search...";
+	padding: 						0 0 0 5px;
     blink:                          true;
 }
 
 inputbar {
-	children: 						[ prompt, entry ];
+	children: 						[prompt, entry];
     background-color:               @bg;
     text-color:                     @fg;
     expand:                         false;
@@ -52,6 +57,10 @@ listview {
     columns:                        @cols;
     spacing:                        1px;
     layout:                         vertical;
+    dynamic:                        true;
+    cycle:                          true;
+    fixed-height:                   false;
+    expand:                         true;
 }
 
 mainbox {

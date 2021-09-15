@@ -1,12 +1,10 @@
-
 configuration {
 	font:							"Iosevka Nerd Font 14";
-  show-icons:                     false;
 }
 
 
 * {
-  width: 500px;
+  width: 300px;
   cols: 1;
 }
 

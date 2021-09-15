@@ -1,17 +1,17 @@
+
 configuration {
 	font:							"Iosevka Nerd Font 14";
-    show-icons:                     true;
+    show-icons:                     false;
 	icon-theme: 					"Papirus";
-    display-drun: 					"";
     disable-history:                false;
 	sidebar-mode: 					false;
 }
 
 
 * {
-  width: 800px;
-  height: 800px;
-  cols: 2;
+  width: 500px;
+  height: 700px;
+  cols: 1;
 }
 
-@import "~/dotfiles/rofi/styles/base.rasi"
+@import "../rofi/styles/base.rasi"
