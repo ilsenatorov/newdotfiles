@@ -1,5 +1,5 @@
 
-STATUS=$(rofi-bluetooth --status)
+STATUS=$(~/dotfiles/rofi-bluetooth/rofi-bluetooth --status)
 SPLIT_STATUS=($(echo $STATUS | tr ";" "\n"))
 if [ "$STATUS" == "" ]; then
 	ICON="%{F#EC7875} "
