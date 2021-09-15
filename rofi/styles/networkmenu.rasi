@@ -8,6 +8,8 @@ configuration {
 * {
   width: 500px;
   cols: 1;
+  placeholder: "Networks";
+
 }
 
 @import "base.rasi"

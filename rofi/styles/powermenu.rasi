@@ -13,6 +13,7 @@ configuration {
 * {
   width: 300px;
   cols: 1;
+  placeholder: "Powermenu";
 }
 
 @import "base.rasi"

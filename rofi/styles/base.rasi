@@ -16,7 +16,7 @@ window {
 	border-color:					@ac;
     border-radius:                  12px;
 	width:							@width;
-    location:                       center;
+    location:                       north west;
     x-offset:                       0;
     y-offset:                       0;
     cycle:                          true;
@@ -35,7 +35,7 @@ entry {
     text-color:                     @fg;
     placeholder-color:              @fg;
     expand:                         false;
-    placeholder:                    "Search...";
+    placeholder:                    @placeholder;
 	padding: 						0 0 0 5px;
     blink:                          true;
 }

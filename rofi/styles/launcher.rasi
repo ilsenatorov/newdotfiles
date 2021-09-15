@@ -9,6 +9,7 @@ configuration {
 * {
   width: 800px;
   cols: 1;
+  placeholder: "Programs";
 }
 
 @import "base.rasi"

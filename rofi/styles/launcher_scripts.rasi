@@ -8,6 +8,7 @@ configuration {
 * {
   width: 500px;
   cols: 1;
+  placeholder: "Scripts";
 }
 
 @import "base.rasi"

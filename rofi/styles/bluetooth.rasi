@@ -6,6 +6,7 @@ configuration {
 * {
   width: 300px;
   cols: 1;
+  placeholder: "Bluetooth";
 }
 
 @import "base.rasi"
