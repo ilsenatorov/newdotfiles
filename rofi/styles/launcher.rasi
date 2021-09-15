@@ -7,7 +7,7 @@ configuration {
 
 
 * {
-  width: 800px;
+  width: 500px;
   cols: 1;
   placeholder: "Programs";
 }
