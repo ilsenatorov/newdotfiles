@@ -9,7 +9,7 @@ ntimepoints: 10
 
 flash-on-focus: true
 flash-fullscreen: true
-flash-lone-windows: 'always'
+flash-lone-windows: "always"
 #
 #
 # I also would prefer that firefox windows are not flashed on focus:

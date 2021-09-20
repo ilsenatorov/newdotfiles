@@ -5,7 +5,7 @@ exec --no-startup-id "redshift -O 3500"
 exec --no-startup-id "setxkbmap -layout us,ru -option grp:shifts_toggle"
 exec --no-startup-id "~/dotfiles/polybar/launch.sh"
 exec --no-startup-id "nitrogen --restore"
-exec --no-startup-id "picom -b"
+exec --no-startup-id "picom --experimental-backends -b"
 exec_always --no-startup-id flashfocus
 exec --no-startup-id "conky -c ~/dotfiles/conky/conky.conf"
 exec --no-startup-id "conky -c ~/dotfiles/conky/conky2.conf"
