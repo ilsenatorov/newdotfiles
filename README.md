@@ -19,3 +19,7 @@
 * __alacritty__ as the terminal emulator
 * __ranger__ as the file manager in terminal
 * __i3__ as the window manager
+* __flashfocus__ for highlighting focused windows in i3
+* __conky__ for displaying status
+* __zsh__
+* __powerline10k__ as the zsh theme
