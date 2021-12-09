@@ -10,7 +10,6 @@ exec_always --no-startup-id flashfocus
 exec --no-startup-id "conky -c ~/dotfiles/conky/conky.conf"
 exec --no-startup-id "conky -c ~/dotfiles/conky/conky2.conf"
 
-for_window [class="Skype"] floating enable border normal
 hide_edge_borders none
 new_window pixel 0
 new_float normal
@@ -161,5 +160,4 @@ assign [class="^[D|d]iscord"] 10
 assign [class="^[T|t]elegram"] 10
 assign [class="^[S|s]lack"] 10
 assign [class="^[S|s]potify"] 10
-assign [class="^[F|f]irefox"] 5
 assign [class="^[Z|z]oom"] 2
