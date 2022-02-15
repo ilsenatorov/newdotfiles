@@ -5,7 +5,8 @@ font:
 
 scrolling:
   multiplier: 3
-background_opacity: 0.95
+window: 
+  opacity: 0.95
 
 
 schemes:
