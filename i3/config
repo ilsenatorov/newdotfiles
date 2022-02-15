@@ -1,5 +1,6 @@
 set $mod Mod4
-font pango:monospace 8
+
+# autostart
 exec --no-startup-id nm-applet
 exec --no-startup-id "redshift -O 3500"
 exec --no-startup-id "setxkbmap -layout us,ru -option grp:shifts_toggle"
@@ -10,6 +11,7 @@ exec_always --no-startup-id flashfocus
 exec --no-startup-id "conky -c ~/dotfiles/conky/conky.conf"
 exec --no-startup-id "conky -c ~/dotfiles/conky/conky2.conf"
 
+# window settings
 hide_edge_borders none
 new_window pixel 0
 new_float normal
@@ -20,7 +22,7 @@ floating_modifier $mod
 focus_on_window_activation urgent
 
 
-
+# volume up/down, brightness up/down, print screen etc
 set $refresh_i3status killall -SIGUSR1 i3status
 bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +2%
 bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -2%
@@ -29,12 +31,12 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 bindsym XF86AudioPrev exec --no-startup-id playerctl previous
-bindsym XF86MonBrightnessUp exec "xbacklight -inc 10
-bindsym XF86MonBrightnessDown exec "xbacklight -dec 10
+bindsym XF86MonBrightnessUp exec "xbacklight -inc 10"
+bindsym XF86MonBrightnessDown exec "xbacklight -dec 10"
 bindsym Print exec --no-startup-id i3-scrot
 bindsym --release Shift+Print exec /home/ilya/dotfiles/i3/scrot.sh
 
-
+# launchers, terminal, etc
 bindsym $mod+Return exec alacritty
 bindsym $mod+End exec alacritty
 bindsym $mod+Shift+q kill
@@ -56,9 +58,11 @@ bindsym $mod+Ctrl+b move container to workspace back_and_forth
 bindsym $mod+Tab workspace next
 bindsym $mod+Shift+Tab workspace prev
 
+#select monitors, last values are backup values
 set_from_resource $mon1 i3wm.mon1 "DP-2"
 set_from_resource $mon2 i3wm.mon2 "HDMI-0"
 
+# assign workspaces to monitors
 workspace 1 output $mon1
 workspace 2 output $mon1
 workspace 3 output $mon1
@@ -155,7 +159,7 @@ gaps inner 10
 gaps outer 0
 smart_gaps on
 
-
+# assign types of windows to workspaces
 assign [class="^[D|d]iscord"] 10
 assign [class="^[T|t]elegram"] 10
 assign [class="^[S|s]lack"] 10
