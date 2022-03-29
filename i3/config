@@ -2,7 +2,7 @@ set $mod Mod4
 
 # autostart
 exec --no-startup-id nm-applet
-exec --no-startup-id "redshift -O 3500"
+exec --no-startup-id "redshift -O 3000"
 exec --no-startup-id "setxkbmap -layout us,ru -option grp:shifts_toggle"
 exec --no-startup-id "~/dotfiles/polybar/launch.sh"
 exec --no-startup-id "nitrogen --restore"
