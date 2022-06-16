@@ -17,7 +17,7 @@ plugins=(git
 source $ZSH/oh-my-zsh.sh
 export EDITOR=vim
 export TERM=xterm-256color
-export BROWSER=/usr/bin/firefox
+export BROWSER=/usr/bin/brave
 alias ranger='ranger -r ~/dotfiles/ranger'
 alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
 
