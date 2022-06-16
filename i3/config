@@ -31,8 +31,8 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 bindsym XF86AudioPrev exec --no-startup-id playerctl previous
-bindsym XF86MonBrightnessUp exec "xbacklight -inc 10"
-bindsym XF86MonBrightnessDown exec "xbacklight -dec 10"
+bindsym XF86MonBrightnessUp exec "brightnessctl set 10%+"
+bindsym XF86MonBrightnessDown exec "brightnessctl set 10%-"
 bindsym Print exec --no-startup-id i3-scrot
 bindsym --release Shift+Print exec /home/ilya/dotfiles/i3/scrot.sh
 
@@ -165,3 +165,4 @@ assign [class="^[T|t]elegram"] 10
 assign [class="^[S|s]lack"] 10
 assign [class="^[S|s]potify"] 10
 assign [class="^[Z|z]oom"] 2
+assign [class="^[B|b]rave"] 5
