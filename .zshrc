@@ -12,7 +12,10 @@ ZSH_THEME="robbyrussell"
 plugins=(git
 	sudo
 	pep8
-	z)
+	z
+	zsh-autosuggestions
+	zsh-syntax-highlighting
+)
 
 source $ZSH/oh-my-zsh.sh
 export EDITOR=vim
