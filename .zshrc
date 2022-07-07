@@ -12,6 +12,9 @@ ZSH_THEME="robbyrussell"
 plugins=(git
 	sudo
 	pep8
+	web-search
+	zsh-autosuggestions
+	zsh-syntax-highlighting
 	z)
 
 source $ZSH/oh-my-zsh.sh
