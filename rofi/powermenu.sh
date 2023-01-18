@@ -23,8 +23,11 @@ case $chosen in
     $reboot)
 		systemctl reboot
 		;;
-    $lock)
-		i3lock
+    $lock)	
+	    	rm /tmp/scrot.png
+	    	scrot /tmp/scrot.png
+		convert /tmp/scrot.png -blur 0x8 /tmp/scrot_resize.png
+		i3lock -i /tmp/scrot_resize.png
 		;;
     $suspend)
 		mpc -q pause

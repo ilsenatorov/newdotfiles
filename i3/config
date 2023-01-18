@@ -158,6 +158,10 @@ bindsym $mod+r mode "resize"
 gaps inner 10
 gaps outer 0
 smart_gaps on
+default_border pixel 1
+default_floating_border pixel 1
+hide_edge_borders smart
+for_window [all] title_window_icon on
 
 # assign types of windows to workspaces
 assign [class="^[D|d]iscord"] 10
