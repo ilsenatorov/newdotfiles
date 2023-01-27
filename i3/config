@@ -165,4 +165,5 @@ assign [class="^[T|t]elegram"] 10
 assign [class="^[S|s]lack"] 10
 assign [class="^[S|s]potify"] 10
 assign [class="^[Z|z]oom"] 2
+assign [class="^[J|j]oin"] 2
 assign [class="^[B|b]rave"] 5

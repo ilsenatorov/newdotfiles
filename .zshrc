@@ -11,6 +11,8 @@ ZSH_THEME="robbyrussell"
 
 plugins=(git
 	sudo
+	zsh-autosuggestions
+	zsh-syntax-highlighting
 	pep8
 	z)
 
