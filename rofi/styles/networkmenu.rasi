@@ -1,6 +1,6 @@
 
 configuration {
-	font:							    "Iosevka Nerd Font 14";
+	font:							    "Iosevka NF 14";
   show-icons:           false;
 }
 
