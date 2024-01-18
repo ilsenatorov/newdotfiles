@@ -43,7 +43,7 @@ bindsym $mod+Shift+q kill
 bindsym $mod+d exec --no-startup-id "~/dotfiles/rofi/launcher.sh"
 bindsym $mod+z exec --no-startup-id "~/dotfiles/rofi/launcher_scripts.sh"
 bindsym $mod+p exec --no-startup-id "rofi-pass"
-bindsym $mod+n exec --no-startup-id "networkmanager_dmenu -theme ~/dotfiles/rofi/styles/networkmenu.rasi"
+bindsym $mod+n exec --no-startup-id "networkmanager_dmenu"
 bindsym $mod+y exec --no-startup-id "~/dotfiles/rofi-bluetooth/rofi-bluetooth"
 bindsym $mod+Shift+s exec --no-startup-id /home/ilya/dotfiles/rofi/powermenu.sh
 
@@ -158,6 +158,10 @@ bindsym $mod+r mode "resize"
 gaps inner 10
 gaps outer 0
 smart_gaps on
+default_border pixel 1
+default_floating_border pixel 1
+hide_edge_borders smart
+for_window [all] title_window_icon on
 
 # assign types of windows to workspaces
 assign [class="^[D|d]iscord"] 10

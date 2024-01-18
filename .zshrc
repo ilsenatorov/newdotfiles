@@ -14,6 +14,9 @@ plugins=(git
 	zsh-autosuggestions
 	zsh-syntax-highlighting
 	pep8
+	web-search
+	zsh-autosuggestions
+	zsh-syntax-highlighting
 	z)
 
 source $ZSH/oh-my-zsh.sh
