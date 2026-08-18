@@ -1,8 +1,9 @@
-/* Waybar stylesheet -- palette taken verbatim from ../polybar/colors.ini */
-
 @define-color background #141C21;
 @define-color foreground #93A1A1;
 @define-color sep        #3C4449;
+
+/* the floating pills: #141C21 at 85%, blurred by hyprland's layer rule */
+@define-color pill       rgba(20, 28, 33, 0.85);
 
 @define-color red        #EC7875;
 @define-color pink       #EC407A;
@@ -27,8 +28,24 @@
 }
 
 window#waybar {
-    background-color: @background;
+    background: transparent;
     color: @foreground;
+}
+
+window#waybar.hidden {
+    opacity: 0;
+}
+
+/* the three rounded pills; the gaps between them stay fully transparent.
+   a gtk box does not clip its children, so every module inside must keep a
+   transparent background or it squares off the pill corners. */
+.modules-left,
+.modules-center,
+.modules-right {
+    background-color: @pill;
+    border-radius: 12px;
+    padding: 4px 12px;
+    margin: 0 4px;
 }
 
 /* polybar: padding = 2, module-margin = 1 */
@@ -44,14 +61,14 @@ window#waybar {
 #pulseaudio,
 #language,
 #custom-bluetooth,
-#custom-sep,
-#tray {
-    padding: 0 8px;
+#custom-sep {
+    padding: 0 4px;
 }
 
 /* ---- workspaces ------------------------------------------------------- */
 #workspaces button {
     padding: 0 6px;
+    border-radius: 8px;
     color: @foreground;      /* polybar: label-empty */
     background: transparent;
 }
@@ -110,6 +127,3 @@ window#waybar {
 #pulseaudio.muted        { color: @red; }
 
 #language                { color: @blue-gray; }
-
-#tray                    { background: @background; }
-#tray > .needs-attention { background: @red; }
