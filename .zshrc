@@ -5,7 +5,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-
 export ZSH="/home/ilya/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 
@@ -44,3 +43,17 @@ source ~/powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/ilya/google-cloud-sdk/path.zsh.inc' ]; then . '/home/ilya/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/home/ilya/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/ilya/google-cloud-sdk/completion.zsh.inc'; fi
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit
+
+zstyle ':completion:*' menu select
+
+# claude-obsidian: single shared knowledge vault across all projects
+export CLAUDE_OBSIDIAN_VAULT="$HOME/Documents/MyKnowledgeVault"
