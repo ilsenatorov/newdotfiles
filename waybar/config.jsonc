@@ -1,15 +1,13 @@
-// Waybar config -- port of ../polybar/{config,bars,modules,user_modules}.ini
-// Module order and colours mirror [bar/main] from the polybar setup.
-//
-// NOTE ON ICONS: the polybar config uses Nerd Fonts v2 codepoints (U+FC6A memory,
-// U+F578-F581 battery, U+FAA8 wifi, U+FA51/F6D9 speeds, U+F700/F701 wired ...).
-// The installed ttf-iosevka-nerd is v3, which relocated those, so they rendered as
-// tofu. The icons below are v3 equivalents, each verified present in the font.
 {
     "layer": "top",
     "position": "top",
-    "height": 34,
-    "spacing": 8,
+    // no fixed height: the pill padding in style.css decides it.
+    "spacing": 4,
+
+    // gap between the bar and the screen edges -- the floating look
+    "margin-top": 6,
+    "margin-left": 8,
+    "margin-right": 8,
 
     "modules-left": [
         "hyprland/workspaces",
@@ -56,7 +54,6 @@
         "tooltip": false
     },
 
-    // polybar: date = "%A, %d %B", time = "%H:%M %p"; alt toggled the year + seconds
     "clock": {
         "format": "  {:%A, %d %B %H:%M}",
         "format-alt": "  {:%A, %d %B %Y %H:%M:%S}",

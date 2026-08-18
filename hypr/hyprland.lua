@@ -1,29 +1,10 @@
--- Hyprland configuration -- ported from the i3 config in this repo (../i3/config).
--- Keybindings intentionally mirror the i3 setup 1:1 where Hyprland allows it.
--- Docs: https://wiki.hypr.land/Configuring/  API stubs: /usr/share/hypr/stubs/hl.meta.lua
-
--------------------------------
----- ENVIRONMENT VARIABLES ----
--------------------------------
-
--- Intel drives eDP-1 on this machine; the NVIDIA MX250 has no connectors (Optimus offload only),
--- so VA-API must point at the Intel driver, not nvidia.
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 
--- Matches Xcursor.size / Xcursor.theme from ~/.Xresources
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Adwaita")
 
 
-------------------
----- MONITORS ----
-------------------
-
--- eDP-1 is a 1920x1080 panel at ~143 DPI. scale = "auto" picks 1.5, which gives a
--- 1280x720 logical resolution -- everything renders as if the screen were 720p.
--- Pinned to 1 for native 1920x1080. Use 1.25 (1536x864 logical) if that reads too small;
--- avoid fractional scales other than 1.25/1.5 as XWayland apps blur on them.
 hl.monitor({
     output   = "eDP-1",
     mode     = "preferred",
@@ -40,27 +21,10 @@ hl.monitor({
 })
 
 
-----------------------
----- MY PROGRAMS ----
-----------------------
-
 local terminal    = "alacritty"
 local fileManager = "alacritty -e ranger -r ~/dotfiles/ranger"
 local dotfiles    = os.getenv("HOME") .. "/dotfiles"
 
-
--------------------
----- AUTOSTART ----
--------------------
-
--- Dropped from the i3 autostart list:
---   polybar   -> waybar (X11 only)
---   picom     -> Hyprland has built-in blur/rounding/opacity
---   flashfocus-> no Wayland equivalent; active border colour serves the same purpose
---   nitrogen  -> hyprpaper
---   conky x2  -> conky is not even installed; those execs already failed silently under i3
---   setxkbmap -> replaced by the input{} block below
---   redshift  -> X11 only; see wlsunset note below
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
@@ -69,26 +33,28 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle")
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
-    -- Night light (replaces `redshift -O 3000`). Requires: pacman -S wlsunset
     -- hl.exec_cmd("wlsunset -T 3001 -t 3000")
 end)
 
 
------------------------
----- LOOK AND FEEL ----
------------------------
 
--- i3 used: gaps inner 10 / gaps outer 0 / default_border pixel 1.
--- Hyprland applies gaps_in per window edge, so gaps_in = 5 gives the same 10px between windows.
+-- waybar draws three translucent pills with transparent gaps between them;
+-- blur what is behind the pills, leave the gaps alone.
+hl.layer_rule({
+    match        = { namespace = "waybar" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
+
 hl.config({
     general = {
         gaps_in  = 5,
         gaps_out = 0,
 
-        border_size = 1,
+        border_size = 0,
 
         col = {
-            -- Cyan = polybar's focused-workspace colour; grey = polybar's separator colour.
             active_border   = "rgba(4DD0E1ff)",
             inactive_border = "rgba(3C4449ff)",
         },
@@ -100,18 +66,16 @@ hl.config({
     },
 
     decoration = {
-        -- Kept flat to match i3. Turn rounding/blur up once the port is settled.
-        rounding = 0,
-
+        rounding = 3,
         active_opacity   = 1.0,
-        inactive_opacity = 1.0,
+        inactive_opacity = 0.8,
 
         shadow = {
             enabled = false,
         },
 
         blur = {
-            enabled = false,
+            enabled = true,
         },
     },
 
@@ -119,8 +83,6 @@ hl.config({
         enabled = true,
     },
 
-    -- i3's `workspace_layout stacking` has no dwindle equivalent; groups are the closest thing
-    -- (see the SUPER+S bind). Style the groupbar to match the bar palette.
     group = {
         col = {
             border_active   = "rgba(4DD0E1ff)",
@@ -164,11 +126,6 @@ hl.animation({ leaf = "layers",     enabled = true, speed = 3.81, bezier = "ease
 hl.animation({ leaf = "workspaces", enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
 
 
----------------
----- INPUT ----
----------------
-
--- Replaces `setxkbmap -layout us,ru -option grp:shifts_toggle` from the i3 autostart.
 hl.config({
     input = {
         kb_layout  = "us,ru",
@@ -190,10 +147,6 @@ hl.gesture({
 })
 
 
----------------------
----- KEYBINDINGS ----
----------------------
-
 local mainMod = "SUPER"
 
 ---- Launchers and terminal -------------------------------------------------
@@ -204,7 +157,6 @@ hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "
 
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher.sh"),         { description = "App launcher" })
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.sh"), { description = "Run command" })
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("rofi-pass"),                             { description = "Passwords" })
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("networkmanager_dmenu"),                  { description = "Network menu" })
 hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd(dotfiles .. "/rofi-bluetooth/rofi-bluetooth"), { description = "Bluetooth menu" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
@@ -225,11 +177,6 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(),                { descript
 hl.bind(mainMod .. " + SHIFT + space", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 hl.bind(mainMod .. " + space", hl.dsp.window.cycle_next(),            { description = "Cycle windows" })
 
--- i3 had `split h` / `split v`; dwindle splits by aspect ratio, so both keys toggle the split
--- direction of the current container. SUPER+E was i3's `layout toggle split` but is now the file
--- manager (i3's SUPER+E was unbound for that) -- SUPER+J keeps togglesplit, per Hyprland default.
-hl.bind(mainMod .. " + H", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
-hl.bind(mainMod .. " + V", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
 
 -- i3's stacking layout -> Hyprland groups (tabbed groupbar).
@@ -261,10 +208,7 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 ---- Session ----------------------------------------------------------------
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload config" })
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload config" })
--- i3 used i3-nagbar to confirm; rofi does the same job here.
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/exit-confirm.sh"), { description = "Exit Hyprland" })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
 hl.define_submap("resize", function()
@@ -310,28 +254,24 @@ for i = 6, 10 do
     hl.workspace_rule({ workspace = tostring(i), monitor = "DP-3" })
 end
 
--- The only thing picom.conf actually did: Rofi at 90% opacity.
 hl.window_rule({
     name    = "rofi-opacity",
     match   = { class = "(?i)^rofi$" },
     opacity = 0.9,
 })
 
--- i3: no_focus [window_role="pop-up"]
 hl.window_rule({
     name     = "no-focus-popups",
     match    = { title = "(?i)pop-up" },
     no_focus = true,
 })
 
--- Ignore maximize requests from all apps.
 hl.window_rule({
     name           = "suppress-maximize-events",
     match          = { class = ".*" },
     suppress_event = "maximize",
 })
 
--- Fix dragging issues with XWayland windows.
 hl.window_rule({
     name  = "fix-xwayland-drags",
     match = {
