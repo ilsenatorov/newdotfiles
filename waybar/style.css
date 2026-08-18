@@ -1,0 +1,113 @@
+/* Waybar stylesheet -- palette taken verbatim from ../polybar/colors.ini */
+
+@define-color background #141C21;
+@define-color foreground #93A1A1;
+@define-color sep        #3C4449;
+
+@define-color red        #EC7875;
+@define-color pink       #EC407A;
+@define-color purple     #BA68C8;
+@define-color blue       #42A5F5;
+@define-color cyan       #4DD0E1;
+@define-color teal       #00B19F;
+@define-color green      #61C766;
+@define-color yellow     #FDD835;
+@define-color orange     #E57C46;
+@define-color blue-gray  #6D8895;
+
+* {
+    /* polybar: font-0 = "Iosevka Nerd Font:style=Mono:size=12" */
+    font-family: "Iosevka Nerd Font", "Hack", monospace;
+    font-size: 12pt;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+
+window#waybar {
+    background-color: @background;
+    color: @foreground;
+}
+
+/* polybar: padding = 2, module-margin = 1 */
+#workspaces,
+#submap,
+#clock,
+#cpu,
+#temperature,
+#memory,
+#disk,
+#network,
+#battery,
+#pulseaudio,
+#language,
+#custom-bluetooth,
+#custom-sep,
+#tray {
+    padding: 0 8px;
+}
+
+/* ---- workspaces ------------------------------------------------------- */
+#workspaces button {
+    padding: 0 6px;
+    color: @foreground;      /* polybar: label-empty */
+    background: transparent;
+}
+
+#workspaces button.active {
+    color: @cyan;            /* polybar: label-focused */
+}
+
+#workspaces button.visible {
+    color: @teal;            /* polybar: label-visible */
+}
+
+#workspaces button.urgent {
+    color: @red;             /* polybar: label-urgent */
+}
+
+#workspaces button:hover {
+    background: transparent;
+    color: @cyan;
+}
+
+/* ---- left ------------------------------------------------------------- */
+#submap        { color: @yellow; }
+#custom-sep    { color: @sep; }
+#clock         { color: @red; }
+
+/* ---- center ----------------------------------------------------------- */
+#cpu           { color: @cyan; }
+#temperature   { color: @cyan; }
+#memory        { color: @blue; }
+#disk          { color: @orange; }
+
+#temperature.critical { color: @red; }
+
+#network.upspeed,
+#network.downspeed { color: @purple; }
+
+#battery              { color: @pink; }
+#battery.charging     { color: @green; }
+#battery.full         { color: @red; }
+#battery.warning      { color: @yellow; }
+#battery.critical     { color: @red; }
+
+/* ---- right ------------------------------------------------------------ */
+#network.wired,
+#network.wireless        { color: @purple; }
+
+#network.disconnected    { color: @orange; }
+
+#custom-bluetooth        { color: @blue; }
+
+/* polybar ramped the volume bar green -> yellow -> red */
+#pulseaudio              { color: @green; }
+#pulseaudio.medium       { color: @yellow; }
+#pulseaudio.high         { color: @red; }
+#pulseaudio.muted        { color: @red; }
+
+#language                { color: @blue-gray; }
+
+#tray                    { background: @background; }
+#tray > .needs-attention { background: @red; }

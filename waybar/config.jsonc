@@ -1,0 +1,176 @@
+// Waybar config -- port of ../polybar/{config,bars,modules,user_modules}.ini
+// Module order and colours mirror [bar/main] from the polybar setup.
+{
+    "layer": "top",
+    "position": "top",
+    "height": 34,
+    "spacing": 8,
+
+    "modules-left": [
+        "hyprland/workspaces",
+        "hyprland/submap",
+        "custom/sep",
+        "clock"
+    ],
+
+    "modules-center": [
+        "cpu",
+        "temperature",
+        "memory",
+        "disk",
+        "network#upspeed",
+        "network#downspeed",
+        "battery"
+    ],
+
+    "modules-right": [
+        "network#wired",
+        "network#wireless",
+        "custom/bluetooth",
+        "custom/sep",
+        "pulseaudio",
+        "custom/sep",
+        "hyprland/language",
+        "tray"
+    ],
+
+    // ---- left ------------------------------------------------------------
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "on-click": "activate",
+        "sort-by-number": true
+    },
+
+    // i3 had no mode indicator; the resize submap gets one for free here.
+    "hyprland/submap": {
+        "format": "  {}",
+        "tooltip": false
+    },
+
+    "custom/sep": {
+        "format": "|",
+        "tooltip": false
+    },
+
+    // polybar: date = "%A, %d %B", time = "%H:%M %p"; alt toggled the year + seconds
+    "clock": {
+        "format": "  {:%A, %d %B %H:%M}",
+        "format-alt": "  {:%A, %d %B %Y %H:%M:%S}",
+        "tooltip-format": "<tt>{calendar}</tt>"
+    },
+
+    // ---- center ----------------------------------------------------------
+    "cpu": {
+        "interval": 1,
+        "format": "  {usage}%"
+    },
+
+    // polybar pointed at thermal_zone1, which on this machine is "INT3400 Thermal" --
+    // not a CPU sensor at all. hwmon7 is coretemp (the actual package temperature).
+    "temperature": {
+        "interval": 2,
+        "hwmon-path": "/sys/class/hwmon/hwmon7/temp1_input",
+        "critical-threshold": 85,
+        "format": "  {temperatureC}°C",
+        "format-critical": "  {temperatureC}°C"
+    },
+
+    "memory": {
+        "interval": 1,
+        "format": "ﱪ  {used:0.1f}G",
+        "tooltip-format": "{used:0.1f}G / {total:0.1f}G  ({percentage}%)"
+    },
+
+    // polybar: filesystem mount-0 = /, label = free space
+    "disk": {
+        "interval": 30,
+        "path": "/",
+        "format": "  {free}"
+    },
+
+    "network#upspeed": {
+        "interface": "wlo1",
+        "interval": 1,
+        "format": "祝 {bandwidthUpBytes}",
+        "format-disconnected": "祝 0B",
+        "tooltip": false
+    },
+
+    "network#downspeed": {
+        "interface": "wlo1",
+        "interval": 1,
+        "format": " {bandwidthDownBytes}",
+        "format-disconnected": " 0B",
+        "tooltip": false
+    },
+
+    // polybar: battery BAT0 / adapter AC / full-at 99
+    "battery": {
+        "bat": "BAT0",
+        "adapter": "AC",
+        "interval": 2,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon}  {capacity}%",
+        "format-charging": "⚡ {capacity}%",
+        "format-full": "  Full",
+        "format-icons": ["", "", "", "", "", "", "", "", ""],
+        "tooltip-format": "{timeTo}  ({power}W)"
+    },
+
+    // ---- right -----------------------------------------------------------
+    "network#wired": {
+        "interface": "eno2",
+        "interval": 2,
+        "format-ethernet": " ",
+        "format-disconnected": "",
+        "format-disabled": "",
+        "format-linked": "",
+        "format-wifi": "",
+        "tooltip-format": "{ifname}  {ipaddr}"
+    },
+
+    "network#wireless": {
+        "interface": "wlo1",
+        "interval": 2,
+        "format-wifi": "直  {essid}",
+        "format-disconnected": "睊 ",
+        "format-ethernet": "",
+        "format-linked": "",
+        "tooltip-format-wifi": "{essid}  {signalStrength}%  {ipaddr}"
+    },
+
+    "custom/bluetooth": {
+        "exec": "~/dotfiles/waybar/scripts/bluetooth.sh",
+        "interval": 5,
+        "return-type": "json",
+        "on-click": "~/dotfiles/rofi-bluetooth/rofi-bluetooth &"
+    },
+
+    // polybar rendered an 11-cell ⏽ bar; waybar has no equivalent, so ramp + percentage.
+    "pulseaudio": {
+        "format": "{icon}  {volume}%",
+        "format-muted": "  Muted",
+        "format-icons": {
+            "headphone": "",
+            "headset": "",
+            "default": ["", "", ""]
+        },
+        "scroll-step": 2,
+        "on-click": "pavucontrol"
+    },
+
+    // polybar internal/xkeyboard -> the us,ru layouts now come from hyprland's input{}
+    "hyprland/language": {
+        "format": "  {short}",
+        "tooltip": false
+    },
+
+    // polybar had the tray disabled, but nm-applet/blueman need somewhere to live on Wayland.
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    }
+}
