@@ -16,8 +16,10 @@
 @define-color blue-gray  #6D8895;
 
 * {
-    /* polybar: font-0 = "Iosevka Nerd Font:style=Mono:size=12" */
-    font-family: "Iosevka Nerd Font", "Hack", monospace;
+    /* polybar: font-0 = "Iosevka Nerd Font:style=Mono:size=12"
+       MesloLGS NF is the icon fallback -- note polybar's colors/bars.ini asks for
+       "Meslo LGS NF", which is not the installed family name ("MesloLGS NF"). */
+    font-family: "Iosevka Nerd Font", "MesloLGS NF", "Hack", monospace;
     font-size: 12pt;
     min-height: 0;
     border: none;
