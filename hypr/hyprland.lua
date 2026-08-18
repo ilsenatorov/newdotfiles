@@ -20,11 +20,23 @@ hl.env("XCURSOR_THEME", "Adwaita")
 ---- MONITORS ----
 ------------------
 
+-- eDP-1 is a 1920x1080 panel at ~143 DPI. scale = "auto" picks 1.5, which gives a
+-- 1280x720 logical resolution -- everything renders as if the screen were 720p.
+-- Pinned to 1 for native 1920x1080. Use 1.25 (1536x864 logical) if that reads too small;
+-- avoid fractional scales other than 1.25/1.5 as XWayland apps blur on them.
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "preferred",
+    position = "auto",
+    scale    = 1,
+})
+
+-- Fallback for any other output (external monitors).
 hl.monitor({
     output   = "",
     mode     = "preferred",
     position = "auto",
-    scale    = "auto",
+    scale    = 1,
 })
 
 
