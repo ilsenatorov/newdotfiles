@@ -8,7 +8,7 @@
 #   "\uF293"      -> powered on, nothing connected
 #   "\uF293;NAME" -> connected to NAME
 
-ICON_OFF=$'\uF5B1'
+ICON_OFF=$'\uF294'
 ICON_ON=$'\uF293'
 
 STATUS=$("${HOME}/dotfiles/rofi-bluetooth/rofi-bluetooth" --status 2>/dev/null)

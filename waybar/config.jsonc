@@ -1,5 +1,10 @@
 // Waybar config -- port of ../polybar/{config,bars,modules,user_modules}.ini
 // Module order and colours mirror [bar/main] from the polybar setup.
+//
+// NOTE ON ICONS: the polybar config uses Nerd Fonts v2 codepoints (U+FC6A memory,
+// U+F578-F581 battery, U+FAA8 wifi, U+FA51/F6D9 speeds, U+F700/F701 wired ...).
+// The installed ttf-iosevka-nerd is v3, which relocated those, so they rendered as
+// tofu. The icons below are v3 equivalents, each verified present in the font.
 {
     "layer": "top",
     "position": "top",
@@ -30,8 +35,7 @@
         "custom/sep",
         "pulseaudio",
         "custom/sep",
-        "hyprland/language",
-        "tray"
+        "hyprland/language"
     ],
 
     // ---- left ------------------------------------------------------------
@@ -43,7 +47,7 @@
 
     // i3 had no mode indicator; the resize submap gets one for free here.
     "hyprland/submap": {
-        "format": "  {}",
+        "format": "  {}",
         "tooltip": false
     },
 
@@ -54,30 +58,30 @@
 
     // polybar: date = "%A, %d %B", time = "%H:%M %p"; alt toggled the year + seconds
     "clock": {
-        "format": "  {:%A, %d %B %H:%M}",
-        "format-alt": "  {:%A, %d %B %Y %H:%M:%S}",
+        "format": "  {:%A, %d %B %H:%M}",
+        "format-alt": "  {:%A, %d %B %Y %H:%M:%S}",
         "tooltip-format": "<tt>{calendar}</tt>"
     },
 
     // ---- center ----------------------------------------------------------
     "cpu": {
         "interval": 1,
-        "format": "  {usage}%"
+        "format": "  {usage}%"
     },
 
-    // polybar pointed at thermal_zone1, which on this machine is "INT3400 Thermal" --
-    // not a CPU sensor at all. hwmon7 is coretemp (the actual package temperature).
+    // polybar pointed at thermal_zone1, which on this machine is "INT3400 Thermal"
+    // -- a thermal policy device, not a processor sensor. hwmon7 is coretemp.
     "temperature": {
         "interval": 2,
         "hwmon-path": "/sys/class/hwmon/hwmon7/temp1_input",
         "critical-threshold": 85,
-        "format": "  {temperatureC}°C",
-        "format-critical": "  {temperatureC}°C"
+        "format": "  {temperatureC}°C",
+        "format-critical": "  {temperatureC}°C"
     },
 
     "memory": {
         "interval": 1,
-        "format": "ﱪ  {used:0.1f}G",
+        "format": "󰍛  {used:0.1f}G",
         "tooltip-format": "{used:0.1f}G / {total:0.1f}G  ({percentage}%)"
     },
 
@@ -85,22 +89,22 @@
     "disk": {
         "interval": 30,
         "path": "/",
-        "format": "  {free}"
+        "format": "  {free}"
     },
 
     "network#upspeed": {
         "interface": "wlo1",
         "interval": 1,
-        "format": "祝 {bandwidthUpBytes}",
-        "format-disconnected": "祝 0B",
+        "format": " {bandwidthUpBytes}",
+        "format-disconnected": " 0B",
         "tooltip": false
     },
 
     "network#downspeed": {
         "interface": "wlo1",
         "interval": 1,
-        "format": " {bandwidthDownBytes}",
-        "format-disconnected": " 0B",
+        "format": " {bandwidthDownBytes}",
+        "format-disconnected": " 0B",
         "tooltip": false
     },
 
@@ -109,14 +113,11 @@
         "bat": "BAT0",
         "adapter": "AC",
         "interval": 2,
-        "states": {
-            "warning": 30,
-            "critical": 15
-        },
+        "states": { "warning": 30, "critical": 15 },
         "format": "{icon}  {capacity}%",
         "format-charging": "⚡ {capacity}%",
-        "format-full": "  Full",
-        "format-icons": ["", "", "", "", "", "", "", "", ""],
+        "format-full": "  Full",
+        "format-icons": ["", "", "", "", ""],
         "tooltip-format": "{timeTo}  ({power}W)"
     },
 
@@ -124,10 +125,10 @@
     "network#wired": {
         "interface": "eno2",
         "interval": 2,
-        "format-ethernet": " ",
+        "format-ethernet": " ",
         "format-disconnected": "",
         "format-disabled": "",
-        "format-linked": "",
+        "format-linked": " ",
         "format-wifi": "",
         "tooltip-format": "{ifname}  {ipaddr}"
     },
@@ -135,8 +136,8 @@
     "network#wireless": {
         "interface": "wlo1",
         "interval": 2,
-        "format-wifi": "直  {essid}",
-        "format-disconnected": "睊 ",
+        "format-wifi": "  {essid}",
+        "format-disconnected": "󰖪 ",
         "format-ethernet": "",
         "format-linked": "",
         "tooltip-format-wifi": "{essid}  {signalStrength}%  {ipaddr}"
@@ -149,14 +150,14 @@
         "on-click": "~/dotfiles/rofi-bluetooth/rofi-bluetooth &"
     },
 
-    // polybar rendered an 11-cell ⏽ bar; waybar has no equivalent, so ramp + percentage.
+    // polybar rendered an 11-cell bar; waybar has no equivalent, so ramp + percentage.
     "pulseaudio": {
         "format": "{icon}  {volume}%",
-        "format-muted": "  Muted",
+        "format-muted": "  Muted",
         "format-icons": {
-            "headphone": "",
-            "headset": "",
-            "default": ["", "", ""]
+            "headphone": "",
+            "headset": "",
+            "default": ["", "", ""]
         },
         "scroll-step": 2,
         "on-click": "pavucontrol"
@@ -164,13 +165,7 @@
 
     // polybar internal/xkeyboard -> the us,ru layouts now come from hyprland's input{}
     "hyprland/language": {
-        "format": "  {short}",
+        "format": "  {short}",
         "tooltip": false
-    },
-
-    // polybar had the tray disabled, but nm-applet/blueman need somewhere to live on Wayland.
-    "tray": {
-        "icon-size": 16,
-        "spacing": 8
     }
 }
