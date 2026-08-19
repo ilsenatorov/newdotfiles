@@ -235,7 +235,21 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"), { description = "Toggle
 -- i3's stacking layout -> Hyprland groups (tabbed groupbar).
 hl.bind(mainMod .. " + S", hl.dsp.group.toggle(),        { description = "Toggle group (was: stacking)" })
 hl.bind(mainMod .. " + A", hl.dsp.group.prev(),          { description = "Previous in group" })
-hl.bind(mainMod .. " + G", hl.dsp.group.next(),          { description = "Next in group" })
+hl.bind(mainMod .. " + Q", hl.dsp.group.next(),          { description = "Next in group" })
+
+-- Moving an existing window in/out of a group lives on window.move, NOT on
+-- hl.dsp.group.* (that table only has toggle/next/prev/active/move_window/
+-- lock/lock_active -- none of which adds a window). group.move_window()
+-- reorders a window *within* its group and warns if it is not in one.
+--
+-- Note group:auto_group and group:merge_groups_on_drag are both true, so new
+-- windows join the focused group automatically and SUPER+drag onto a groupbar
+-- merges. These binds are for moving a window that already exists elsewhere.
+hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ into_group = "l" }), { description = "Move into group (left)" })
+hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ into_group = "r" }), { description = "Move into group (right)" })
+hl.bind(mainMod .. " + CTRL + up",    hl.dsp.window.move({ into_group = "u" }), { description = "Move into group (up)" })
+hl.bind(mainMod .. " + CTRL + down",  hl.dsp.window.move({ into_group = "d" }), { description = "Move into group (down)" })
+hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), { description = "Move out of group" })
 
 ---- Workspaces -------------------------------------------------------------
 local wsKeys = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }
