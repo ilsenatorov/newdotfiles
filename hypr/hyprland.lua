@@ -4,9 +4,24 @@
 -- an app launched as a systemd scope -- which is exactly the browser.
 --
 -- The cursor vars below ARE in UWSM_FINALIZE_VARNAMES, so they propagate.
+-- Cursor theme: Bibata if it is installed, Adwaita (always present) otherwise.
+-- Checked here rather than hardcoded so the config stays correct on a machine
+-- without bibata-cursor-theme. hypr/scripts/gsettings-theme.sh does the same
+-- pick for the GTK side, so the two never disagree.
+local function cursor_theme()
+    for _, name in ipairs({ "Bibata-Modern-Ice", "Bibata-Modern-Classic" }) do
+        for _, dir in ipairs({ "/usr/share/icons/", os.getenv("HOME") .. "/.local/share/icons/",
+                               os.getenv("HOME") .. "/.icons/" }) do
+            local f = io.open(dir .. name .. "/index.theme", "r")
+            if f then f:close(); return name end
+        end
+    end
+    return "Adwaita"
+end
+
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
-hl.env("XCURSOR_THEME", "Adwaita")
+hl.env("XCURSOR_THEME", cursor_theme())
 
 
 hl.monitor({
@@ -43,9 +58,17 @@ local function app(cmd)
 end
 
 hl.on("hyprland.start", function()
+    -- GTK4/libadwaita and the GTK portal read gsettings, not gtk-4.0/settings.ini.
+    -- Without this, file dialogs and GNOME apps stay light on a dark desktop.
+    hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
+
     app("waybar")
     app("mako")
-    app("hyprpaper")
+    -- Wallpaper: mpvpaper via wallpaper-daemon.sh, not hyprpaper. The wallpaper
+    -- is a looping video (Disco-Elysium-4k.mp4) and hyprpaper only does stills;
+    -- mpvpaper covers stills too, so it is the only wallpaper daemon now.
+    -- The script reads hypr/wallpaper.conf, written by set-wallpaper.sh.
+    hl.exec_cmd(dotfiles .. "/hypr/scripts/wallpaper-daemon.sh")
     app("hypridle")
     app("nm-applet --indicator")
 
@@ -87,16 +110,37 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
+-- rofi runs as a layer surface under Wayland (namespace "rofi"), so the
+-- `class = rofi` window rule further down never applies to it -- the blur has
+-- to be a layer rule. ignore_alpha is lower than the bar's because the rofi
+-- window is drawn at 0xE6 alpha rather than 0xD9.
+hl.layer_rule({
+    match        = { namespace = "rofi" },
+    blur         = true,
+    ignore_alpha = 0.1,
+})
+
 
 hl.config({
     general = {
         gaps_in  = 5,
-        gaps_out = 0,
+        -- waybar floats with margin-top 6 / left|right 8; matching that here
+        -- keeps windows off the screen edge so the detached bar reads as
+        -- deliberate rather than as a bar overlapping full-bleed windows.
+        gaps_out = 8,
 
-        border_size = 0,
+        -- was 0, which made the col.* accent below dead config: the
+        -- wallpaper-derived accent showed on the bar, rofi and notifications
+        -- but never on the focused window.
+        border_size = 2,
 
         col = {
-            active_border   = "rgba(" .. colors.accent .. "ff)",
+            -- gradient accent -> accent_dim; both come from the wallpaper.
+            active_border   = {
+                colors = { "rgba(" .. colors.accent .. "ff)",
+                           "rgba(" .. colors.accent_dim .. "ff)" },
+                angle  = 45,
+            },
             inactive_border = "rgba(3C4449ff)",
         },
 
@@ -107,12 +151,23 @@ hl.config({
     },
 
     decoration = {
-        rounding = 3,
+        -- 12px is the radius shared by the waybar pills, mako, the rofi window
+        -- and the hyprlock input field. 3 was the odd one out.
+        rounding = 12,
         active_opacity   = 1.0,
         inactive_opacity = 0.8,
 
+        -- Shadows are on but scoped: the "no-shadow-when-tiled" window rule
+        -- below turns them off for tiled windows, where every tile having a
+        -- drop shadow just muddies the gaps. Floating windows and dialogs keep
+        -- them, which is where the depth actually helps.
         shadow = {
-            enabled = false,
+            enabled       = true,
+            range         = 20,
+            render_power  = 3,
+            offset        = "0 4",
+            color         = "rgba(0A0F12AA)",
+            color_inactive = "rgba(0A0F1266)",
         },
 
         blur = {
@@ -132,11 +187,11 @@ hl.config({
         groupbar = {
             font_family = "Iosevka Nerd Font",
             font_size   = 11,
-            -- match the waybar pills: 12px radius, cyan indicator, some air
+            -- match the waybar pills: 12px radius, accent indicator, some air
             height           = 20,
             indicator_height = 3,
-            rounding         = 8,
-            gradient_rounding = 8,
+            rounding         = 12,
+            gradient_rounding = 12,
             gaps_in          = 2,
             gaps_out         = 2,
             text_color       = "rgba(93A1A1ff)",
@@ -368,6 +423,14 @@ hl.window_rule({
     name    = "rofi-opacity",
     match   = { class = "(?i)^rofi$" },
     opacity = 0.9,
+})
+
+-- Shadow only where it adds depth. A tiled grid of shadowed windows reads as
+-- noise in the 8px gaps; a floating dialog over them reads as lifted.
+hl.window_rule({
+    name      = "no-shadow-when-tiled",
+    match     = { float = false },
+    no_shadow = true,
 })
 
 hl.window_rule({

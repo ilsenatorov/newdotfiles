@@ -85,6 +85,9 @@ window#waybar.hidden {
 
 #workspaces button.active {
     color: @accent;
+    /* @surface is the wallpaper-tinted dark surface from matugen -- it shifts
+       with the accent while staying dark enough not to fight the pill. */
+    background: @surface;
 }
 
 #workspaces button.visible {

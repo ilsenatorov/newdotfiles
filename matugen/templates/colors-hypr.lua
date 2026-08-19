@@ -5,4 +5,5 @@ return {
     accent_alt = "{{colors.tertiary.dark.hex_stripped}}",
     accent_dim = "{{colors.primary_container.dark.hex_stripped}}",
     urgent     = "{{colors.error.dark.hex_stripped}}",
+    surface    = "{{colors.surface_container_high.dark.hex_stripped}}",
 }
