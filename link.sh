@@ -7,8 +7,16 @@
 
 stamp=$(date +%Y%m%d-%H%M%S)
 
+# Dirs that are not ~/.config configs. sddm's theme goes to /usr/share and /etc
+# (see sddm/install.sh), and graphify-out is generated output.
+skip="sddm graphify-out"
+
 for i in */; do
 	bas=$(basename "$i")
+
+	case " $skip " in
+		*" $bas "*) echo "SKIP    $bas"; continue ;;
+	esac
 	src="$HOME/dotfiles/$bas"
 	dst="$HOME/.config/$bas"
 

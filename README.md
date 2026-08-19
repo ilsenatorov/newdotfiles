@@ -21,5 +21,6 @@
 * __i3__ as the window manager
 * __flashfocus__ for highlighting focused windows in i3
 * __conky__ for displaying status
+* __sddm__ as the display manager, with the pixel_sakura astronaut theme (see `sddm/`)
 * __zsh__
 * __powerline10k__ as the zsh theme
