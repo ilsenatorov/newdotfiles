@@ -7,8 +7,10 @@ REPO="$(cd "$(dirname "$0")" && pwd)"
 NAME=sddm-astronaut-theme
 DST=/usr/share/sddm/themes/$NAME
 
-# Source of the video wallpaper. Override with: WALLPAPER=/path/to.mp4 sudo -E ./install.sh
-HOME_WALLPAPER=/home/ilya/Pictures/Wallpapers/Disco-Elysium-4k.mp4
+# The background is no longer copied by this script: sync-wallpaper.sh does it,
+# from whatever hypr/wallpaper.conf currently points at (the same file mpvpaper
+# is playing on the desktop). Override for this run with:
+#   WALLPAPER=/path/to.mp4 sudo -E ./install.sh
 
 [ "$(id -u)" -eq 0 ] || { echo "run with sudo" >&2; exit 1; }
 
@@ -24,14 +26,12 @@ rm -rf "$DST"
 install -d "$DST"
 cp -r "$REPO/theme/." "$DST/"
 
-# The video wallpaper is too large to keep in git, so it is copied in from
-# $WALLPAPER at install time. It MUST end up inside $DST: the greeter runs as
-# the unprivileged "sddm" user, which cannot traverse a 0700 /home/<user>.
-WALLPAPER="${WALLPAPER:-$HOME_WALLPAPER}"
-if [ -f "$WALLPAPER" ]; then
-	install -m 644 "$WALLPAPER" "$DST/Backgrounds/Disco-Elysium-4k.mp4"
-else
-	echo "WARNING: $WALLPAPER not found; falling back to pixel_sakura.gif" >&2
+# The wallpaper is too large to keep in git, and the greeter runs as the
+# unprivileged "sddm" user which cannot traverse a 0700 /home/<user> -- so it has
+# to be copied inside $DST. sync-wallpaper.sh does that, and also pushes the
+# current matugen accent into Themes/main.conf.
+if ! "$REPO/sync-wallpaper.sh" ${WALLPAPER:+"$WALLPAPER"}; then
+	echo "WARNING: wallpaper sync failed; falling back to pixel_sakura.gif" >&2
 	sed -i 's|^Background=.*|Background="Backgrounds/pixel_sakura.gif"|' \
 		"$DST/Themes/main.conf"
 fi

@@ -4,3 +4,6 @@
 @define-color accent_alt {{colors.tertiary.dark.hex}};
 @define-color accent_dim {{colors.primary_container.dark.hex}};
 @define-color urgent     {{colors.error.dark.hex}};
+/* wallpaper-tinted dark surface -- for selected/active backgrounds only.
+   Dark enough to sit inside the hand-written #141C21 base without fighting it. */
+@define-color surface    {{colors.surface_container_high.dark.hex}};

@@ -25,3 +25,17 @@ output_path = '~/dotfiles/hypr/colors.lua'
 [templates.mako]
 input_path  = '~/dotfiles/matugen/templates/colors-mako'
 output_path = '~/dotfiles/mako/colors'
+
+[templates.alacritty]
+input_path  = '~/dotfiles/matugen/templates/colors-alacritty.toml'
+output_path = '~/dotfiles/alacritty/colors.toml'
+
+# GTK3 and GTK4 read their own gtk.css; both import the generated file next to
+# it. Same template, two destinations.
+[templates.gtk3]
+input_path  = '~/dotfiles/matugen/templates/colors-gtk.css'
+output_path = '~/dotfiles/gtk-3.0/colors.css'
+
+[templates.gtk4]
+input_path  = '~/dotfiles/matugen/templates/colors-gtk.css'
+output_path = '~/dotfiles/gtk-4.0/colors.css'
