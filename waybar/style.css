@@ -69,7 +69,7 @@ window#waybar.hidden {
 #battery,
 #pulseaudio,
 #language,
-#custom-bluetooth,
+#bluetooth,
 #custom-sep,
 #tray {
     padding: 0 4px;
@@ -128,11 +128,15 @@ window#waybar.hidden {
 
 #network.disconnected    { color: @orange; }
 
-/* waybar/scripts/bluetooth.sh sets these three classes */
-#custom-bluetooth            { color: @blue; }
-#custom-bluetooth.off        { color: @sep; }
-#custom-bluetooth.on         { color: @blue-gray; }
-#custom-bluetooth.connected  { color: @blue; }
+/* states come from the native bluetooth module */
+#bluetooth               { color: @blue; }
+#bluetooth.disabled      { color: @sep; }
+#bluetooth.off           { color: @sep; }
+#bluetooth.no-controller { color: @sep; }
+#bluetooth.on            { color: @blue-gray; }
+#bluetooth.discoverable,
+#bluetooth.discovering   { color: @orange; }
+#bluetooth.connected     { color: @blue; }
 
 #pulseaudio              { color: @green; }
 #pulseaudio.medium       { color: @yellow; }
