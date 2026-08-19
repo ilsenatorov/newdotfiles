@@ -3,5 +3,5 @@
 choice=$(printf 'Cancel\nExit Hyprland' | rofi -dmenu -i -p "Exit?" \
     -theme "${HOME}/dotfiles/rofi/styles/powermenu.rasi" -selected-row 0)
 
-[ "$choice" = "Exit Hyprland" ] && hyprctl dispatch exit
+[ "$choice" = "Exit Hyprland" ] && hyprctl dispatch 'hl.dsp.exit()'
 exit 0

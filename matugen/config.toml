@@ -1,0 +1,27 @@
+# matugen drives the ACCENT colour only. Backgrounds, foregrounds and the fixed
+# semantic colours (battery red, disk orange, ...) stay hand-written in the real
+# config files, which import these generated files and can override anything.
+#
+# Regenerate with hypr/scripts/set-wallpaper.sh -- never edit the outputs.
+
+[config]
+
+[templates.waybar]
+input_path  = '~/dotfiles/matugen/templates/colors-waybar.css'
+output_path = '~/dotfiles/waybar/colors.css'
+
+[templates.rofi]
+input_path  = '~/dotfiles/matugen/templates/colors-rofi.rasi'
+output_path = '~/dotfiles/rofi/styles/colors.rasi'
+
+[templates.hyprlock]
+input_path  = '~/dotfiles/matugen/templates/colors-hypr.conf'
+output_path = '~/dotfiles/hypr/colors.conf'
+
+[templates.hyprland]
+input_path  = '~/dotfiles/matugen/templates/colors-hypr.lua'
+output_path = '~/dotfiles/hypr/colors.lua'
+
+[templates.mako]
+input_path  = '~/dotfiles/matugen/templates/colors-mako'
+output_path = '~/dotfiles/mako/colors'

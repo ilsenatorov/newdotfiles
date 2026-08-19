@@ -27,3 +27,23 @@ for i in */; do
 	echo "LINK    $bas"
 	ln -s "$src" "$dst"
 done
+
+# Prune links this repo used to own but no longer does. Without this, removing a
+# directory from the repo leaves a dangling ~/.config entry forever -- which is
+# how conky, flashfocus, i3, picom, polybar and rofi-pass ended up broken.
+for dst in "$HOME"/.config/*; do
+	[ -L "$dst" ] || continue
+	target=$(readlink "$dst")
+
+	# only touch links that point into this repo
+	case "$target" in
+		"$HOME"/dotfiles/*) ;;
+		*) continue ;;
+	esac
+
+	# ...and only those whose target is gone
+	[ -e "$target" ] && continue
+
+	echo "PRUNE   $(basename "$dst") (dangling -> $target)"
+	rm "$dst"
+done

@@ -1,3 +1,15 @@
+/* Accent colours come from the wallpaper via matugen (waybar/colors.css).
+   GTK CSS requires @import before any other rule, and resolves @define-color
+   at parse time -- so overrides go in the block just below, not at the end. */
+@import "colors.css";
+
+/* ---- manual overrides -------------------------------------------------- */
+/* GTK resolves @define-color at parse time, so an override must appear BEFORE
+   the rules that use it -- putting it at the bottom of the file has no effect.
+   Redefine any generated colour here to pin it against matugen:
+     @define-color accent #61C766;
+*/
+
 @define-color background #141C21;
 @define-color foreground #93A1A1;
 @define-color sep        #3C4449;
@@ -9,7 +21,7 @@
 @define-color pink       #EC407A;
 @define-color purple     #BA68C8;
 @define-color blue       #42A5F5;
-@define-color cyan       #4DD0E1;
+@define-color cyan       #4DD0E1;   /* kept as the pre-matugen fallback */
 @define-color teal       #00B19F;
 @define-color green      #61C766;
 @define-color yellow     #FDD835;
@@ -17,9 +29,8 @@
 @define-color blue-gray  #6D8895;
 
 * {
-    /* polybar: font-0 = "Iosevka Nerd Font:style=Mono:size=12"
-       MesloLGS NF is the icon fallback -- note polybar's colors/bars.ini asks for
-       "Meslo LGS NF", which is not the installed family name ("MesloLGS NF"). */
+    /* Iosevka Nerd Font is the primary; MesloLGS NF is the icon fallback.
+       Both are installed -- verify with `fc-list : family | grep -i nerd`. */
     font-family: "Iosevka Nerd Font", "MesloLGS NF", "Hack", monospace;
     font-size: 12pt;
     min-height: 0;
@@ -47,8 +58,6 @@ window#waybar.hidden {
     padding: 4px 12px;
     margin: 0 4px;
 }
-
-/* polybar: padding = 2, module-margin = 1 */
 #workspaces,
 #submap,
 #clock,
@@ -61,7 +70,8 @@ window#waybar.hidden {
 #pulseaudio,
 #language,
 #custom-bluetooth,
-#custom-sep {
+#custom-sep,
+#tray {
     padding: 0 4px;
 }
 
@@ -69,25 +79,25 @@ window#waybar.hidden {
 #workspaces button {
     padding: 0 6px;
     border-radius: 8px;
-    color: @foreground;      /* polybar: label-empty */
+    color: @foreground;
     background: transparent;
 }
 
 #workspaces button.active {
-    color: @cyan;            /* polybar: label-focused */
+    color: @accent;
 }
 
 #workspaces button.visible {
-    color: @teal;            /* polybar: label-visible */
+    color: @accent_alt;
 }
 
 #workspaces button.urgent {
-    color: @red;             /* polybar: label-urgent */
+    color: @red;
 }
 
 #workspaces button:hover {
     background: transparent;
-    color: @cyan;
+    color: @accent;
 }
 
 /* ---- left ------------------------------------------------------------- */
@@ -96,8 +106,8 @@ window#waybar.hidden {
 #clock         { color: @red; }
 
 /* ---- center ----------------------------------------------------------- */
-#cpu           { color: @cyan; }
-#temperature   { color: @cyan; }
+#cpu           { color: @accent; }
+#temperature   { color: @accent; }
 #memory        { color: @blue; }
 #disk          { color: @orange; }
 
@@ -118,12 +128,27 @@ window#waybar.hidden {
 
 #network.disconnected    { color: @orange; }
 
-#custom-bluetooth        { color: @blue; }
+/* waybar/scripts/bluetooth.sh sets these three classes */
+#custom-bluetooth            { color: @blue; }
+#custom-bluetooth.off        { color: @sep; }
+#custom-bluetooth.on         { color: @blue-gray; }
+#custom-bluetooth.connected  { color: @blue; }
 
-/* polybar ramped the volume bar green -> yellow -> red */
 #pulseaudio              { color: @green; }
 #pulseaudio.medium       { color: @yellow; }
 #pulseaudio.high         { color: @red; }
 #pulseaudio.muted        { color: @red; }
 
 #language                { color: @blue-gray; }
+
+/* ---- tray -------------------------------------------------------------- */
+#tray { background: transparent; }
+
+#tray > .passive { -gtk-icon-effect: dim; }
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    color: @red;
+}
+
+

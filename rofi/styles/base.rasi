@@ -1,11 +1,12 @@
 
+@import "colors.rasi"
+
 * {
   al:   #00000000;
   bg:   #141C21FF;
   bga:  #1E262BFF;
   fg:   #93A1A1FF;
-  ac:   #D12F2CFF;
-  se:   #333333FF;
+  se:   #1E262BFF;   /* selection surface, was #333333 (off-palette) */
 }
 
 window {
@@ -95,8 +96,8 @@ element-text {
 
 element selected {
     background-color:               @se;
-    text-color:                     @fg;
-	border:							0% 0% 0% 0%;
+    text-color:                     @ac;
+	border:							0px 0px 0px 3px;
     border-radius:                  12px;
-    border-color:                  	@bg;
+    border-color:                  	@ac;
 }

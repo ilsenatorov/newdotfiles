@@ -34,13 +34,21 @@
         "pulseaudio",
         "custom/sep",
         "hyprland/language"
+        // "custom/sep",
+        // "tray"
     ],
 
     // ---- left ------------------------------------------------------------
+    // NOTE: app-icon-per-workspace was attempted two ways and neither renders on
+    // waybar 0.15.0 here -- `{windows}` + window-rewrite produces empty output,
+    // and `workspace-taskbar` draws nothing despite the config parsing cleanly
+    // and both windows being present. Left out rather than shipped dead.
+    // What IS working below: correct `sort-by` (was the ignored `sort-by-number`)
+    // and persistent 1-5 so the workspace row stops reflowing.
     "hyprland/workspaces": {
         "format": "{id}",
-        "on-click": "activate",
-        "sort-by-number": true
+        "sort-by": "number",
+        // "persistent-workspaces": { "*": [1, 2, 3, 4, 5] }
     },
 
     // i3 had no mode indicator; the resize submap gets one for free here.
@@ -67,10 +75,16 @@
     },
 
     // polybar pointed at thermal_zone1, which on this machine is "INT3400 Thermal"
-    // -- a thermal policy device, not a processor sensor. hwmon7 is coretemp.
+    // -- a thermal policy device, not a processor sensor.
+    //
+    // NOT "hwmon-path": /sys/class/hwmon/hwmonN is assigned in module probe
+    // order and moves across boots (nine devices compete for it here, incl.
+    // iwlwifi and nvme). hwmon-path-abs points at the coretemp device itself,
+    // so the index is irrelevant. temp1_label == "Package id 0".
     "temperature": {
         "interval": 2,
-        "hwmon-path": "/sys/class/hwmon/hwmon7/temp1_input",
+        "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
+        "input-filename": "temp1_input",
         "critical-threshold": 85,
         "format": "  {temperatureC}°C",
         "format-critical": "  {temperatureC}°C"

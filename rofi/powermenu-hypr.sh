@@ -2,7 +2,7 @@
 # Hyprland/Wayland version of powermenu.sh.
 # Same rofi theme and same option order, but the X11 bits are swapped out:
 #   Lock   : scrot + convert -blur + i3lock  ->  hyprlock (blurs a live screenshot itself)
-#   Logout : i3-msg exit                     ->  hyprctl dispatch exit
+#   Logout : i3-msg exit                     ->  hyprctl dispatch 'hl.dsp.exit()'
 #   Sleep  : dropped `mpc -q pause` (mpc is not installed on this machine)
 # The original powermenu.sh is left alone so the i3 session keeps working.
 
@@ -33,6 +33,6 @@ case $chosen in
         systemctl suspend
         ;;
     "$logout")
-        hyprctl dispatch exit
+        hyprctl dispatch 'hl.dsp.exit()'
         ;;
 esac
