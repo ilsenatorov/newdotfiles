@@ -18,7 +18,10 @@ plugins=(git
 
 source $ZSH/oh-my-zsh.sh
 export EDITOR=vim
-export TERM=xterm-256color
+# Deliberately NOT setting TERM: alacritty and kitty both ship correct terminfo
+# and export it themselves. Forcing xterm-256color costs true-colour and
+# undercurl detection. For hosts missing the entry, use `kitty +kitten ssh` or
+#   infocmp -x | ssh HOST -- tic -x -
 export BROWSER=/usr/bin/brave
 alias ranger='ranger -r ~/dotfiles/ranger'
 alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
