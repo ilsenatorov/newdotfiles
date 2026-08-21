@@ -1,0 +1,339 @@
+# EDIT THIS FILE. starship.toml next to it is BUILT (base + colors.toml) by
+# build.sh, and colors.toml is written by matugen -- neither is hand-editable.
+# After changing this file run:  ~/dotfiles/starship/build.sh
+#
+# This is starship's gruvbox-rainbow preset (https://starship.rs/presets/gruvbox-rainbow)
+# with the gruvbox_dark palette swapped for matugen's, so the prompt follows the
+# wallpaper like everything else on this desktop. Segment order, separators and
+# module formats are the preset's.
+#
+# The four hue_* colours are NOT plain Material roles -- those all derive from one
+# source hue and would collapse the chain into a flat band. They come from
+# matugen custom_colors harmonized toward the wallpaper, so each segment keeps a
+# distinct hue. See matugen/templates/colors-starship.toml, which also carries a
+# commented vivid variant of the same four slots.
+#
+# It replaces powerlevel10k (the old ~/.p10k.zsh rainbow preset). Two p10k
+# behaviours have no starship equivalent and are gone:
+#
+#   1. No instant prompt. POWERLEVEL9K_INSTANT_PROMPT=verbose relied on p10k
+#      being a zsh-native theme; starship is a subprocess per prompt. The real
+#      startup cost in .zshrc is `conda init` + `compinit`, not the prompt.
+#   2. The git segment cannot change background with git state. p10k swapped the
+#      whole segment green/yellow for clean/dirty; starship has no
+#      state-conditional module style, so state is carried by the +!?~* counts
+#      below -- the same characters p10k drew.
+#
+# Like the upstream preset, the six segments always render, so an empty one
+# shows as a bare wedge of colour and the chain reads as one continuous
+# gradient bar. That is the preset's signature look. Starship's `(...)` groups
+# CAN collapse empty modules, but only at the cost of the blended separators --
+# each separator's colour depends on which neighbour survived, which a static
+# format string cannot express. See the note above right_format.
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+palette = 'dots'
+
+add_newline = false
+
+# Bound a slow filesystem or a hung VCS call. No p10k analogue.
+scan_timeout = 30
+command_timeout = 500
+
+format = """\
+[](hue_red)\
+$os\
+$username\
+[](bg:hue_orange fg:hue_red)\
+$directory\
+[](fg:hue_orange bg:hue_green)\
+$git_branch\
+$git_status\
+[](fg:hue_green bg:hue_cyan)\
+$c\
+$cpp\
+$rust\
+$golang\
+$nodejs\
+$bun\
+$php\
+$java\
+$kotlin\
+$haskell\
+$python\
+[](fg:hue_cyan bg:surface_bright)\
+$docker_context\
+$conda\
+$pixi\
+[](fg:surface_bright bg:surface_container)\
+$time\
+[ ](fg:surface_container)\
+$line_break$character"""
+
+# NOT part of the preset -- gruvbox-rainbow has no right prompt. Kept because
+# dropping it would lose the exit code, the command timer and the job count,
+# all of which the old p10k right prompt showed. These are self-contained pills
+# rather than a blended chain: every one of them is conditional, so the `(...)`
+# groups collapse them cleanly when there is nothing to say. Delete this line
+# to get the preset exactly as published.
+right_format = """($status)($cmd_duration)($jobs)"""
+
+# ---------------------------------------------------------------------------
+# left chain
+# ---------------------------------------------------------------------------
+
+[os]
+disabled = false
+style = "bg:hue_red fg:on_hue"
+format = "[ $symbol]($style)"
+
+[os.symbols]
+Manjaro = ""
+Arch = "󰣇"
+Linux = "󰌽"
+Ubuntu = "󰕈"
+Debian = "󰣚"
+Fedora = "󰣛"
+Macos = "󰀵"
+Windows = "󰍲"
+
+# The preset shows the user unconditionally as part of the first segment; p10k
+# hid it unless root or over ssh. Following the preset here -- root and ssh are
+# still called out, by colour rather than by presence.
+[username]
+show_always = true
+style_user = "bg:hue_red fg:on_hue"
+style_root = "bg:error fg:on_error bold"
+format = '[ $user ]($style)'
+disabled = false
+
+[directory]
+style = "fg:on_hue bg:hue_orange"
+format = "[ $path$read_only ]($style)"
+# The preset ships truncation_length = 3, which renders ~/dotfiles/hypr/scripts
+# as …/dotfiles/hypr/scripts -- it eats the ~ and you lose whether you are under
+# home. p10k never truncated (DIR_MAX_LENGTH=80), so 0 keeps the old behaviour.
+# Set this to 3 for the preset exactly as published.
+truncation_length = 0
+truncation_symbol = "…/"
+# p10k bolded the repo root (POWERLEVEL9K_DIR_ANCHOR_BOLD). Not in the preset,
+# but it costs nothing and it is the one thing you actually look for in a path.
+truncate_to_repo = false
+repo_root_style = "bold fg:on_hue bg:hue_orange"
+before_repo_root_style = "fg:on_hue bg:hue_orange"
+# The trailing space must sit INSIDE a styled group or it renders with no
+# background and punches a hole in the bar just before the separator.
+repo_root_format = "[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only ]($read_only_style)"
+# POWERLEVEL9K_DIR_SHOW_WRITABLE=v3
+read_only = " "
+read_only_style = "fg:red bg:hue_orange"
+home_symbol = "~"
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = "󰝚 "
+"Pictures" = " "
+"Developer" = "󰲋 "
+
+[git_branch]
+symbol = ""
+style = "bg:hue_green"
+format = '[[ $symbol $branch ](fg:on_hue bg:hue_green)]($style)'
+
+# The preset prints a bare $all_status$ahead_behind. These counters are the ones
+# p10k's custom gitstatus formatter emitted, so the segment reads the same as
+# before: ~conflicted +staged !unstaged ?untracked *stashed, ⇡ahead ⇣behind.
+[git_status]
+style = "bg:hue_green"
+format = '[[($all_status$ahead_behind )](fg:on_hue bg:hue_green)]($style)'
+conflicted = "~$count"
+staged     = "+$count"
+modified   = "!$count"
+untracked  = "?$count"
+stashed    = "*$count"
+renamed    = "»$count"
+# p10k folded deletions into its "!" unstaged count; starship counts them
+# separately, so they get their own marker rather than being dropped.
+deleted    = "✘$count"
+ahead      = "⇡$count"
+behind     = "⇣$count"
+diverged   = "⇡$ahead_count⇣$behind_count"
+up_to_date = ""
+
+# p10k appended VCS_STATUS_ACTION (rebase, merge, ...) to the same segment.
+# Not in the preset; add $git_state after $git_branch in `format` to use it.
+[git_state]
+style = "bold fg:on_hue bg:hue_green"
+format = '[$state( $progress_current/$progress_total) ]($style)'
+
+# --- language slot --------------------------------------------------------
+# The preset's blue segment. Every one of these is off by default because p10k
+# never showed toolchain versions -- it listed the *env managers (pyenv, nvm,
+# rbenv, ...) and none of them are installed here. They are wired into `format`
+# already, so uncommenting a block is all it takes.
+
+# [c]
+# symbol = " "
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [cpp]
+# symbol = " "
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [rust]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [golang]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [nodejs]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [bun]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [php]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [java]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [kotlin]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [haskell]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# [python]
+# symbol = ""
+# style = "bg:hue_cyan"
+# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+
+# --- docker / env slot ----------------------------------------------------
+
+[docker_context]
+symbol = ""
+style = "bg:surface_bright"
+format = '[[ $symbol( $context) ](fg:on_surface bg:surface_bright)]($style)'
+
+# POWERLEVEL9K_ANACONDA: p10k stripped the "(...)" that CONDA_PROMPT_MODIFIER
+# wraps the env name in, and showed the base env too.
+[conda]
+symbol = " "
+style = "bg:surface_bright"
+format = '[[ $symbol$environment ](fg:on_surface bg:surface_bright)]($style)'
+ignore_base = false
+truncation_length = 1
+
+[pixi]
+style = "bg:surface_bright"
+format = '[[ $symbol( $version)( $environment) ](fg:on_surface bg:surface_bright)]($style)'
+
+# POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'. The preset uses %R (HH:MM); p10k
+# showed seconds, so that is kept.
+[time]
+disabled = false
+time_format = "%H:%M:%S"
+style = "bg:surface_container"
+format = '[[ 󰥔 $time ](fg:on_surface bg:surface_container)]($style)'
+
+[line_break]
+disabled = false
+
+# POWERLEVEL9K_PROMPT_CHAR: ❯ insert, ❮ command, V visual, ▶ overwrite, with
+# foreground 76 (green) on success and 196 (red) on failure. The preset uses its
+# own green/red for the same reason: a success signal must not follow the
+# wallpaper, or it stops meaning anything.
+[character]
+disabled = false
+success_symbol = '[❯](bold fg:green)'
+error_symbol = '[❯](bold fg:red)'
+vimcmd_symbol = '[❮](bold fg:green)'
+vimcmd_visual_symbol = '[V](bold fg:yellow)'
+vimcmd_replace_symbol = '[▶](bold fg:red)'
+vimcmd_replace_one_symbol = '[▶](bold fg:red)'
+
+# ---------------------------------------------------------------------------
+# right prompt -- not part of the preset, see the note on right_format
+# ---------------------------------------------------------------------------
+
+# POWERLEVEL9K_STATUS_OK=false (silent on success), '✘' on failure, with
+# ERROR_PIPE/OK_PIPE reporting the whole pipeline.
+[status]
+disabled = false
+style = "fg:on_error bg:error"
+format = '[](fg:error)[ $symbol$status ]($style)'
+symbol = "✘"
+success_symbol = ""
+not_executable_symbol = "✘"
+not_found_symbol = "✘"
+sigint_symbol = "✘"
+signal_symbol = "✘"
+# POWERLEVEL9K_STATUS_VERBOSE_SIGNAME=false
+map_symbol = false
+recognize_signal_code = true
+pipestatus = true
+pipestatus_format = '[](fg:error)[ $symbol$pipestatus ]($style)'
+
+# POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=3, PRECISION=0.
+[cmd_duration]
+min_time = 3000
+show_milliseconds = false
+style = "fg:on_hue bg:hue_orange"
+format = '[](fg:hue_orange)[ 󱎫 $duration ]($style)'
+# Desktop notification when a long command finishes -- you run matugen and
+# wallpaper jobs from the shell, and mako is already configured.
+# show_notifications = true
+# min_time_to_notify = 45000
+
+# POWERLEVEL9K_BACKGROUND_JOBS with VERBOSE=false: a bare symbol until there is
+# more than one job.
+[jobs]
+style = "fg:on_surface bg:surface_bright"
+format = '[](fg:surface_bright)[ $symbol$number ]($style)'
+symbol = ""
+number_threshold = 2
+symbol_threshold = 1
+
+# ---------------------------------------------------------------------------
+# extras -- not in the preset and not in the old p10k config. Uncomment one at a
+# time; each needs its $module added to `format` or `right_format`.
+# ---------------------------------------------------------------------------
+
+# Lines added/removed in the working tree. Add ($git_metrics) to right_format.
+# [git_metrics]
+# disabled = false
+# added_style = "fg:green bg:surface_bright"
+# deleted_style = "fg:red bg:surface_bright"
+# format = '[](fg:surface_bright)[ +$added]($added_style)[ -$deleted ]($deleted_style)'
+
+# Nesting depth. p10k had dedicated `ranger`/`vim_shell` segments for this, and
+# your `r` alias drops you into a subshell. Add ($shlvl) to right_format.
+# [shlvl]
+# disabled = false
+# threshold = 2
+# symbol = "❯"
+# repeat = false
+# style = "fg:on_surface bg:surface_bright"
+# format = '[](fg:surface_bright)[ $symbol$shlvl ]($style)'
+
+# Warns while a sudo timestamp is still valid. Add ($sudo) to right_format.
+# [sudo]
+# disabled = false
+# style = "fg:on_error bg:error"
+# format = '[](fg:error)[ $symbol ]($style)'
+# symbol = "󰒃 "
+
+# Transient prompt: collapse past prompts to a bare ❯ so scrollback stays clean.
+# POWERLEVEL9K_TRANSIENT_PROMPT was `off`, so this is off here too. Needs
+# `enable_transience` in .zshrc AFTER `eval "$(starship init zsh)"`.

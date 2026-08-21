@@ -42,11 +42,20 @@ if [ -z "$wall" ]; then
         | sort)
     [ "${#files[@]}" -gt 0 ] || die "No wallpapers in $WALLDIR"
 
-    # show basenames, map back to full paths afterwards
-    choice=$(printf '%s\n' "${files[@]##*/}" \
+    # Show each entry as its path RELATIVE to WALLDIR, not as a bare basename:
+    # find recurses, so a basename is ambiguous the moment a wallpaper lives in
+    # a subfolder -- "nature/forest.mp4" would come back as "forest.mp4" and the
+    # path rebuilt below would not exist.
+    #
+    # A relative path is unique per file, so it maps straight back by
+    # concatenation. Deliberately NOT using rofi's `-format i` to return a row
+    # index: this box has rofi 2.0.0, a major version past the usual 1.7.x, and
+    # a prompt that silently does nothing is far worse than one that cannot tell
+    # a video from a still.
+    choice=$(printf '%s\n' "${files[@]#"${WALLDIR}"/}" \
         | rofi -dmenu -i -p "Wallpaper" \
             -theme "${DOTS}/rofi/styles/launcher_scripts.rasi") || exit 0
-    [ -n "$choice" ] || exit 0
+    [ -n "$choice" ] || exit 0          # dismissed with Escape
     wall="${WALLDIR}/${choice}"
 fi
 
@@ -81,6 +90,12 @@ STATEFILE
 "${DOTS}/hypr/scripts/wallpaper-daemon.sh" "$wall" || die "could not start mpvpaper"
 
 # ---- 4. tell everything to re-read its colours ---------------------------
+# starship is the one config that is built rather than imported: its TOML has no
+# include directive, so the generated palette has to be concatenated onto the
+# hand-written base. starship re-reads its config on every prompt, so this
+# recolours already-open shells with no restart -- same as alacritty.
+"${DOTS}/starship/build.sh" || echo "starship rebuild failed (non-fatal)" >&2
+
 hyprctl reload >/dev/null 2>&1 || true
 pkill -SIGUSR2 -x waybar 2>/dev/null || true   # waybar reloads CSS on SIGUSR2
 makoctl reload 2>/dev/null || true
