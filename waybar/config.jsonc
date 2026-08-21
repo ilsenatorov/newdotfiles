@@ -157,14 +157,28 @@
     // Native DBus module -- replaces the old custom/bluetooth + scripts/bluetooth.sh,
     // which polled `rofi-bluetooth --status` every 5s. This is event-driven and adds
     // per-device battery. rofi-bluetooth stays as the click menu.
+    //
+    // Icons are the Nerd Font Material Design set: it has a real crossed-out glyph
+    // (U+F00B2 󰂲) for "off", which the FontAwesome pair used before did not -- every
+    // state drew the same  and only the CSS colour changed.
+    //
+    // The label carries the *displayed* device's alias ({device_alias} = the one
+    // picked by format-device-preference, else the last connected). The module has
+    // no bar-label enumerator -- {device_enumerate} is tooltip-only -- so with 2+
+    // devices connected the bar shows one name and the tooltip lists them all.
     "bluetooth": {
-        "format": "",
-        "format-disabled": "",
-        "format-off": "",
-        "format-connected": "  {num_connections}",
-        "format-connected-battery": "  {device_battery_percentage}%",
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-off": "󰂲",
+        "format-no-controller": "󰂲",
+        "format-on": "󰂯",
+        "format-connected": "󰂱  {device_alias}",
+        "format-connected-battery": "󰂱  {device_alias}",
+        // caps the whole label -- icon + two spaces + ~14 chars of name; long aliases
+        // ("Bose Mini II SE SoundLink") get cut here and stay whole in the tooltip.
+        "max-length": 20,
         "tooltip-format": "{controller_alias}\t{controller_address}",
-        "tooltip-format-connected": "{controller_alias}\n{device_enumerate}",
+        "tooltip-format-connected": "{controller_alias}\n{num_connections} connected\n\n{device_enumerate}",
         "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
         "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_battery_percentage}%",
         "on-click": "~/dotfiles/rofi-bluetooth/rofi-bluetooth &"

@@ -106,7 +106,7 @@ window#waybar.hidden {
 /* ---- left ------------------------------------------------------------- */
 #submap        { color: @yellow; }
 #custom-sep    { color: @sep; }
-#clock         { color: @red; }
+#clock         { color: @accent; }
 
 /* ---- center ----------------------------------------------------------- */
 #cpu           { color: @accent; }
@@ -135,7 +135,6 @@ window#waybar.hidden {
 #bluetooth               { color: @blue; }
 #bluetooth.disabled      { color: @sep; }
 #bluetooth.off           { color: @sep; }
-#bluetooth.no-controller { color: @sep; }
 #bluetooth.on            { color: @blue-gray; }
 #bluetooth.discoverable,
 #bluetooth.discovering   { color: @orange; }

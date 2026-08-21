@@ -1,12 +1,5 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 export ZSH="/home/ilya/.oh-my-zsh"
-# No ZSH_THEME: powerlevel10k is sourced at the bottom of this file and replaces
+# No ZSH_THEME: starship is initialised at the bottom of this file and replaces
 # whatever oh-my-zsh sets, so setting one here only costs a wasted theme load.
 ZSH_THEME=""
 
@@ -51,21 +44,19 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-source ~/powerlevel10k/powerlevel10k.zsh-theme
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/home/ilya/google-cloud-sdk/path.zsh.inc' ]; then . '/home/ilya/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/home/ilya/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/ilya/google-cloud-sdk/completion.zsh.inc'; fi
-
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
 
 # claude-obsidian: single shared knowledge vault across all projects
 export CLAUDE_OBSIDIAN_VAULT="$HOME/Documents/MyKnowledgeVault"
+# The prompt lives in ~/dotfiles/starship (link.sh symlinks it to
+# ~/.config/starship), not at starship's default ~/.config/starship.toml, so it
+# has to be pointed at the built file. Rebuild after editing starship.base.toml:
+#   ~/dotfiles/starship/build.sh
+# Keep this last -- starship's init must come after oh-my-zsh, which sets its own
+# PROMPT. There is no instant-prompt equivalent to the p10k block that used to
+# sit at the top of this file.
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+eval "$(starship init zsh)"
+

@@ -38,7 +38,7 @@ white   = "#CDD6D6"
 size = 13.0
 
 # Iosevka Nerd Font everywhere: waybar, mako, rofi, hyprlock and the Hyprland
-# groupbar all use it. MesloLGS NF stays installed as the p10k glyph fallback.
+# groupbar all use it. MesloLGS NF stays installed as the prompt glyph fallback.
 [font.normal]
 family = "MesloLGS NF"
 style = "Regular"

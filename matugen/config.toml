@@ -6,6 +6,22 @@
 
 [config]
 
+# Seed hues for the starship prompt chain. A Material scheme is generated from a
+# single source colour, so primary/secondary/tertiary all land on nearly the same
+# hue -- fine for an accent, useless for starship's gruvbox-rainbow layout, which
+# needs six visibly different segments. custom_colors with blend = true fixes
+# that: each seed below keeps its own hue but is harmonized toward the wallpaper,
+# so the chain reads as a real rainbow that still belongs to the palette.
+#
+# Only colors-starship.toml consumes these; every other template ignores them.
+[config.custom_colors]
+rainbow_red    = { color = "#ff0000", blend = true }
+rainbow_orange = { color = "#ff8800", blend = true }
+rainbow_green  = { color = "#00cc44", blend = true }
+rainbow_cyan   = { color = "#00cccc", blend = true }
+rainbow_blue   = { color = "#3388ff", blend = true }
+rainbow_purple = { color = "#aa55ff", blend = true }
+
 [templates.waybar]
 input_path  = '~/dotfiles/matugen/templates/colors-waybar.css'
 output_path = '~/dotfiles/waybar/colors.css'
@@ -29,6 +45,13 @@ output_path = '~/dotfiles/mako/colors'
 [templates.alacritty]
 input_path  = '~/dotfiles/matugen/templates/colors-alacritty.toml'
 output_path = '~/dotfiles/alacritty/colors.toml'
+
+# Starship has no include directive, so this generated palette is not imported --
+# starship/build.sh concatenates it onto starship/starship.base.toml. That build
+# step runs from set-wallpaper.sh right after matugen.
+[templates.starship]
+input_path  = '~/dotfiles/matugen/templates/colors-starship.toml'
+output_path = '~/dotfiles/starship/colors.toml'
 
 # GTK3 and GTK4 read their own gtk.css; both import the generated file next to
 # it. Same template, two destinations.
