@@ -64,6 +64,9 @@ hl.on("hyprland.start", function()
 
     app("waybar")
     app("mako")
+    -- Desktop dashboard (quickshell/). -n makes this a no-op if an instance
+    -- is already running, so a config reload never stacks two of them.
+    app("qs -d -n")
     -- Wallpaper: mpvpaper via wallpaper-daemon.sh, not hyprpaper. The wallpaper
     -- is a looping video (Disco-Elysium-4k.mp4) and hyprpaper only does stills;
     -- mpvpaper covers stills too, so it is the only wallpaper daemon now.
@@ -118,6 +121,14 @@ hl.layer_rule({
     match        = { namespace = "rofi" },
     blur         = true,
     ignore_alpha = 0.1,
+})
+
+-- The desktop dashboard sits on the `bottom` layer, above mpvpaper's wallpaper
+-- and below every window. Same 0xD9 surface as the bar, so the same ignore_alpha.
+hl.layer_rule({
+    match        = { namespace = "quickshell-dashboard" },
+    blur         = true,
+    ignore_alpha = 0.2,
 })
 
 
@@ -268,6 +279,7 @@ hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.s
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("networkmanager_dmenu"),                  { description = "Network menu" })
 hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd(dotfiles .. "/rofi-bluetooth/rofi-bluetooth"), { description = "Bluetooth menu" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle desktop dashboard" })
 
 ---- Focus and movement -----------------------------------------------------
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

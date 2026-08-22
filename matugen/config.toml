@@ -53,6 +53,13 @@ output_path = '~/dotfiles/alacritty/colors.toml'
 input_path  = '~/dotfiles/matugen/templates/colors-starship.toml'
 output_path = '~/dotfiles/starship/colors.toml'
 
+# The desktop dashboard (quickshell/) is a QML singleton rather than a stylesheet.
+# Quickshell watches its config directory, so rewriting this file hot-reloads the
+# running shell -- no reload hook is needed in set-wallpaper.sh.
+[templates.quickshell]
+input_path  = '~/dotfiles/matugen/templates/colors-quickshell.qml'
+output_path = '~/dotfiles/quickshell/Colors.qml'
+
 # GTK3 and GTK4 read their own gtk.css; both import the generated file next to
 # it. Same template, two destinations.
 [templates.gtk3]
