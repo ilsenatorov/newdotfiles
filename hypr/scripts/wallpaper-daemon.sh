@@ -44,10 +44,17 @@ command -v mpvpaper >/dev/null || {
 OPTS="no-audio loop-file=inf image-display-duration=inf hwdec=auto panscan=1.0 video-sync=display-resample"
 OPTS="$OPTS input-ipc-server=${XDG_RUNTIME_DIR:-/tmp}/mpvpaper.sock"
 
-# -p (auto-pause) stops decoding whenever the wallpaper is hidden, and
-# -a MAX extends that to any fullscreen or maximised window -- without it the
-# video keeps decoding behind a fullscreen game. That pair is what keeps a
-# looping video off the battery. -f forks so this script can return.
+# -p (auto-pause) stops decoding whenever the wallpaper is hidden, which is what
+# keeps a looping video off the battery. -f forks so this script can return.
+#
+# Deliberately NO -a MAX/-a FULL here. That flag extends auto-pause to *any*
+# maximised or fullscreen toplevel, on any workspace, visible or not -- and
+# mpvpaper only re-evaluates on toplevel state events, so once it pauses it
+# never resumes on its own. One maximised window parked on another workspace
+# (Telegram, here) left the wallpaper frozen at frame 1, and even a restart came
+# up already paused because mpvpaper sees that window at startup. -p alone
+# already handles the real case: a fullscreen window covering the wallpaper
+# stops the frame callbacks, so decoding stops anyway.
 #
 # '*' targets every output, so an external monitor is covered without a second
 # invocation.
@@ -55,7 +62,7 @@ pkill -x mpvpaper 2>/dev/null || true
 pkill -x hyprpaper 2>/dev/null || true   # legacy: no longer started, may linger
 sleep 0.3
 
-setsid uwsm app -- mpvpaper -f -p -a MAX -o "$OPTS" '*' "$wall" >/dev/null 2>&1 </dev/null &
+setsid uwsm app -- mpvpaper -f -p -o "$OPTS" '*' "$wall" >/dev/null 2>&1 </dev/null &
 disown 2>/dev/null || true
 
 # confirm it came up; mpvpaper exits silently on an unreadable file
