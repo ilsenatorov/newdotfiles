@@ -24,6 +24,10 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", cursor_theme())
 
 
+-- "eDP-1" is a generic DRM connector class for a laptop's built-in panel, not
+-- a machine-specific identity -- safe to hardcode across any laptop this repo
+-- runs on. On a desktop with no eDP output (this rule matches nothing there)
+-- the fallback rule below picks up the real monitor generically instead.
 hl.monitor({
     output   = "eDP-1",
     mode     = "preferred",
@@ -31,7 +35,7 @@ hl.monitor({
     scale    = 1,
 })
 
--- Fallback for any other output (external monitors).
+-- Fallback for any other output (desktops, or external monitors on a laptop).
 hl.monitor({
     output   = "",
     mode     = "preferred",
@@ -423,6 +427,10 @@ hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(shot .. "clip"), { descri
 --------------------------------
 
 -- Workspace -> monitor assignment, mirroring i3's `workspace N output`.
+-- "eDP-1" here is the same generic laptop-panel connector class as the
+-- monitor rule above: on this desktop (no eDP-1) the rule just never matches,
+-- which is harmless with a single monitor. It only does real work once a
+-- laptop is docked to a second display.
 for i = 1, 5 do
     hl.workspace_rule({ workspace = tostring(i), monitor = "eDP-1" })
 end

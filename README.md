@@ -27,6 +27,9 @@ it, and the installer refuses to run from anywhere else.
    packaged `/usr/share` copies are not on the right path;
 1. writes `~/.config/environment.d/10-locale.conf` (under UWSM only what the
    systemd user manager exports reaches apps started as scopes);
+1. detects the GPU via `lspci` and writes `~/.config/environment.d/20-va.conf`
+   (`LIBVA_DRIVER_NAME` plus `MPV_HWDEC`/`MPV_HWDEC_INTEROP` for the wallpaper
+   daemon) -- skipped if that file already exists, so a hand edit sticks;
 1. enables `hyprpolkitagent.service` as a user unit;
 1. sets the wallpaper and derives the accent with matugen, if one is found.
 
@@ -43,8 +46,11 @@ ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo).
   files keep the desktop themed.
 * Log out and pick **"Hyprland (uwsm-managed)"** in the greeter. Every autostart
   in `hypr/hyprland.lua` goes through `uwsm app --`, so the session wants UWSM.
-* For hardware video decode add `~/.config/environment.d/20-va.conf` with
-  `LIBVA_DRIVER_NAME=iHD` (Intel), `radeonsi` (AMD) or `nvidia`.
+* Hardware video decode is auto-detected into `~/.config/environment.d/20-va.conf`
+  (`LIBVA_DRIVER_NAME` + `MPV_HWDEC`/`MPV_HWDEC_INTEROP`); it is per-machine and
+  not in git, so edit that file directly if the detection guesses wrong (e.g. an
+  NVIDIA box with `nvidia-vaapi-driver` installed can go back to
+  `LIBVA_DRIVER_NAME=nvidia` and `MPV_HWDEC=auto`).
 
 Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 `hyprland.conf`, and Lua configs are a recent feature. Tested on 0.56.2.
