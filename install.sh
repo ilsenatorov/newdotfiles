@@ -164,8 +164,7 @@ fi
 
 # -------------------------------------------------------- session env ------
 # Under UWSM only what the systemd user manager exports reaches apps started as
-# scopes, so locale lives here rather than in hyprland.lua. The VA-API driver is
-# hardware-specific and is left to the user.
+# scopes, so locale lives here rather than in hyprland.lua.
 say "session environment"
 mkdir -p "${HOME}/.config/environment.d"
 if [ ! -f "${HOME}/.config/environment.d/10-locale.conf" ]; then
@@ -179,8 +178,51 @@ EOF
 else
 	echo "OK      ~/.config/environment.d/10-locale.conf"
 fi
-[ -f "${HOME}/.config/environment.d/20-va.conf" ] || \
-	echo "NOTE    for hardware video decode add ~/.config/environment.d/20-va.conf with LIBVA_DRIVER_NAME=<iHD|radeonsi|nvidia>"
+
+# GPU video decode is genuinely per-machine (this repo runs on both an
+# NVIDIA-only desktop and an Intel/NVIDIA Optimus laptop), so it cannot live in
+# a git-tracked config -- ~/.config/hypr is a symlink into this repo (see
+# link.sh), so anything written there would sync verbatim to every machine.
+# 20-va.conf lives in ~/.config/environment.d instead, is never overwritten
+# once present (hand-edit it freely), and is read both by the systemd user
+# environment (LIBVA_DRIVER_NAME, for VAAPI apps in general) and directly by
+# hypr/scripts/wallpaper-daemon.sh (MPV_HWDEC / MPV_HWDEC_INTEROP).
+if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
+	gpus="$(lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' || true)"
+
+	if echo "$gpus" | grep -qi intel; then
+		# Intel iGPU present: on a laptop (Optimus or not) it is what actually
+		# drives the display, so VAAPI via iHD is correct even with an NVIDIA
+		# dGPU alongside it for offload -- and forcing LIBVA_DRIVER_NAME=iHD
+		# keeps VAAPI off that dGPU entirely.
+		driver=iHD; hwdec=auto; interop=auto
+	elif echo "$gpus" | grep -qi nvidia; then
+		# NVIDIA and no Intel (this box): NVIDIA's bundled nvidia_drv_video.so
+		# VAAPI shim SIGFPEs on vaInitialize, so route mpv straight through
+		# NVDEC/CUDA and skip VAAPI for the wallpaper entirely. LIBVA_DRIVER_NAME
+		# is deliberately left unset -- there's no known-good VAAPI driver here
+		# to steer other apps to (nvidia-vaapi-driver would need to be
+		# installed separately; not attempted by this script).
+		driver=""; hwdec=nvdec; interop=cuda
+	elif echo "$gpus" | grep -Eqi 'amd|ati|radeon'; then
+		driver=radeonsi; hwdec=auto; interop=auto
+	else
+		driver=""; hwdec=auto; interop=auto
+	fi
+
+	{
+		echo "# GPU video decode, detected at install time from:"
+		echo "#   ${gpus:-<lspci found no VGA/3D controller>}"
+		echo "# Not re-generated once this file exists -- edit freely, or delete"
+		echo "# and re-run install.sh to redetect."
+		[ -n "$driver" ] && echo "LIBVA_DRIVER_NAME=${driver}"
+		echo "MPV_HWDEC=${hwdec}"
+		echo "MPV_HWDEC_INTEROP=${interop}"
+	} > "${HOME}/.config/environment.d/20-va.conf"
+	echo "WROTE   ~/.config/environment.d/20-va.conf (hwdec=${hwdec} interop=${interop}${driver:+ driver=${driver}})"
+else
+	echo "OK      ~/.config/environment.d/20-va.conf"
+fi
 
 # ---------------------------------------------------------- user units ----
 # hyprpolkitagent ships its own user unit (WantedBy=graphical-session.target);

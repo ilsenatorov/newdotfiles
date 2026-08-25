@@ -103,8 +103,12 @@
         "format": "  {free}"
     },
 
+    // No "interface" -- waybar auto-detects the default-route interface, so
+    // this tracks whichever connection is actually active (wifi on a laptop,
+    // ethernet here) instead of a hardcoded, machine-specific device name
+    // (this box is enp6s0/wlp5s0, a laptop is more like eno2/wlo1 -- neither
+    // name is portable between them).
     "network#upspeed": {
-        "interface": "wlo1",
         "interval": 1,
         "format": " {bandwidthUpBytes}",
         "format-disconnected": " 0B",
@@ -112,7 +116,6 @@
     },
 
     "network#downspeed": {
-        "interface": "wlo1",
         "interval": 1,
         "format": " {bandwidthDownBytes}",
         "format-disconnected": " 0B",
@@ -133,8 +136,12 @@
     },
 
     // ---- right -----------------------------------------------------------
+    // Wildcards (waybar's "interface" accepts them), not exact device names:
+    // predictable network interface names differ per machine (this box is
+    // enp6s0/wlp5s0, a laptop is more like eno2/wlo1), so an exact name here
+    // broke silently on any box but the one it was written on.
     "network#wired": {
-        "interface": "eno2",
+        "interface": "en*",
         "interval": 2,
         "format-ethernet": " ",
         "format-disconnected": "",
@@ -145,7 +152,7 @@
     },
 
     "network#wireless": {
-        "interface": "wlo1",
+        "interface": "wl*",
         "interval": 2,
         "format-wifi": "  {essid}",
         "format-disconnected": "󰖪 ",
