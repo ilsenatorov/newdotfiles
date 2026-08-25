@@ -2,16 +2,59 @@
 
 ## Installation
 
-1. clone the repository with `git clone https://github.com/ilsenatorov/newdotfiles ~/dotfiles`
-1. cd into repo with `cd ~/dotfiles`
-1. link all the necessary folders with `./link.sh`
-1. edit the .zshrc
-1. enjoy!
+Arch or Manjaro, with a Wayland-capable GPU. One command does everything:
+
+```sh
+git clone https://github.com/ilsenatorov/newdotfiles ~/dotfiles
+cd ~/dotfiles
+./install.sh          # add --sddm to also theme the login screen
+```
+
+The repo **must** live at `~/dotfiles` -- link.sh, the scripts and the configs
+themselves (rofi `-theme` paths, `ranger -r`, matugen output paths) all hardcode
+it, and the installer refuses to run from anywhere else.
+
+`install.sh` is idempotent; re-run it after every `git pull`. It:
+
+1. installs the repo packages (see below) and, through whichever AUR helper is
+   present (`yay`/`paru`/`trizen`/`pacaur`), **mpvpaper** -- the wallpaper daemon,
+   the one hard AUR dependency -- plus optional `adw-gtk3`;
+1. runs `link.sh`, which symlinks every top-level directory into `~/.config`;
+   anything real in the way is moved to `<name>.bak-<timestamp>`, never deleted;
+1. symlinks `~/.zshrc` (link.sh only walks directories, so it skips this one);
+1. installs oh-my-zsh and clones `zsh-autosuggestions` / `zsh-syntax-highlighting`
+   into `$ZSH_CUSTOM/plugins` -- `.zshrc` loads them as oh-my-zsh plugins, so the
+   packaged `/usr/share` copies are not on the right path;
+1. writes `~/.config/environment.d/10-locale.conf` (under UWSM only what the
+   systemd user manager exports reaches apps started as scopes);
+1. enables `hyprpolkitagent.service` as a user unit;
+1. sets the wallpaper and derives the accent with matugen, if one is found.
+
+Flags: `--no-packages` (links and theme only), `--no-aur`, `--minimal` (skips
+ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo).
+
+### After it finishes
+
+* **Edit `.zshrc`** -- it still carries a hardcoded `$ZSH=/home/ilya/.oh-my-zsh`
+  and a conda block for `/home/ilya/miniconda3`. The installer warns about both.
+* **Wallpaper**: not in git (too large). Drop an image or video into
+  `~/Pictures/Wallpapers` and press `SUPER+W`, or run
+  `hypr/scripts/set-wallpaper.sh <file>`. Until then the committed `colors.*`
+  files keep the desktop themed.
+* Log out and pick **"Hyprland (uwsm-managed)"** in the greeter. Every autostart
+  in `hypr/hyprland.lua` goes through `uwsm app --`, so the session wants UWSM.
+* For hardware video decode add `~/.config/environment.d/20-va.conf` with
+  `LIBVA_DRIVER_NAME=iHD` (Intel), `radeonsi` (AMD) or `nvidia`.
+
+Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
+`hyprland.conf`, and Lua configs are a recent feature. Tested on 0.56.2.
 
 ## Used packages
 
+The authoritative list is the `PKGS_*` / `AUR_*` arrays in `install.sh`; this is
+the why behind them.
+
 * __rofi__ for launching software
-* __rofi pass__ for password managing
 * __networkmanager_dmenu__ for connection managing
 * __rofi-bluetooth__ for bluetooth managing
 * __waybar__ as the status bar
@@ -19,6 +62,7 @@
 * __alacritty__ as the terminal emulator
 * __ranger__ as the file manager in terminal
 * __mako__ for notifications, __rofi__ menus for power/bluetooth/network
+* __quickshell__ for the desktop dashboard (`quickshell/`, SUPER+G)
 * __matugen__ for wallpaper-derived accent colours
 * __sddm__ as the display manager, with the pixel_sakura astronaut theme (see `sddm/`)
 * __zsh__
