@@ -309,13 +309,22 @@ hl.bind(mainMod .. " + Q", hl.dsp.group.next(),          { description = "Next i
 -- lock/lock_active -- none of which adds a window). group.move_window()
 -- reorders a window *within* its group and warns if it is not in one.
 --
+-- `into_group = dir` maps to the moveintogroup dispatcher, which is one-way:
+-- it can only pull a window in, so there was no way back out on the same key.
+-- `direction = dir, group_aware = true` maps to movewindoworgroup instead,
+-- which is the symmetric one: group in that direction -> move in; already in
+-- a group -> move out; otherwise -> plain directional move.
+--
 -- Note group:auto_group and group:merge_groups_on_drag are both true, so new
 -- windows join the focused group automatically and SUPER+drag onto a groupbar
 -- merges. These binds are for moving a window that already exists elsewhere.
-hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ into_group = "l" }), { description = "Move into group (left)" })
-hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ into_group = "r" }), { description = "Move into group (right)" })
-hl.bind(mainMod .. " + CTRL + up",    hl.dsp.window.move({ into_group = "u" }), { description = "Move into group (up)" })
-hl.bind(mainMod .. " + CTRL + down",  hl.dsp.window.move({ into_group = "d" }), { description = "Move into group (down)" })
+hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ direction = "left",  group_aware = true }), { description = "Move in/out of group (left)" })
+hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ direction = "right", group_aware = true }), { description = "Move in/out of group (right)" })
+hl.bind(mainMod .. " + CTRL + up",    hl.dsp.window.move({ direction = "up",    group_aware = true }), { description = "Move in/out of group (up)" })
+hl.bind(mainMod .. " + CTRL + down",  hl.dsp.window.move({ direction = "down",  group_aware = true }), { description = "Move in/out of group (down)" })
+
+-- Unconditional escape hatch, mirroring SUPER+S / SUPER+A / SUPER+Q: pops the
+-- active window out of its group regardless of what is next to it.
 hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), { description = "Move out of group" })
 
 ---- Workspaces -------------------------------------------------------------
@@ -468,4 +477,29 @@ hl.window_rule({
         pin        = false,
     },
     no_focus = true,
+})
+
+-- ripdrag is the drag source ranger cannot be (<C-g> in ranger/rc.conf): a
+-- throwaway GTK4 window that exists for the few seconds between picking a file
+-- and dropping it onto the browser. Tiling it would reflow the whole layout
+-- mid-drag, so it floats; it is pinned because dragging across a workspace
+-- switch would otherwise leave it behind.
+--
+-- Class is the GTK app-id `it.catboy.ripdrag`, NOT `ripdrag` -- confirmed with
+-- `hyprctl clients`; a `^ripdrag$` match silently never fires.
+--
+-- No `size` or `move` here, deliberately, both tested and rejected:
+--   * `size` loses to GTK -- ripdrag's window is non-resizable (no --resizable),
+--     so it renders at its own size regardless. Size it with ripdrag's own
+--     -W/-H in ranger/rc.conf instead, which is where it actually takes.
+--   * `move = "cursor <dx> <dy>"` is not understood by the Lua rule parser --
+--     the window silently falls back to centred. Absolute `move = "x y"` does
+--     work, but lands ~50/80px off the requested spot and would need per-monitor
+--     numbers. Centred is predictable, and the pad is small enough (240x180)
+--     to grab and drag off the browser without covering much of it.
+hl.window_rule({
+    name  = "ripdrag-drag-pad",
+    match = { class = "(?i)^it\\.catboy\\.ripdrag$" },
+    float = true,
+    pin   = true,
 })
