@@ -60,3 +60,8 @@ export CLAUDE_OBSIDIAN_VAULT="$HOME/Documents/MyKnowledgeVault"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
 
+
+# VS Code: native Wayland backend segfaults on this NVIDIA setup; force XWayland
+alias code="code --ozone-platform=x11"
+
+. "$HOME/.local/share/../bin/env"

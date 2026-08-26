@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Point the installed SDDM theme at the current desktop wallpaper and accent, so
-# boot -> login -> desktop is one continuous look instead of three palettes.
+# Point the installed SDDM theme at a static frame of the current desktop
+# wallpaper and accent, so boot -> login -> desktop is one continuous look
+# instead of three palettes. Always static -- see the note below on why.
 #
 #   sudo ./sync-wallpaper.sh              # use whatever hypr/wallpaper.conf says
 #   sudo ./sync-wallpaper.sh <image>      # use that image
@@ -29,17 +30,37 @@ wall="${1:-$(grep -oP '^\s*WALLPAPER=\K.*' "$DOTS/hypr/wallpaper.conf" | head -1
 
 # The greeter runs as the unprivileged "sddm" user and cannot traverse a 0700
 # /home/<user>, so the image has to be copied inside the theme directory.
-# The astronaut theme plays video backgrounds itself (QtMultimedia), so a video
-# wallpaper carries over as-is -- png/jpg/webp/gif/mp4/mkv/webm/mov are all fine.
-ext="${wall##*.}"
-# The 4K clip is ~90MB; only copy when it actually differs, so a repeated
-# wallpaper set does not rewrite /usr every time.
-if ! cmp -s "$wall" "$DST/Backgrounds/current.$ext"; then
-    install -m 644 "$wall" "$DST/Backgrounds/current.$ext"
+#
+# The astronaut theme CAN play video/gif backgrounds natively (QtMultimedia /
+# AnimatedImage), but that decode path segfaults sddm-greeter-qt6 inside
+# libX11 on this machine's nvidia driver, especially right at boot while the
+# driver is still settling -- it dropped the machine to a black screen / tty
+# with no greeter at all. So SDDM always gets a static frame, regardless of
+# what the desktop wallpaper is doing.
+case "${wall,,}" in
+    *.mp4|*.mkv|*.webm|*.mov|*.avi|*.m4v|*.gif)
+        command -v ffmpeg >/dev/null || { echo "ffmpeg needed to extract a frame from $wall" >&2; exit 1; }
+        tmp="$(mktemp --suffix=.png)"
+        trap 'rm -f "$tmp"' EXIT
+        ffmpeg -y -loglevel error -ss 3 -i "$wall" -frames:v 1 "$tmp" </dev/null >/dev/null 2>&1 \
+            || ffmpeg -y -loglevel error -i "$wall" -frames:v 1 "$tmp" </dev/null >/dev/null 2>&1 \
+            || { echo "ffmpeg could not read a frame from $(basename "$wall")" >&2; exit 1; }
+        src="$tmp"
+        ;;
+    *)
+        src="$wall"
+        ;;
+esac
+ext="${src##*.}"
+# Only copy when it actually differs, so a repeated wallpaper set does not
+# rewrite /usr every time.
+if ! cmp -s "$src" "$DST/Backgrounds/current.$ext"; then
+    install -m 644 "$src" "$DST/Backgrounds/current.$ext"
 fi
-# Drop everything else: stale copies with another extension, and the
-# Disco-Elysium-4k.mp4 that older versions of install.sh copied in by hand.
-# pixel_sakura.gif stays -- it is the theme's shipped fallback.
+# Drop everything else: stale copies with another extension, and any leftover
+# video/gif from older versions of this script that copied those through as-is.
+# pixel_sakura.gif stays -- it is the theme's shipped fallback, but is never
+# referenced once a static frame has been installed.
 find "$DST/Backgrounds" -maxdepth 1 -type f \
     ! -name "current.$ext" ! -name 'pixel_sakura.gif' ! -name '.gitignore' -delete
 

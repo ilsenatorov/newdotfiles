@@ -363,10 +363,10 @@ hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/ex
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
 hl.define_submap("resize", function()
-    hl.bind("left",  hl.dsp.window.resize({ x = -10, y = 0 }), { repeating = true })
-    hl.bind("right", hl.dsp.window.resize({ x = 10, y = 0 }),  { repeating = true })
-    hl.bind("up",    hl.dsp.window.resize({ x = 0, y = -10 }), { repeating = true })
-    hl.bind("down",  hl.dsp.window.resize({ x = 0, y = 10 }),  { repeating = true })
+    hl.bind("left",  hl.dsp.window.resize({ x = -10, y = 0, relative = true }), { repeating = true })
+    hl.bind("right", hl.dsp.window.resize({ x = 10, y = 0, relative = true }),  { repeating = true })
+    hl.bind("up",    hl.dsp.window.resize({ x = 0, y = -10, relative = true }), { repeating = true })
+    hl.bind("down",  hl.dsp.window.resize({ x = 0, y = 10, relative = true }),  { repeating = true })
 
     hl.bind("Return", hl.dsp.submap("reset"))
     hl.bind("Escape", hl.dsp.submap("reset"))

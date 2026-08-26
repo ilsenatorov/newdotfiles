@@ -32,6 +32,17 @@ Pane {
 
     focus: true
 
+    // Only true for an actual video file. Kept as an eagerly-evaluated property
+    // (not decided inside Component.onCompleted) so the Loader below never builds
+    // a MediaPlayer for an image background: on this machine, merely constructing
+    // a QMediaPlayer makes Qt's ffmpeg backend probe VA-API hw accel, which
+    // segfaults inside the nvidia VA-API driver under the greeter's minimal X
+    // session -- regardless of whether a video is ever played.
+    readonly property bool backgroundIsVideo: {
+        var ext = (config.Background || "").substring(config.Background.lastIndexOf(".") + 1).toLowerCase()
+        return ["avi", "mp4", "mov", "mkv", "m4v", "webm"].includes(ext)
+    }
+
     property bool leftleft: config.HaveFormBackground == "true" &&
                             config.PartialBlur == "false" &&
                             config.FormPosition == "left" &&
@@ -192,24 +203,38 @@ Pane {
         AnimatedImage {
             id: backgroundImage
 
-            MediaPlayer {
-                id: player
-
-                videoOutput: videoOutput
-                autoPlay: true
-                playbackRate: config.BackgroundSpeed == "" ? 1.0 : config.BackgroundSpeed
-                loops: -1
-                onPlayingChanged: {
-                    console.log("Video started.")
-                    backgroundPlaceholderImage.visible = false;
-                }
-            }
-
-            VideoOutput {
-                id: videoOutput
-
-                fillMode: config.CropBackground == "true" ? VideoOutput.PreserveAspectCrop : VideoOutput.PreserveAspectFit
+            // Only builds a MediaPlayer/VideoOutput when root.backgroundIsVideo is
+            // true -- see the property definition above for why that matters.
+            Loader {
                 anchors.fill: parent
+                active: root.backgroundIsVideo
+
+                sourceComponent: Component {
+                    Item {
+                        anchors.fill: parent
+
+                        MediaPlayer {
+                            id: player
+
+                            videoOutput: videoOutput
+                            source: Qt.resolvedUrl(config.Background)
+                            autoPlay: true
+                            playbackRate: config.BackgroundSpeed == "" ? 1.0 : config.BackgroundSpeed
+                            loops: -1
+                            onPlayingChanged: {
+                                console.log("Video started.")
+                                backgroundPlaceholderImage.visible = false;
+                            }
+                        }
+
+                        VideoOutput {
+                            id: videoOutput
+
+                            fillMode: config.CropBackground == "true" ? VideoOutput.PreserveAspectCrop : VideoOutput.PreserveAspectFit
+                            anchors.fill: parent
+                        }
+                    }
+                }
             }
 
             height: parent.height
@@ -235,15 +260,10 @@ Pane {
             clip: true
             mipmap: true
 
-            Component.onCompleted:{
-                var fileType = config.Background.substring(config.Background.lastIndexOf(".") + 1)
-                const videoFileTypes = ["avi", "mp4", "mov", "mkv", "m4v", "webm"];
-                if (videoFileTypes.includes(fileType)) {
+            Component.onCompleted: {
+                if (root.backgroundIsVideo) {
                     backgroundPlaceholderImage.visible = true;
-                    player.source = Qt.resolvedUrl(config.Background)
-                    player.play();
-                }
-                else{
+                } else {
                     backgroundImage.source = config.background || config.Background
                 }
             }
