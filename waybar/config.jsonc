@@ -53,19 +53,27 @@
         // table, not on waybar-hyprland-workspaces(5) -- so they apply here
         // even though this module's own man page never mentions them.
         //
+        // NOT the classic `hyprctl dispatch workspace e+1`: this Hyprland runs
+        // the Lua config, where hyprctl wraps the argument as `return
+        // hl.dispatch(<arg>)` and evaluates it as Lua -- the bare string form is
+        // a syntax error ("')' expected near 'e'"). The argument has to be a Lua
+        // expression, so this is the same `hl.dsp.focus{ workspace = ... }` the
+        // SUPER+Tab and SUPER+wheel binds use (hypr/hyprland.lua:347-351).
+        // Lua single quotes keep the JSON free of escaped double quotes.
+        //
         // `e+1`/`e-1` = next/previous *existing* workspace: empty ones are
         // skipped and it wraps at both ends. Plain `+1`/`-1` would walk
         // numerically and dead-end at the last workspace instead.
-        "on-scroll-up": "hyprctl dispatch workspace e+1",
-        "on-scroll-down": "hyprctl dispatch workspace e-1",
-        // Touchpad scrolling arrives as GDK_SCROLL_SMOOTH -- a stream of small
-        // deltas -- so with no threshold one two-finger flick fires a dozen
-        // dispatches and the workspace flies past. waybar accumulates the delta
-        // and only acts once it crosses this value. A discrete mouse wheel takes
-        // the other code path (direction events, not deltas) and stays at
-        // 1 notch = 1 workspace regardless of this. Raise it if the touchpad
-        // still overshoots.
-        "smooth-scrolling-threshold": 4,
+        "on-scroll-up": "hyprctl dispatch \"hl.dsp.focus({workspace='e+1'})\"",
+        "on-scroll-down": "hyprctl dispatch \"hl.dsp.focus({workspace='e-1'})\"",
+        // Deliberately no "smooth-scrolling-threshold". Under Wayland a mouse
+        // wheel also arrives as GDK_SCROLL_SMOOTH (deltas, not direction
+        // events), so a threshold throttles the wheel too -- at 4 it took
+        // several notches per switch, which reads as "scrolling is broken".
+        // Unset = every scroll event acts, i.e. 1 notch = 1 workspace.
+        // On a touchpad a two-finger flick will then fire several switches;
+        // uncomment and tune upward there if that becomes annoying.
+        // "smooth-scrolling-threshold": 1.0,
         // "persistent-workspaces": { "*": [1, 2, 3, 4, 5] }
     },
 
