@@ -10,7 +10,7 @@
     "margin-right": 8,
 
     "modules-left": [
-        "hyprland/workspaces",
+        "ext/workspaces",
         "hyprland/submap",
         "custom/sep",
         "clock"
@@ -39,42 +39,49 @@
     ],
 
     // ---- left ------------------------------------------------------------
-    // NOTE: app-icon-per-workspace was attempted two ways and neither renders on
-    // waybar 0.15.0 here -- `{windows}` + window-rewrite produces empty output,
-    // and `workspace-taskbar` draws nothing despite the config parsing cleanly
-    // and both windows being present. Left out rather than shipped dead.
-    // What IS working below: correct `sort-by` (was the ignored `sort-by-number`)
-    // and persistent 1-5 so the workspace row stops reflowing.
-    "hyprland/workspaces": {
-        "format": "{id}",
-        "sort-by": "number",
-        // Scroll over the pills to change workspace. on-scroll-up/down are
-        // generic AModule options -- documented in waybar(5)'s common-options
-        // table, not on waybar-hyprland-workspaces(5) -- so they apply here
-        // even though this module's own man page never mentions them.
-        //
-        // NOT the classic `hyprctl dispatch workspace e+1`: this Hyprland runs
-        // the Lua config, where hyprctl wraps the argument as `return
-        // hl.dispatch(<arg>)` and evaluates it as Lua -- the bare string form is
-        // a syntax error ("')' expected near 'e'"). The argument has to be a Lua
-        // expression, so this is the same `hl.dsp.focus{ workspace = ... }` the
-        // SUPER+Tab and SUPER+wheel binds use (hypr/hyprland.lua:347-351).
-        // Lua single quotes keep the JSON free of escaped double quotes.
-        //
-        // `e+1`/`e-1` = next/previous *existing* workspace: empty ones are
-        // skipped and it wraps at both ends. Plain `+1`/`-1` would walk
-        // numerically and dead-end at the last workspace instead.
+    // NOT "hyprland/workspaces": that module's click handler is hardcoded in
+    // waybar's C++ to send `dispatch workspace <id>` over Hyprland's IPC socket,
+    // and this Hyprland runs the *Lua* config, where the socket wraps whatever it
+    // receives as `return hl.dispatch(<arg>)` and evaluates it as Lua. The bare
+    // string is a syntax error -- verified by sending it to .socket.sock by hand:
+    //
+    //   error: [string "return hl.dispatch(workspace 2)"]:1: ')' expected near '2'
+    //
+    // so clicking a pill silently did nothing and no config key could fix it.
+    //
+    // "ext/workspaces" speaks ext-workspace-v1 instead (Hyprland 0.56 advertises
+    // ext_workspace_manager_v1), so "on-click": "activate" is a protocol request,
+    // not a dispatch string -- it never touches the Lua parser. Same #workspaces /
+    // button.active CSS selectors, so style.css needs no change.
+    //
+    // Trade-offs vs. the hyprland module: no persistent-workspaces (occupied-only
+    // here, which is what we want anyway) and no `visible` class, so the
+    // "#workspaces button.visible" rule in style.css is now inert -- ext exposes
+    // `hidden` instead. {name} rather than {id}: ext's {id} is the protocol's
+    // opaque handle id, {name} is Hyprland's "1".."10".
+    //
+    // Also still unsolved from the hyprland module: app-icon-per-workspace. It was
+    // attempted two ways there and neither rendered on waybar 0.15.0 -- `{windows}`
+    // + window-rewrite produced empty output, and `workspace-taskbar` drew nothing.
+    "ext/workspaces": {
+        "format": "{name}",
+        "sort-by-name": true,
+        // The whole point of the module swap -- protocol activate, not IPC.
+        "on-click": "activate",
+        // Scrolling still goes through hyprctl, because "next *occupied*
+        // workspace, wrapping" is a Hyprland concept that ext-workspace-v1 has no
+        // request for. This is the Lua form (`hl.dsp.focus{ workspace = ... }`,
+        // the same one hypr/hyprland.lua:347-351 binds to SUPER+Tab and
+        // SUPER+wheel); the classic `hyprctl dispatch workspace e+1` dies with the
+        // Lua syntax error above. Lua single quotes keep the JSON escape-free.
         "on-scroll-up": "hyprctl dispatch \"hl.dsp.focus({workspace='e+1'})\"",
         "on-scroll-down": "hyprctl dispatch \"hl.dsp.focus({workspace='e-1'})\"",
-        // Deliberately no "smooth-scrolling-threshold". Under Wayland a mouse
-        // wheel also arrives as GDK_SCROLL_SMOOTH (deltas, not direction
-        // events), so a threshold throttles the wheel too -- at 4 it took
-        // several notches per switch, which reads as "scrolling is broken".
-        // Unset = every scroll event acts, i.e. 1 notch = 1 workspace.
-        // On a touchpad a two-finger flick will then fire several switches;
-        // uncomment and tune upward there if that becomes annoying.
+        // Deliberately no "smooth-scrolling-threshold": under Wayland a mouse wheel
+        // also arrives as GDK_SCROLL_SMOOTH, so a threshold throttles the wheel too
+        // -- at 4 it cost several notches per switch. Unset = 1 notch = 1 workspace.
+        // Uncomment and tune upward on a touchpad, where one flick will otherwise
+        // fire several switches.
         // "smooth-scrolling-threshold": 1.0,
-        // "persistent-workspaces": { "*": [1, 2, 3, 4, 5] }
     },
 
     // i3 had no mode indicator; the resize submap gets one for free here.
