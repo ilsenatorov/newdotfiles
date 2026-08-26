@@ -48,6 +48,24 @@
     "hyprland/workspaces": {
         "format": "{id}",
         "sort-by": "number",
+        // Scroll over the pills to change workspace. on-scroll-up/down are
+        // generic AModule options -- documented in waybar(5)'s common-options
+        // table, not on waybar-hyprland-workspaces(5) -- so they apply here
+        // even though this module's own man page never mentions them.
+        //
+        // `e+1`/`e-1` = next/previous *existing* workspace: empty ones are
+        // skipped and it wraps at both ends. Plain `+1`/`-1` would walk
+        // numerically and dead-end at the last workspace instead.
+        "on-scroll-up": "hyprctl dispatch workspace e+1",
+        "on-scroll-down": "hyprctl dispatch workspace e-1",
+        // Touchpad scrolling arrives as GDK_SCROLL_SMOOTH -- a stream of small
+        // deltas -- so with no threshold one two-finger flick fires a dozen
+        // dispatches and the workspace flies past. waybar accumulates the delta
+        // and only acts once it crosses this value. A discrete mouse wheel takes
+        // the other code path (direction events, not deltas) and stays at
+        // 1 notch = 1 workspace regardless of this. Raise it if the touchpad
+        // still overshoots.
+        "smooth-scrolling-threshold": 4,
         // "persistent-workspaces": { "*": [1, 2, 3, 4, 5] }
     },
 
