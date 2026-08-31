@@ -283,6 +283,7 @@ hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.s
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("networkmanager_dmenu"),                  { description = "Network menu" })
 hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd(dotfiles .. "/rofi-bluetooth/rofi-bluetooth"), { description = "Bluetooth menu" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), { description = "Monitor placement" })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle desktop dashboard" })
 
 ---- Focus and movement -----------------------------------------------------
