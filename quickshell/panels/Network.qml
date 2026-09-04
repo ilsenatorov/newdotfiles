@@ -5,13 +5,20 @@ import "../services"
 
 // Replaces the SUPER+N networkmanager_dmenu rofi menu. Live NetworkManager
 // state via Quickshell.Networking -- no omarchy-network-status polling.
+// Fully keyboard-drivable: Up/Down move the selection, Enter/Return acts on
+// it (same as a click), Left/Right toggle the Wi-Fi radio. shell.qml grabs
+// keyboard focus onto this root the moment the panel is toggled open.
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
     spacing: 8
+    focus: true
+
+    signal shareRequested
 
     property var wifiDevice: Net.wifiDevice ?? findAnyWifiDevice()
     property var pendingPskNetwork: null
+    property int currentIndex: -1
 
     function findAnyWifiDevice(): var {
         const devices = Networking.devices ? Networking.devices.values : [];
@@ -19,17 +26,77 @@ Column {
         return null;
     }
 
+    function networkCount(): int {
+        return root.wifiDevice && root.wifiDevice.networks ? root.wifiDevice.networks.values.length : 0;
+    }
+
+    function activateNetwork(net: var): void {
+        if (net.connected) {
+            net.disconnect();
+        } else if (net.known) {
+            net.connect();
+        } else {
+            root.pendingPskNetwork = net;
+        }
+    }
+
+    Keys.onDownPressed: {
+        if (root.pendingPskNetwork !== null) return;
+        const count = networkCount();
+        if (count > 0) root.currentIndex = (root.currentIndex + 1) % count;
+    }
+    Keys.onUpPressed: {
+        if (root.pendingPskNetwork !== null) return;
+        const count = networkCount();
+        if (count > 0) root.currentIndex = (root.currentIndex - 1 + count) % count;
+    }
+    Keys.onLeftPressed: Networking.wifiEnabled = false
+    Keys.onRightPressed: Networking.wifiEnabled = true
+    Keys.onReturnPressed: activateCurrent()
+    Keys.onEnterPressed: activateCurrent()
+    Keys.onEscapePressed: event => {
+        if (root.pendingPskNetwork !== null) {
+            root.pendingPskNetwork = null;
+            event.accepted = true;
+        }
+    }
+    Keys.onPressed: event => {
+        if ((event.key === Qt.Key_S) && root.pendingPskNetwork === null && Net.wifiConnected) {
+            root.shareRequested();
+            event.accepted = true;
+        }
+    }
+
+    function activateCurrent(): void {
+        if (root.pendingPskNetwork !== null || root.currentIndex < 0) return;
+        const nets = root.wifiDevice && root.wifiDevice.networks ? root.wifiDevice.networks.values : [];
+        if (root.currentIndex < nets.length) activateNetwork(nets[root.currentIndex]);
+    }
+
     Row {
         width: parent.width
 
         Text {
-            width: parent.width - toggle.width
+            width: parent.width - toggle.width - (shareIcon.visible ? shareIcon.width + 8 : 0)
             text: "Wi-Fi"
             font.family: Theme.font
             font.pixelSize: Theme.fsValue
             color: Theme.fg
             verticalAlignment: Text.AlignVCenter
             height: toggle.height
+        }
+
+        Text {
+            id: shareIcon
+            visible: Net.wifiConnected
+            text: "󰐲"
+            font.family: Theme.font
+            font.pixelSize: Theme.fsValue
+            color: Colors.accent
+            anchors.verticalCenter: parent.verticalCenter
+            rightPadding: 8
+
+            MouseArea { anchors.fill: parent; onClicked: root.shareRequested() }
         }
 
         Rectangle {
@@ -62,6 +129,7 @@ Column {
         Column {
             id: row
             required property var modelData
+            required property int index
             width: root.width
             visible: Networking.wifiEnabled
             spacing: 4
@@ -70,7 +138,9 @@ Column {
                 width: row.width
                 height: 34
                 radius: 8
-                color: netArea.containsMouse ? Colors.surface : "transparent"
+                color: (netArea.containsMouse || row.index === root.currentIndex) ? Colors.surface : "transparent"
+                border.width: row.index === root.currentIndex ? 1 : 0
+                border.color: Colors.accent
 
                 Row {
                     anchors.fill: parent
@@ -110,13 +180,8 @@ Column {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        if (row.modelData.connected) {
-                            row.modelData.disconnect();
-                        } else if (row.modelData.known) {
-                            row.modelData.connect();
-                        } else {
-                            root.pendingPskNetwork = row.modelData;
-                        }
+                        root.currentIndex = row.index;
+                        root.activateNetwork(row.modelData);
                     }
                 }
             }

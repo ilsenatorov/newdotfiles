@@ -64,8 +64,8 @@ PKGS_DESKTOP=(
 	# network + bluetooth -- network-manager-applet dropped, the bar's
 	# network module + Network panel (SUPER+N) replace it
 	networkmanager bluez bluez-utils
-	# used by the scripts
-	git jq curl ffmpeg imagemagick libnotify fzf
+	# used by the scripts -- qrencode is the Network panel's Wi-Fi share QR
+	git jq curl ffmpeg imagemagick libnotify fzf qrencode
 	# fallback if hyprsunset is ever missing
 	wlsunset
 )
