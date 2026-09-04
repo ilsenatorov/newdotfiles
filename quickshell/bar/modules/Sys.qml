@@ -12,7 +12,7 @@ Row {
     spacing: Theme.barPillGap
 
     Text {
-        text: "  " + Math.round(SysMon.cpu * 100) + "%"
+        text: "  " + Math.round(SysMon.cpu * 100) + "%"
         height: Theme.barHeight
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
@@ -22,7 +22,7 @@ Row {
 
     Text {
         visible: SysMon.tempPath !== ""
-        text: "  " + SysMon.tempC.toFixed(0) + "°C"
+        text: "  " + SysMon.tempC.toFixed(0) + "°C"
         height: Theme.barHeight
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
@@ -40,7 +40,7 @@ Row {
     }
 
     Text {
-        text: "  " + SysMon.fmtBytes(SysMon.diskFreeBytes)
+        text: "  " + SysMon.fmtBytes(SysMon.diskFreeBytes)
         height: Theme.barHeight
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
@@ -49,7 +49,7 @@ Row {
     }
 
     Text {
-        text: "  " + SysMon.fmtBytes(SysMon.netUp) + "/s"
+        text: "  " + SysMon.fmtBytes(SysMon.netUp) + "/s"
         height: Theme.barHeight
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
@@ -58,7 +58,7 @@ Row {
     }
 
     Text {
-        text: "  " + SysMon.fmtBytes(SysMon.netDown) + "/s"
+        text: "  " + SysMon.fmtBytes(SysMon.netDown) + "/s"
         height: Theme.barHeight
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font

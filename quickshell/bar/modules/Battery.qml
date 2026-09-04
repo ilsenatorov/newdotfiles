@@ -22,7 +22,7 @@ Text {
     font.pixelSize: Theme.fsBar
 
     text: {
-        if (full) return "  Full";
+        if (full) return "  Full";
         if (charging) return "⚡ " + Math.round(pct) + "%";
         return icon() + "  " + Math.round(pct) + "%";
     }
@@ -35,10 +35,10 @@ Text {
     }
 
     function icon(): string {
-        if (pct >= 90) return "";
-        if (pct >= 70) return "";
-        if (pct >= 40) return "";
-        if (pct >= 15) return "";
-        return "";
+        if (pct >= 90) return "";
+        if (pct >= 70) return "";
+        if (pct >= 40) return "";
+        if (pct >= 15) return "";
+        return "";
     }
 }

@@ -20,6 +20,19 @@ Column {
     property var pendingPskNetwork: null
     property int currentIndex: -1
 
+    // `focus: true` alone only *requests* activeFocus once this branch's
+    // enclosing FocusScope (shell.qml's panelFocus) is itself active -- with
+    // a Loader (not a FocusScope) in between, that request can lose the race
+    // against the scope activating, especially right after the panel's
+    // WlrLayershell surface is mapped. Forcing it once this item actually
+    // exists makes the Up/Down/Enter handlers below reliable every time.
+    // Also only poll gateway/throughput while this panel is actually visible.
+    Component.onCompleted: {
+        root.forceActiveFocus();
+        Net.detailsActive = true;
+    }
+    Component.onDestruction: Net.detailsActive = false
+
     function findAnyWifiDevice(): var {
         const devices = Networking.devices ? Networking.devices.values : [];
         for (const d of devices) if (d instanceof WifiDevice) return d;
@@ -119,6 +132,51 @@ Column {
             MouseArea {
                 anchors.fill: parent
                 onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
+            }
+        }
+    }
+
+    // Connection details, Omarchy-style: shown only once actually connected.
+    // One label/value row (not a 2-column grid) -- the MAC address alone is
+    // wider than half the 340px panel, so a grid cell would clip it.
+    Column {
+        visible: Net.wifiConnected
+        width: parent.width
+        spacing: 2
+
+        readonly property var rows: [
+            ["IP", Net.ip !== "" ? Net.ip : "--"],
+            ["Gateway", Net.gateway !== "" ? Net.gateway : "--"],
+            ["MAC", Net.mac !== "" ? Net.mac : "--"],
+            ["Signal", Math.round(Net.signalStrength) + "%"],
+            ["Rate", SysMon.fmtBytes(Net.rxRate) + "/s down, " + SysMon.fmtBytes(Net.txRate) + "/s up"],
+            ["Total", SysMon.fmtBytes(Net.rxTotalBytes) + " down, " + SysMon.fmtBytes(Net.txTotalBytes) + " up"],
+        ]
+
+        Repeater {
+            model: parent.rows
+
+            Row {
+                width: parent.width
+                spacing: 8
+
+                required property var modelData
+
+                Text {
+                    width: 56
+                    text: modelData[0]
+                    color: Theme.dim
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fsLabel
+                }
+                Text {
+                    width: parent.width - 64
+                    text: modelData[1]
+                    color: Theme.fg
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fsLabel
+                    elide: Text.ElideRight
+                }
             }
         }
     }

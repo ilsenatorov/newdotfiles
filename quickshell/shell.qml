@@ -218,47 +218,41 @@ ShellRoot {
         }
     }
 
+    // SUPER+G system-info overlay. Unlike the old bottom-left corner pill,
+    // this is on-demand only (nothing shown at rest) and sits on the Overlay
+    // layer so it draws above normal windows, not just the desktop -- a
+    // fastfetch+htop-style glance at the machine from inside anything.
     PanelWindow {
-        id: win
+        id: dashboardWin
+        visible: state.expanded
 
-        anchors {
-            left: true
-            bottom: true
-        }
-
-        margins {
-            left: 8
-            bottom: 8
-        }
-
-        // Deliberately fixed. A layer-shell surface renegotiates geometry with the
-        // compositor on every size change, so animating this would mean a round
-        // trip per frame -- the card inside animates instead, and the inset gives
-        // its overshoot and shadow room to render.
         implicitWidth: Theme.cardW + Theme.inset * 2
-        // Sized for the card at its tallest (now-playing row present) so the
-        // surface never has to renegotiate geometry when a track starts.
-        implicitHeight: Theme.cardH + Theme.npRow + Theme.inset * 2
+        implicitHeight: Theme.cardH + Theme.inset * 2
 
         color: "transparent"
         exclusiveZone: 0
 
-        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "quickshell-dashboard"
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        // Only the card takes clicks; the rest of the corner stays click-through.
-        mask: Region { item: card }
+        mask: Region { item: dashLoader.item ?? null }
 
-        Card {
-            id: card
+        // Same FocusScope + Loader + forceActiveFocus pattern as panelWin
+        // above -- Escape closes it, no click needed first.
+        FocusScope {
+            id: dashFocus
+            anchors.fill: parent
+            focus: state.expanded
 
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.margins: Theme.inset
+            Keys.onEscapePressed: state.expanded = false
 
-            expanded: state.expanded
-            onToggleRequested: state.expanded = !state.expanded
+            Loader {
+                id: dashLoader
+                anchors.fill: parent
+                active: state.expanded
+                sourceComponent: Card {}
+            }
         }
     }
 }
