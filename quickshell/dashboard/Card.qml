@@ -153,6 +153,20 @@ Item {
                         caption: Math.round(SysMon.disk * 100) + "%"
                         barColor: SysMon.disk > 0.9 ? Theme.red : Colors.accent
                     }
+
+                    // NVIDIA only -- see SysMon.gpuAvailable. This box also has an
+                    // Intel iGPU, but reading its utilization needs intel_gpu_top
+                    // (root, not installed), so it has no stat here.
+                    StatBar {
+                        width: parent.width
+                        index: 4
+                        shown: root.expanded && SysMon.gpuAvailable
+                        visible: SysMon.gpuAvailable
+                        label: "GPU"
+                        value: SysMon.gpuUtil
+                        caption: Math.round(SysMon.gpuUtil * 100) + "%"
+                        barColor: SysMon.gpuUtil > 0.9 ? Theme.red : Colors.accent
+                    }
                 }
 
                 Rectangle {
@@ -171,29 +185,29 @@ Item {
                     property int colW: (width - columnSpacing) / 2
 
                     Stat {
-                        width: parent.colW; index: 4; shown: root.expanded
+                        width: parent.colW; index: 5; shown: root.expanded
                         label: "UP"; value: SysMon.uptimeText
                     }
                     Stat {
-                        width: parent.colW; index: 5; shown: root.expanded
+                        width: parent.colW; index: 6; shown: root.expanded
                         label: "WX"; value: Weather.text
                     }
                     Stat {
-                        width: parent.colW; index: 6; shown: root.expanded
+                        width: parent.colW; index: 7; shown: root.expanded
                         label: "LOAD"; value: SysMon.load1.toFixed(2)
                         // 12 threads here, so one core saturated is ~1.0.
                         valueColor: SysMon.load1 > 12 ? Theme.red : (SysMon.load1 > 6 ? Theme.yellow : Theme.fg)
                     }
                     Stat {
-                        width: parent.colW; index: 7; shown: root.expanded
+                        width: parent.colW; index: 8; shown: root.expanded
                         label: "NET"; value: "\u25b2 " + SysMon.fmtBytes(SysMon.netUp) + "  \u25bc " + SysMon.fmtBytes(SysMon.netDown)
                     }
                     Stat {
-                        width: parent.colW; index: 8; shown: root.expanded
+                        width: parent.colW; index: 9; shown: root.expanded
                         label: "FREE"; value: SysMon.fmtBytes(SysMon.diskFreeBytes)
                     }
                     Stat {
-                        width: parent.colW; index: 9; shown: root.expanded
+                        width: parent.colW; index: 10; shown: root.expanded
                         label: "CLD"; value: ClaudeUsage.text
                         // Dimmed rather than hidden when the OAuth token has expired:
                         // the numbers are still the last true ones, just not fresh.
@@ -201,12 +215,24 @@ Item {
                         valueColor: ClaudeUsage.fiveHour > 90 ? Theme.red : (ClaudeUsage.fiveHour > 70 ? Theme.yellow : Theme.fg)
                     }
                     Stat {
-                        width: parent.colW; index: 10; shown: root.expanded
+                        width: parent.colW; index: 11; shown: root.expanded
                         label: "SWP"; value: SysMon.fmtBytes(SysMon.swapUsedBytes)
                         valueColor: SysMon.swapTotalBytes > 0 && SysMon.swapUsedBytes / SysMon.swapTotalBytes > 0.5 ? Theme.yellow : Theme.fg
                     }
                     Stat {
-                        width: parent.colW; index: 11; shown: root.expanded
+                        width: parent.colW; index: 12; shown: root.expanded && SysMon.gpuAvailable
+                        visible: SysMon.gpuAvailable
+                        label: "GTM"; value: Math.round(SysMon.gpuTempC) + "\u00b0"
+                        valueColor: SysMon.gpuTempC > 85 ? Theme.red : (SysMon.gpuTempC > 75 ? Theme.yellow : Theme.fg)
+                    }
+                    Stat {
+                        width: parent.colW; index: 13; shown: root.expanded && SysMon.gpuAvailable
+                        visible: SysMon.gpuAvailable
+                        label: "VRM"
+                        value: SysMon.fmtBytes(SysMon.gpuVramUsedBytes) + " / " + SysMon.fmtBytes(SysMon.gpuVramTotalBytes)
+                    }
+                    Stat {
+                        width: parent.colW; index: 14; shown: root.expanded
                         label: "BAT"
                         value: {
                             const d = UPower.displayDevice;
@@ -230,7 +256,7 @@ Item {
                 // animates its height to suit.
                 Stat {
                     width: parent.width
-                    index: 12
+                    index: 15
                     shown: root.expanded && Media.active
                     visible: Media.active
                     label: "\uf001"
