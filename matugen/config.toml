@@ -34,9 +34,9 @@ output_path = '~/dotfiles/hypr/colors.conf'
 input_path  = '~/dotfiles/matugen/templates/colors-hypr.lua'
 output_path = '~/dotfiles/hypr/colors.lua'
 
-[templates.alacritty]
-input_path  = '~/dotfiles/matugen/templates/colors-alacritty.toml'
-output_path = '~/dotfiles/alacritty/colors.toml'
+[templates.kitty]
+input_path  = '~/dotfiles/matugen/templates/colors-kitty.conf'
+output_path = '~/dotfiles/kitty/colors.conf'
 
 # Starship has no include directive, so this generated palette is not imported --
 # starship/build.sh concatenates it onto starship/starship.base.toml. That build

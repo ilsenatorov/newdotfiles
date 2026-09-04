@@ -53,7 +53,7 @@ if [ "$preview_images" = "True" ]; then
         ###image/svg+xml)
         ###   convert "$path" "$cached" && exit 6 || exit 1;;
         # Image previews for image files. Exit 7 hands the file straight to
-        # ranger's configured image displayer (ueberzug here, see rc.conf);
+        # ranger's configured image displayer (kitty here, see rc.conf);
         # it might still fail for types that displayer cannot decode.
         image/*)
             exit 7;;

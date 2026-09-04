@@ -80,6 +80,11 @@ Singleton {
     // rule in hypr/hyprland.lua -- keep this above that rule's ignore_alpha (0.2)
     // or the blur stops being applied at all.
     readonly property color surface: "#66141C21"
+
+    // SUPER+G's dashboard specifically: it can pop up over arbitrary windows
+    // (overlay layer, not just the desktop background), so the frosted-glass
+    // `surface` above reads poorly over bright content. Solid instead.
+    readonly property color dashboardSurface: "#F2141C21"
     readonly property color fg: "#93A1A1"
     readonly property color dim: "#6D8895"
     readonly property color rule: "#3C4449"

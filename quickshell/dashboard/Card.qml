@@ -32,7 +32,7 @@ Item {
         id: bg
         anchors.fill: parent
         radius: Theme.radius
-        color: Theme.surface
+        color: Theme.dashboardSurface
         border.width: 2
         border.color: "transparent"
         visible: false
