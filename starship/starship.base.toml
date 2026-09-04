@@ -292,7 +292,8 @@ show_milliseconds = false
 style = "fg:on_hue bg:hue_orange"
 format = '[](fg:hue_orange)[ 󱎫 $duration ]($style)'
 # Desktop notification when a long command finishes -- you run matugen and
-# wallpaper jobs from the shell, and mako is already configured.
+# wallpaper jobs from the shell, and the quickshell notification overlay is
+# already configured.
 # show_notifications = true
 # min_time_to_notify = 45000
 
