@@ -24,6 +24,17 @@ Singleton {
     property real netUp: 0            // bytes/sec
     property real netDown: 0
 
+    // NVIDIA only (nvidia-smi) -- this box is an Optimus laptop with an
+    // Intel iGPU alongside the NVIDIA card, and there is no free/no-root way
+    // to read Intel GPU utilization without intel_gpu_top, which isn't
+    // installed here. gpuAvailable stays false (and the dashboard hides the
+    // GPU stats) when nvidia-smi is missing or reports no device.
+    property bool gpuAvailable: false
+    property real gpuUtil: 0          // 0..1
+    property real gpuTempC: 0
+    property real gpuVramUsedBytes: 0
+    property real gpuVramTotalBytes: 0
+
     // Expanded -> 2s, collapsed -> 10s. Collapsed there is nothing to look at,
     // but staying warm means expanding never animates from stale values.
     property bool fast: false
@@ -67,6 +78,14 @@ Singleton {
                 const p = text.trim();
                 if (p !== "") root.tempPath = p.replace(/\/name$/, "/temp1_input");
             }
+        }
+    }
+
+    Process {
+        running: true
+        command: ["sh", "-c", "command -v nvidia-smi >/dev/null && nvidia-smi -L >/dev/null 2>&1 && echo yes || echo no"]
+        stdout: StdioCollector {
+            onStreamFinished: { root.gpuAvailable = text.trim() === "yes"; }
         }
     }
 
@@ -133,6 +152,23 @@ Singleton {
                 const availKb = parseFloat(f[1]);
                 if (!isNaN(pct)) root.disk = pct / 100;
                 if (!isNaN(availKb)) root.diskFreeBytes = availKb * 1024;
+            }
+        }
+    }
+
+    Process {
+        id: gpuProc
+        command: ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu",
+                  "--format=csv,noheader,nounits"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // "12, 512, 2048, 47" -- util%, vram used/total in MiB, temp C.
+                const f = text.trim().split(",").map(s => parseFloat(s.trim()));
+                if (f.length < 4 || f.some(isNaN)) return;
+                root.gpuUtil = f[0] / 100;
+                root.gpuVramUsedBytes = f[1] * 1024 * 1024;
+                root.gpuVramTotalBytes = f[2] * 1024 * 1024;
+                root.gpuTempC = f[3];
             }
         }
     }
@@ -236,6 +272,7 @@ Singleton {
             root.sampleMisc();
             netView.reload();
             root.sampleNet();
+            if (root.gpuAvailable) gpuProc.running = true;
         }
     }
 
