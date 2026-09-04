@@ -94,6 +94,7 @@ ShellRoot {
 
             Bar {
                 anchors.fill: parent
+                screen: barWin.screen
                 onPanelRequested: name => shell.togglePanel(name)
             }
         }

@@ -10,6 +10,7 @@ import "modules"
 Item {
     id: root
 
+    required property var screen
     signal panelRequested(string name)
 
     implicitHeight: Theme.barHeight
@@ -19,7 +20,7 @@ Item {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
 
-        Workspaces {}
+        Workspaces { screen: root.screen }
         Submap {}
         Sep {}
         ClockModule {
