@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Effects
 import Quickshell.Services.UPower
+import ".."
+import "../services"
 
 // The morphing surface. Collapsed it is a waybar-sized clock pill in the corner;
 // expanded it is the full dashboard. It grows up and to the right from the

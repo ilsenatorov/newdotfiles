@@ -200,7 +200,7 @@ hl.config({
             border_inactive = "rgba(3C4449ff)",
         },
         groupbar = {
-            font_family = "Iosevka Nerd Font",
+            font_family = "MesloLGS NF",
             font_size   = 11,
             -- match the waybar pills: 12px radius, accent indicator, some air
             height           = 20,

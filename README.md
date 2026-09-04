@@ -124,4 +124,4 @@ the accent moves with the wallpaper.
 
 Optional packages that the configs pick up automatically if installed:
 `adw-gtk3` (better GTK3 match for modern apps), `bibata-cursor-theme` (falls
-back to Adwaita). `papirus-icon-theme` and `ttf-iosevka-nerd` are required.
+back to Adwaita). `papirus-icon-theme` and `ttf-meslo-nerd` are required.

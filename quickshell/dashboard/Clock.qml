@@ -1,8 +1,11 @@
 import QtQuick
+import ".."
 
 // The expanded clock block: oversized time, an accent rule that fades out to the
-// right, then the date. Iosevka Light at 62px is the one place in this rice with
-// real typographic weight -- everything else stays at bar scale.
+// right, then the date. MesloLGS NF Light at Theme.fsClock is the one place in
+// this rice with real typographic weight -- everything else stays at bar scale.
+// MesloLGS is noticeably wider than Iosevka was at the same pixel size; if the
+// digits start crowding cardW, trim Theme.fsClock down from 64 rather than here.
 Item {
     id: root
 

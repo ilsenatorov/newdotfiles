@@ -95,7 +95,7 @@ set_key PasswordFieldTextColor "#93A1A1"
 set_key PlaceholderTextColor   "#6D8895"
 set_key TimeTextColor          "#93A1A1"
 set_key WarningColor           "#EC7875"
-set_key Font                   "Iosevka Nerd Font"
+set_key Font                   "MesloLGS NF"
 set_key RoundCorners           "12"
 
 echo "sddm theme now uses $(basename "$wall") with accent $accent"

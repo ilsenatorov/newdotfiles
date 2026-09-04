@@ -1,4 +1,4 @@
-# Palette matched to the desktop base in waybar/style.css (#141C21 / #93A1A1)
+# Palette matched to the desktop base in quickshell/Theme.qml (#141C21 / #93A1A1)
 # and the ANSI colours the bar already uses -- this was Tokyo Night (#24283b /
 # #a9b1d6) before, the only surface left outside the theme.
 #
@@ -37,8 +37,8 @@ white   = "#CDD6D6"
 [font]
 size = 13.0
 
-# Iosevka Nerd Font everywhere: waybar, mako, rofi, hyprlock and the Hyprland
-# groupbar all use it. MesloLGS NF stays installed as the prompt glyph fallback.
+# MesloLGS NF everywhere: quickshell (bar, notifications, panels), rofi,
+# hyprlock and the Hyprland groupbar all use it now, one font across the rice.
 [font.normal]
 family = "MesloLGS NF"
 style = "Regular"
