@@ -71,7 +71,7 @@ PKGS_FONTS=(
 )
 # ranger's scope.sh previews -- everything it shells out to.
 PKGS_RANGER=(
-	w3m highlight ffmpegthumbnailer mediainfo perl-image-exiftool
+	ueberzugpp w3m highlight ffmpegthumbnailer mediainfo perl-image-exiftool
 	atool 7zip unrar odt2txt transmission-cli elinks lynx
 )
 PKGS_SDDM=( sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative )
