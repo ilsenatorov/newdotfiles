@@ -127,17 +127,34 @@ ShellRoot {
 
         mask: Region { item: panelLoader.item ?? null }
 
-        Loader {
-            id: panelLoader
-            active: shell.activePanel !== ""
+        // Grabs keyboard focus the instant a panel opens (SUPER+N/Y/M all
+        // route here via shell.togglePanel), so the network/bluetooth panels
+        // are drivable with no mouse click first -- Network.qml and
+        // Bluetooth.qml declare `focus: true` on their root, which this
+        // scope's `focus: true` binding then activates. Escape closes
+        // whatever's open -- individual panel content may intercept it first
+        // (e.g. Network's password prompt cancels itself instead).
+        FocusScope {
+            id: panelFocus
+            anchors.fill: parent
+            focus: shell.activePanel !== ""
 
-            sourceComponent: {
-                switch (shell.activePanel) {
-                case "calendar": return calendarPanel;
-                case "network": return networkPanel;
-                case "bluetooth": return bluetoothPanel;
-                case "audio": return audioPanelC;
-                default: return null;
+            Keys.onEscapePressed: shell.activePanel = ""
+
+            Loader {
+                id: panelLoader
+                anchors.fill: parent
+                active: shell.activePanel !== ""
+
+                sourceComponent: {
+                    switch (shell.activePanel) {
+                    case "calendar": return calendarPanel;
+                    case "network": return networkPanel;
+                    case "wifiqr": return wifiSharePanel;
+                    case "bluetooth": return bluetoothPanel;
+                    case "audio": return audioPanelC;
+                    default: return null;
+                    }
                 }
             }
         }
@@ -149,7 +166,11 @@ ShellRoot {
     }
     Component {
         id: networkPanel
-        Panel { title: "Wi-Fi"; Network {} }
+        Panel { title: "Wi-Fi"; Network { onShareRequested: shell.activePanel = "wifiqr" } }
+    }
+    Component {
+        id: wifiSharePanel
+        Panel { title: "Share Wi-Fi"; WifiShare {} }
     }
     Component {
         id: bluetoothPanel

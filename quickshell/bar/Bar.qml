@@ -53,6 +53,5 @@ Item {
         }
         Sep {}
         Language {}
-        Tray {}
     }
 }

@@ -1,0 +1,29 @@
+#!/bin/bash
+# Prints the active Wi-Fi connection's password on stdout. Ported from
+# omarchy's omarchy-network-password.
+
+set -euo pipefail
+
+interface=${1:?Usage: network-password.sh <interface>}
+uuid=$(nmcli --get-values GENERAL.CON-UUID device show "$interface" | head -n 1)
+[[ -n $uuid && $uuid != "--" ]] || { echo "No active Wi-Fi connection" >&2; exit 1; }
+
+mapfile -t fields < <(nmcli --show-secrets --escape no --get-values \
+  802-11-wireless-security.key-mgmt,802-11-wireless-security.psk,802-11-wireless-security.wep-key0 \
+  connection show uuid "$uuid")
+
+key_management=${fields[0]:-}
+password=${fields[1]:-}
+wep_key=${fields[2]:-}
+
+[[ $key_management != *eap* && $key_management != *ieee8021x* ]] || {
+  echo "Enterprise Wi-Fi has no shareable password" >&2
+  exit 1
+}
+if [[ -z $key_management || $key_management == "none" ]]; then
+  password=$wep_key
+  [[ -n $password ]] || { echo "This network has no password" >&2; exit 1; }
+fi
+[[ -n $password ]] || { echo "Could not read the Wi-Fi password" >&2; exit 1; }
+
+printf '%s\n' "$password"
