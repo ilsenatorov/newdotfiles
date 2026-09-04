@@ -4,6 +4,9 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
+import "services"
+import "dashboard"
+
 ShellRoot {
     id: shell
 

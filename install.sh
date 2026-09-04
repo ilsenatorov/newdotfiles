@@ -66,7 +66,7 @@ PKGS_DESKTOP=(
 	wlsunset
 )
 PKGS_FONTS=(
-	ttf-iosevka-nerd ttf-meslo-nerd ttf-nerd-fonts-symbols-mono
+	ttf-meslo-nerd ttf-nerd-fonts-symbols-mono
 	noto-fonts noto-fonts-emoji papirus-icon-theme bibata-cursor-theme
 )
 # ranger's scope.sh previews -- everything it shells out to.

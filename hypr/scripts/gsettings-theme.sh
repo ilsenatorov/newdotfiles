@@ -43,7 +43,7 @@ set -- \
     cursor-theme          "$CURSOR_THEME" \
     cursor-size           "24" \
     font-name             "Cantarell 11" \
-    monospace-font-name   "Iosevka Nerd Font 11" \
+    monospace-font-name   "MesloLGS NF 11" \
     font-antialiasing     "grayscale" \
     font-hinting          "slight"
 
