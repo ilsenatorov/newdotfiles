@@ -3,14 +3,14 @@
 @import "colors.css";
 
 /* Adwaita-dark's selection blue replaced by the wallpaper accent, so GTK
-   selections, focus rings and checkboxes match waybar/rofi/mako. */
+   selections, focus rings and checkboxes match the quickshell bar/rofi. */
 @define-color theme_selected_bg_color @accent;
 @define-color theme_selected_fg_color @accent_on;
 @define-color accent_color @accent;
 @define-color accent_bg_color @accent;
 @define-color accent_fg_color @accent_on;
 
-/* Match the 12px pill radius used by waybar, mako, rofi and hyprlock. */
+/* Match the 12px pill radius used by the quickshell bar, rofi and hyprlock. */
 window.background,
 window.csd,
 .background { border-radius: 12px; }

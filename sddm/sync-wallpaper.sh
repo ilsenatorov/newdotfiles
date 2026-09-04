@@ -64,9 +64,9 @@ fi
 find "$DST/Backgrounds" -maxdepth 1 -type f \
     ! -name "current.$ext" ! -name 'pixel_sakura.gif' ! -name '.gitignore' -delete
 
-# Accent: the same colour matugen just wrote for waybar.
-accent=$(grep -oE '#[0-9a-fA-F]{6}' "$DOTS/waybar/colors.css" | head -1)
-accent_dim=$(grep -oE '#[0-9a-fA-F]{6}' "$DOTS/waybar/colors.css" | sed -n 3p)
+# Accent: the same colour matugen just wrote for the quickshell bar.
+accent=$(grep -oE '#[0-9a-fA-F]{6}' "$DOTS/quickshell/Colors.qml" | head -1)
+accent_dim=$(grep -oE '#[0-9a-fA-F]{6}' "$DOTS/quickshell/Colors.qml" | sed -n 3p)
 
 set_key() {  # set_key <Key> <value>
     sed -i "s|^$1=.*|$1=\"$2\"|" "$CONF"
@@ -83,8 +83,8 @@ set_key VirtualKeyboardButtonTextColor "$accent"
 set_key HighlightBorderColor "$accent"
 set_key HighlightBackgroundColor "${accent_dim:-$accent}"
 set_key LoginButtonBackgroundColor "${accent_dim:-$accent}"
-# desktop base, so the login form matches waybar/hyprlock rather than the
-# theme's stock Disco Elysium blues
+# desktop base, so the login form matches the quickshell bar/hyprlock
+# rather than the theme's stock Disco Elysium blues
 set_key FormBackgroundColor  "#141C21"
 set_key BackgroundColor      "#141C21"
 set_key DimBackgroundColor   "#141C21"
