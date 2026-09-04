@@ -12,6 +12,8 @@ Singleton {
     // All 0..1 except tempC, which is real degrees.
     property real cpu: 0
     property real ram: 0
+    property real ramUsedBytes: 0
+    property real ramTotalBytes: 0
     property real tempC: 0
     property real disk: 0
     property real diskFreeBytes: 0
@@ -162,8 +164,11 @@ Singleton {
         const t = memView.text();
         const total = /MemTotal:\s+(\d+)/.exec(t);
         const avail = /MemAvailable:\s+(\d+)/.exec(t);
-        if (total && avail && Number(total[1]) > 0)
+        if (total && avail && Number(total[1]) > 0) {
             root.ram = 1 - Number(avail[1]) / Number(total[1]);
+            root.ramTotalBytes = Number(total[1]) * 1024;
+            root.ramUsedBytes = root.ramTotalBytes - Number(avail[1]) * 1024;
+        }
 
         const st = /SwapTotal:\s+(\d+)/.exec(t);
         const sf = /SwapFree:\s+(\d+)/.exec(t);

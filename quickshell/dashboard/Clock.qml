@@ -1,5 +1,6 @@
 import QtQuick
 import ".."
+import "../services"
 
 // The expanded clock block: oversized time, an accent rule that fades out to the
 // right, then the date. MesloLGS NF Light at Theme.fsClock is the one place in

@@ -66,10 +66,11 @@ hl.on("hyprland.start", function()
     -- Without this, file dialogs and GNOME apps stay light on a dark desktop.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
 
-    app("waybar")
     app("mako")
-    -- Desktop dashboard (quickshell/). -n makes this a no-op if an instance
-    -- is already running, so a config reload never stacks two of them.
+    -- Bar, dashboard corner and (soon) notifications all live in one
+    -- quickshell instance now -- see quickshell/shell.qml. -n makes this a
+    -- no-op if an instance is already running, so a config reload never
+    -- stacks two of them.
     app("qs -d -n")
     -- Wallpaper: mpvpaper via wallpaper-daemon.sh, not hyprpaper. The wallpaper
     -- is a looping video (Disco-Elysium-4k.mp4) and hyprpaper only does stills;
@@ -105,7 +106,7 @@ end)
 
 
 hl.layer_rule({
-    match        = { namespace = "waybar" },
+    match        = { namespace = "quickshell-bar" },
     blur         = true,
     ignore_alpha = 0.2,
 })
@@ -139,9 +140,10 @@ hl.layer_rule({
 hl.config({
     general = {
         gaps_in  = 5,
-        -- waybar floats with margin-top 6 / left|right 8; matching that here
-        -- keeps windows off the screen edge so the detached bar reads as
-        -- deliberate rather than as a bar overlapping full-bleed windows.
+        -- The quickshell bar floats with margin-top/side from Theme.qml
+        -- (barMarginTop 6, barMarginSide 8); matching that here keeps windows
+        -- off the screen edge so the detached bar reads as deliberate rather
+        -- than as a bar overlapping full-bleed windows.
         gaps_out = 8,
 
         -- was 0, which made the col.* accent below dead config: the
