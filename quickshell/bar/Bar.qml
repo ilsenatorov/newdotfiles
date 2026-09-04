@@ -33,8 +33,8 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
 
-        Sys {}
         Gpu {}
+        Sys {}
         Battery {}
     }
 
