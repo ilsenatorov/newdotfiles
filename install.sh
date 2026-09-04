@@ -47,19 +47,23 @@ PKGS_DESKTOP=(
 	# compositor + session
 	hyprland uwsm hyprlock hypridle hyprsunset hyprshot hyprpolkitagent
 	xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit
-	# bar, notifications, menus, dashboard
-	waybar mako rofi networkmanager-dmenu quickshell
+	# bar, notifications, menus, dashboard -- bar+notifications+panels are
+	# quickshell now (see quickshell/), rofi stays for the app launcher and
+	# power menu
+	rofi quickshell
 	# terminal, shell, prompt, files
 	alacritty zsh starship ranger
 	# theming
 	matugen
 	# clipboard + screenshots
 	cliphist wl-clipboard wl-clip-persist grim slurp swappy
-	# media / hardware keys
-	mpv playerctl brightnessctl libpulse pavucontrol
+	# media / hardware keys -- pavucontrol dropped, the quickshell Audio
+	# panel (SUPER+M) replaces its default-sink slider
+	mpv playerctl brightnessctl libpulse
 	pipewire pipewire-pulse wireplumber
-	# network + bluetooth
-	networkmanager network-manager-applet bluez bluez-utils
+	# network + bluetooth -- network-manager-applet dropped, the bar's
+	# network module + Network panel (SUPER+N) replace it
+	networkmanager bluez bluez-utils
 	# used by the scripts
 	git jq curl ffmpeg imagemagick libnotify fzf
 	# fallback if hyprsunset is ever missing

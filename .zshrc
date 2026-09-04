@@ -19,7 +19,7 @@ export EDITOR=vim
 #   infocmp -x | ssh HOST -- tic -x -
 export BROWSER=/usr/bin/brave
 
-# fzf in the desktop palette (waybar/style.css). bat/delta/eza are not installed
+# fzf in the desktop palette (quickshell/Theme.qml). bat/delta/eza are not installed
 # here, so there is nothing to theme for them yet.
 export FZF_DEFAULT_OPTS="--color=bg+:#1E262B,bg:-1,spinner:#4DD0E1,hl:#EC7875 \
 --color=fg:#93A1A1,header:#EC7875,info:#FDD835,pointer:#4DD0E1 \

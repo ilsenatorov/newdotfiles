@@ -79,7 +79,9 @@ hl.on("hyprland.start", function()
     -- The script reads hypr/wallpaper.conf, written by set-wallpaper.sh.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/wallpaper-daemon.sh")
     app("hypridle")
-    app("nm-applet --indicator")
+    -- nm-applet retired: the bar's network module + Network panel (SUPER+N)
+    -- replace it, and the tray it rendered into was disabled anyway
+    -- (waybar's tray module was commented out).
 
     -- Polkit agent: NOT started here. hyprpolkitagent ships its own systemd user
     -- unit (WantedBy=graphical-session.target), which is the right mechanism
@@ -170,8 +172,9 @@ hl.config({
     },
 
     decoration = {
-        -- 12px is the radius shared by the waybar pills, mako, the rofi window
-        -- and the hyprlock input field. 3 was the odd one out.
+        -- 12px is the radius shared by the quickshell bar pills, notification
+        -- toasts, the rofi window and the hyprlock input field. 3 was the
+        -- odd one out.
         rounding = 12,
         active_opacity   = 1.0,
         inactive_opacity = 0.8,
@@ -206,7 +209,7 @@ hl.config({
         groupbar = {
             font_family = "MesloLGS NF",
             font_size   = 11,
-            -- match the waybar pills: 12px radius, accent indicator, some air
+            -- match the quickshell bar pills: 12px radius, accent indicator, some air
             height           = 20,
             indicator_height = 3,
             rounding         = 12,
@@ -284,8 +287,11 @@ hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "
 
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher.sh"),         { description = "App launcher" })
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.sh"), { description = "Run command" })
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("networkmanager_dmenu"),                  { description = "Network menu" })
-hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd(dotfiles .. "/rofi-bluetooth/rofi-bluetooth"), { description = "Bluetooth menu" })
+-- Network/bluetooth/audio now open the quickshell panels instead of
+-- launching a separate rofi/GTK tool -- see quickshell/panels/.
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"),   { description = "Network menu" })
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), { description = "Bluetooth menu" })
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"),     { description = "Audio menu" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), { description = "Monitor placement" })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle desktop dashboard" })
