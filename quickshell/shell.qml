@@ -6,6 +6,7 @@ import Quickshell.Wayland
 
 import "services"
 import "dashboard"
+import "bar"
 
 ShellRoot {
     id: shell
@@ -29,13 +30,54 @@ ShellRoot {
         function status(): string { return state.expanded ? "expanded" : "collapsed" }
     }
 
-    // Poll fast only while the gauges are actually on screen. This has to be a
-    // binding rather than an onExpandedChanged handler, or a session that starts
-    // expanded never leaves the slow interval.
+    // The bar is always on screen now (it wasn't, before this migration --
+    // only the dashboard corner was), so there is always something to poll
+    // for. Fast stays permanently on rather than gated on state.expanded.
     Binding {
         target: SysMon
         property: "fast"
-        value: state.expanded
+        value: true
+    }
+
+    // One bar per connected screen, replacing waybar (which had no `output`
+    // filter and so spawned on every monitor too).
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            id: barWin
+            required property var modelData
+            screen: modelData
+
+            anchors {
+                top: true
+                left: true
+                right: true
+            }
+
+            margins {
+                top: Theme.barMarginTop
+                left: Theme.barMarginSide
+                right: Theme.barMarginSide
+            }
+
+            implicitHeight: Theme.barHeight
+            color: "transparent"
+            // Reserve the bar's own height plus its top margin so window
+            // gaps (hyprland.lua's gaps_out) don't creep under it.
+            exclusiveZone: Theme.barHeight + Theme.barMarginTop
+
+            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.namespace: "quickshell-bar"
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+            Bar {
+                anchors.fill: parent
+                // Panel opening is wired once the panel host lands (see
+                // panels/) -- until then this is a documented no-op.
+                onPanelRequested: name => console.log("panel requested:", name)
+            }
+        }
     }
 
     PanelWindow {
