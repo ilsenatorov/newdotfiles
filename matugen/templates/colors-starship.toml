@@ -55,7 +55,7 @@ on_error = "{{colors.on_error.dark.hex}}"
 
 # --- fixed: hand-written semantic colours ---------------------------------
 # Per matugen/config.toml's rule, semantic colours stay hand-written. These are
-# the desktop base from alacritty/alacritty.toml. gruvbox-rainbow uses
+# the desktop base from kitty/kitty.conf. gruvbox-rainbow uses
 # color_green/color_red for the prompt character for exactly this reason: a
 # success/failure signal must not drift to whatever hue the wallpaper happens
 # to be, or it stops meaning anything.

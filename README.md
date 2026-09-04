@@ -62,7 +62,8 @@ the why behind them.
 
 * __rofi__ for launching software and the power menu (`SUPER+D`, `SUPER+SHIFT+S`)
 * __hyprland__ as the compositor/WM, with __mpvpaper__ for the video wallpaper
-* __alacritty__ as the terminal emulator
+* __kitty__ as the terminal emulator -- its native graphics protocol lets
+  __ranger__ preview images inline with no overlay process
 * __ranger__ as the file manager in terminal
 * __quickshell__ for the bar, notifications, and the network/bluetooth/audio/
   calendar panels (`quickshell/`; SUPER+N/Y/M/G) -- replaces waybar, mako,
@@ -82,7 +83,7 @@ mpvpaper covers both. `hypr/wallpaper.conf` holds the current path;
 every change.
 
 One accent colour is derived from the wallpaper by **matugen** and pushed into
-quickshell, rofi, hyprland, hyprlock, alacritty, starship and GTK. Change
+quickshell, rofi, hyprland, hyprlock, kitty, starship and GTK. Change
 wallpaper and
 accent together with `SUPER+W` (or `hypr/scripts/set-wallpaper.sh`), which takes
 images and videos alike -- for a video it pulls a frame with ffmpeg and themes

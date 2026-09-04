@@ -48,8 +48,8 @@ hl.monitor({
 -- dofile() to override any of it.
 local colors = dofile(os.getenv("HOME") .. "/dotfiles/hypr/colors.lua")
 
-local terminal    = "alacritty"
-local fileManager = "alacritty -e ranger -r ~/dotfiles/ranger"
+local terminal    = "kitty"
+local fileManager = "kitty ranger -r ~/dotfiles/ranger"
 local dotfiles    = os.getenv("HOME") .. "/dotfiles"
 
 
@@ -235,7 +235,7 @@ hl.config({
         disable_splash_rendering = true,
 
         enable_swallow = true,
-        swallow_regex  = "^(Alacritty|alacritty|kitty)$",
+        swallow_regex  = "^(kitty)$",
     },
 })
 
@@ -453,10 +453,10 @@ end
 -- real external display to pin them to.
 
 -- Terminals: solid-ish when focused, noticeably see-through when not.
--- Alacritty's own `opacity` is left at 1.0 so these two numbers are the whole story.
+-- kitty's own `background_opacity` is left at 1.0 so these two numbers are the whole story.
 hl.window_rule({
-    name    = "alacritty-opacity",
-    match   = { class = "(?i)^alacritty$" },
+    name    = "kitty-opacity",
+    match   = { class = "(?i)^kitty$" },
     opacity = "0.95 0.85",
 })
 

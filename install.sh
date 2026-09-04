@@ -52,7 +52,7 @@ PKGS_DESKTOP=(
 	# power menu
 	rofi quickshell
 	# terminal, shell, prompt, files
-	alacritty zsh starship ranger
+	kitty zsh starship ranger
 	# theming
 	matugen
 	# clipboard + screenshots
@@ -73,9 +73,10 @@ PKGS_FONTS=(
 	ttf-meslo-nerd ttf-nerd-fonts-symbols-mono
 	noto-fonts noto-fonts-emoji papirus-icon-theme bibata-cursor-theme
 )
-# ranger's scope.sh previews -- everything it shells out to.
+# ranger's scope.sh previews -- everything it shells out to. Image previews
+# themselves need no package here: kitty decodes them itself (see ranger/rc.conf).
 PKGS_RANGER=(
-	ueberzugpp w3m highlight ffmpegthumbnailer mediainfo perl-image-exiftool
+	w3m highlight ffmpegthumbnailer mediainfo perl-image-exiftool
 	atool 7zip unrar odt2txt transmission-cli elinks lynx
 )
 PKGS_SDDM=( sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative )

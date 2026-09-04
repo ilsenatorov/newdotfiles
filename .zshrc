@@ -13,9 +13,9 @@ plugins=(git
 
 source $ZSH/oh-my-zsh.sh
 export EDITOR=vim
-# Deliberately NOT setting TERM: alacritty and kitty both ship correct terminfo
-# and export it themselves. Forcing xterm-256color costs true-colour and
-# undercurl detection. For hosts missing the entry, use `kitty +kitten ssh` or
+# Deliberately NOT setting TERM: kitty ships correct terminfo and exports it
+# itself. Forcing xterm-256color costs true-colour and undercurl detection.
+# For hosts missing the entry, use `kitty +kitten ssh` or
 #   infocmp -x | ssh HOST -- tic -x -
 export BROWSER=/usr/bin/brave
 
