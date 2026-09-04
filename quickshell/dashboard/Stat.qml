@@ -1,4 +1,5 @@
 import QtQuick
+import ".."
 
 // A footer cell: small dim label, value beside it. Same fade-and-rise entrance
 // as StatBar so the whole card assembles as one motion.

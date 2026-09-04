@@ -22,10 +22,6 @@ rainbow_cyan   = { color = "#00cccc", blend = true }
 rainbow_blue   = { color = "#3388ff", blend = true }
 rainbow_purple = { color = "#aa55ff", blend = true }
 
-[templates.waybar]
-input_path  = '~/dotfiles/matugen/templates/colors-waybar.css'
-output_path = '~/dotfiles/waybar/colors.css'
-
 [templates.rofi]
 input_path  = '~/dotfiles/matugen/templates/colors-rofi.rasi'
 output_path = '~/dotfiles/rofi/styles/colors.rasi'
@@ -37,10 +33,6 @@ output_path = '~/dotfiles/hypr/colors.conf'
 [templates.hyprland]
 input_path  = '~/dotfiles/matugen/templates/colors-hypr.lua'
 output_path = '~/dotfiles/hypr/colors.lua'
-
-[templates.mako]
-input_path  = '~/dotfiles/matugen/templates/colors-mako'
-output_path = '~/dotfiles/mako/colors'
 
 [templates.alacritty]
 input_path  = '~/dotfiles/matugen/templates/colors-alacritty.toml'

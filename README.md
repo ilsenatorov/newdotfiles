@@ -60,15 +60,13 @@ Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 The authoritative list is the `PKGS_*` / `AUR_*` arrays in `install.sh`; this is
 the why behind them.
 
-* __rofi__ for launching software
-* __networkmanager_dmenu__ for connection managing
-* __rofi-bluetooth__ for bluetooth managing
-* __waybar__ as the status bar
+* __rofi__ for launching software and the power menu (`SUPER+D`, `SUPER+SHIFT+S`)
 * __hyprland__ as the compositor/WM, with __mpvpaper__ for the video wallpaper
 * __alacritty__ as the terminal emulator
 * __ranger__ as the file manager in terminal
-* __mako__ for notifications, __rofi__ menus for power/bluetooth/network
-* __quickshell__ for the desktop dashboard (`quickshell/`, SUPER+G)
+* __quickshell__ for the bar, notifications, and the network/bluetooth/audio/
+  calendar panels (`quickshell/`; SUPER+N/Y/M/G) -- replaces waybar, mako,
+  networkmanager_dmenu, rofi-bluetooth and pavucontrol
 * __matugen__ for wallpaper-derived accent colours
 * __sddm__ as the display manager, with the pixel_sakura astronaut theme (see `sddm/`)
 * __zsh__
@@ -84,7 +82,7 @@ mpvpaper covers both. `hypr/wallpaper.conf` holds the current path;
 every change.
 
 One accent colour is derived from the wallpaper by **matugen** and pushed into
-waybar, rofi, mako, hyprland, hyprlock, alacritty, starship and GTK. Change
+quickshell, rofi, hyprland, hyprlock, alacritty, starship and GTK. Change
 wallpaper and
 accent together with `SUPER+W` (or `hypr/scripts/set-wallpaper.sh`), which takes
 images and videos alike -- for a video it pulls a frame with ffmpeg and themes
@@ -124,4 +122,4 @@ the accent moves with the wallpaper.
 
 Optional packages that the configs pick up automatically if installed:
 `adw-gtk3` (better GTK3 match for modern apps), `bibata-cursor-theme` (falls
-back to Adwaita). `papirus-icon-theme` and `ttf-iosevka-nerd` are required.
+back to Adwaita). `papirus-icon-theme` and `ttf-meslo-nerd` are required.

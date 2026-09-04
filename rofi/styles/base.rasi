@@ -4,7 +4,8 @@
 * {
   al:   #00000000;
   /* not fully opaque: hypr/hyprland.lua carries a layer rule blurring the
-     "rofi" namespace, the same treatment the waybar pills and mako get. */
+     "rofi" namespace, the same treatment the quickshell bar and
+     notifications get. */
   bg:   #141C21E6;
   bga:  #1E262BFF;
   fg:   #93A1A1FF;

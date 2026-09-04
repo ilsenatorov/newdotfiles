@@ -1,4 +1,5 @@
 import QtQuick
+import ".."
 
 // One labelled capsule gauge. The hover treatment -- tinted surface fill plus a
 // 3px accent bar on the left edge -- is lifted straight from the selected-element
