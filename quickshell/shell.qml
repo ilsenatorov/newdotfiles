@@ -7,6 +7,7 @@ import Quickshell.Wayland
 import "services"
 import "dashboard"
 import "bar"
+import "ui"
 
 ShellRoot {
     id: shell
@@ -77,6 +78,43 @@ ShellRoot {
                 // panels/) -- until then this is a documented no-op.
                 onPanelRequested: name => console.log("panel requested:", name)
             }
+        }
+    }
+
+    // Notification overlay -- replaces mako. Single instance on the primary
+    // screen (mako shows on the focused output only, not every monitor, so
+    // this deliberately isn't a per-screen Variants like the bar). mako ran
+    // layer=overlay, anchor=top-right, margin=6; mirrored below. Only the
+    // toasts themselves take clicks (mask), same click-through-elsewhere
+    // behaviour the bar and dashboard already have.
+    PanelWindow {
+        id: notifWin
+
+        anchors {
+            top: true
+            right: true
+        }
+
+        margins {
+            top: Theme.notifMargin
+            right: Theme.notifMargin
+        }
+
+        implicitWidth: Theme.notifWidth
+        implicitHeight: Math.max(1, stack.implicitHeight)
+        color: "transparent"
+        exclusiveZone: 0
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-notifications"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        mask: Region { item: stack }
+
+        NotificationStack {
+            id: stack
+            anchors.top: parent.top
+            anchors.right: parent.right
         }
     }
 
