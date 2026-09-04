@@ -16,6 +16,26 @@ import "../.."
 Item {
     id: root
 
+    required property var screen
+
+    // Workspace groups in ext-workspace-v1 map to outputs, so this is how
+    // "only this monitor's workspaces" is expressed -- WindowManager.windowsets
+    // is the flat, unfiltered list across every output.
+    readonly property var projection: {
+        for (const p of WindowManager.windowsetProjections) {
+            if (p.screens.some(s => s.name === root.screen.name)) return p;
+        }
+        return null;
+    }
+
+    // The protocol makes no ordering guarantee (observed as e.g. 5 7 1 0), so
+    // sort explicitly by the numeric workspace name.
+    readonly property var sortedWorkspaces: {
+        const list = projection ? projection.windowsets.slice() : [];
+        list.sort((a, b) => parseInt(a.name) - parseInt(b.name));
+        return list;
+    }
+
     implicitWidth: row.implicitWidth
     implicitHeight: Theme.barHeight
 
@@ -25,7 +45,7 @@ Item {
         spacing: 2
 
         Repeater {
-            model: WindowManager.windowsets
+            model: root.sortedWorkspaces
 
             Rectangle {
                 id: ws

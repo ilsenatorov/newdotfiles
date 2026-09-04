@@ -446,11 +446,13 @@ hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(shot .. "clip"), { descri
 for i = 1, 5 do
     hl.workspace_rule({ workspace = tostring(i), monitor = "eDP-1" })
 end
--- 6..10 are deliberately unpinned: they follow the focused monitor. The old i3
--- config pinned them to DP-3, which does not exist here and would not match a
--- dock enumerating as DP-1/HDMI-A-1 either. Pin them with a stable
--- `monitor = "desc:<vendor model>"` (see `hyprctl monitors`) once there is a
--- real external display to pin them to.
+-- 6..10 pinned to the external monitor by description rather than connector
+-- name (`desc:<vendor model>`, from `hyprctl monitors`) since the connector
+-- (DP-6, HDMI-A-1, ...) depends on which port it's plugged into, but the
+-- panel's own description doesn't.
+for i = 6, 10 do
+    hl.workspace_rule({ workspace = tostring(i), monitor = "desc:Dell Inc. DELL P2422H F4JL9D3" })
+end
 
 -- Terminals: solid-ish when focused, noticeably see-through when not.
 -- kitty's own `background_opacity` is left at 1.0 so these two numbers are the whole story.
