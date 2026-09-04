@@ -39,6 +39,18 @@ Singleton {
     // but staying warm means expanding never animates from stale values.
     property bool fast: false
 
+    // Only sampled while the SUPER+G dashboard overlay is actually open --
+    // ps is cheap but there's no reason to run it in the background.
+    property bool procsActive: false
+    property var topProcesses: []
+
+    // Static machine identity for the dashboard's fastfetch-style header --
+    // sampled once at startup, never changes without a reboot/shell change.
+    property string hostname: ""
+    property string osName: ""
+    property string kernelVersion: ""
+    property string shellName: ""
+
     readonly property real tempMin: 30
     readonly property real tempMax: 95
     readonly property real tempFrac: Math.max(0, Math.min(1, (tempC - tempMin) / (tempMax - tempMin)))
@@ -98,6 +110,42 @@ Singleton {
                 if (n !== "") root.netIface = n;
             }
         }
+    }
+
+    // hostname / kernel / distro / shell, tab-separated in one process.
+    Process {
+        running: true
+        command: ["sh", "-c", "hostname; uname -r; sh -c '. /etc/os-release 2>/dev/null; echo \"$PRETTY_NAME\"'; basename \"$SHELL\""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = text.trim().split("\n");
+                root.hostname = lines[0] ?? "";
+                root.kernelVersion = lines[1] ?? "";
+                root.osName = lines[2] ?? "";
+                root.shellName = lines[3] ?? "";
+            }
+        }
+    }
+
+    Process {
+        id: psProc
+        command: ["sh", "-c", "ps -eo comm,%cpu --sort=-%cpu --no-headers | head -5"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.topProcesses = text.trim().split("\n").map(line => {
+                    const m = /^(.*\S)\s+([\d.]+)$/.exec(line.trim());
+                    return m ? { name: m[1], cpu: parseFloat(m[2]) } : null;
+                }).filter(r => r !== null);
+            }
+        }
+    }
+
+    Timer {
+        running: root.procsActive
+        repeat: true
+        triggeredOnStart: true
+        interval: 2000
+        onTriggered: psProc.running = true
     }
 
     FileView {

@@ -16,7 +16,7 @@ Text {
     font.pixelSize: Theme.fsBar
 
     text: {
-        if (Net.wired) return "  ";
+        if (Net.wired) return "  ";
         if (Net.wifiConnected) return Net.signalGlyph(Net.signalStrength) + "  " + Net.ssid;
         if (!Net.wifiHardwareEnabled) return "󰤮 ";
         return "󰖪 ";

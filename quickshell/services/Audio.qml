@@ -38,8 +38,8 @@ Singleton {
     }
 
     function volumeGlyph(): string {
-        if (muted || volume === 0) return "";
-        if (volume < 0.5) return "";
-        return "";
+        if (muted || volume === 0) return "";
+        if (volume < 0.5) return "";
+        return "";
     }
 }

@@ -16,6 +16,10 @@ Column {
 
     property int currentIndex: -1
 
+    // See Network.qml's Component.onCompleted for why this is needed on top
+    // of `focus: true` -- without it, Up/Down/Enter/F silently do nothing.
+    Component.onCompleted: root.forceActiveFocus()
+
     Keys.onDownPressed: {
         const count = Bt.powered ? Bt.devices.length : 0;
         if (count > 0) root.currentIndex = (root.currentIndex + 1) % count;
@@ -26,6 +30,8 @@ Column {
     }
     Keys.onReturnPressed: activateCurrent()
     Keys.onEnterPressed: activateCurrent()
+    Keys.onLeftPressed: { if (Bt.available) Bt.adapter.enabled = false; }
+    Keys.onRightPressed: { if (Bt.available) Bt.adapter.enabled = true; }
     Keys.onPressed: event => {
         if ((event.key === Qt.Key_F || event.key === Qt.Key_Delete) && root.currentIndex >= 0 && Bt.powered) {
             Bt.devices[root.currentIndex].forget();

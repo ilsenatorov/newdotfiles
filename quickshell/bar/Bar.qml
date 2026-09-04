@@ -33,6 +33,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         Sys {}
+        Gpu {}
         Battery {}
     }
 

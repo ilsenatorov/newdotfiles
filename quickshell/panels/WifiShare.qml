@@ -50,7 +50,9 @@ Column {
     Component.onCompleted: {
         qrProc.command = [Qt.resolvedUrl("../scripts/network-qr.sh").toString().replace("file://", "")];
         qrProc.running = true;
+        Net.detailsActive = true;
     }
+    Component.onDestruction: Net.detailsActive = false
 
     Process {
         id: qrProc

@@ -132,8 +132,9 @@ hl.layer_rule({
     ignore_alpha = 0.1,
 })
 
--- The desktop dashboard sits on the `bottom` layer, above mpvpaper's wallpaper
--- and below every window. Same 0xD9 surface as the bar, so the same ignore_alpha.
+-- SUPER+G's system-info overlay -- on the `overlay` layer now (shows above
+-- normal windows, not just the desktop), on demand only. Same 0xD9 surface
+-- as the bar, so the same ignore_alpha.
 hl.layer_rule({
     match        = { namespace = "quickshell-dashboard" },
     blur         = true,
@@ -294,7 +295,7 @@ hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth")
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"),     { description = "Audio menu" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), { description = "Monitor placement" })
-hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle desktop dashboard" })
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle system info overlay" })
 
 ---- Focus and movement -----------------------------------------------------
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

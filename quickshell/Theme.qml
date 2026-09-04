@@ -15,23 +15,18 @@ Singleton {
     // Type scale, in one place. This panel is 1920x1080 on a 340mm-wide screen
     // (~143 DPI), so anything under 14px is genuinely hard to read at a glance.
     readonly property int fsClock: 64
-    readonly property int fsPill: 24
     readonly property int fsDate: 15
     readonly property int fsLabel: 14
     readonly property int fsValue: 15
 
-    // The PanelWindow is fixed at cardW+inset*2 x cardH+inset*2. The inset is
-    // headroom so the hover scale and the drop shadow have somewhere to bleed
-    // without being clipped at the surface edge.
+    // The dashboard PanelWindow (SUPER+G) is fixed at cardW+inset*2 x
+    // cardH+inset*2 -- sized for its tallest state (GPU rows + now-playing +
+    // top processes all present) so it never renegotiates layer-shell
+    // geometry while open. The inset is headroom for the drop shadow.
     readonly property int cardW: 420
-    readonly property int cardH: 430
-    // The now-playing row only exists while something is playing, so the card
-    // grows by this much when it appears. The window is sized for the maximum.
-    readonly property int npRow: 28
+    readonly property int cardH: 720
     readonly property int footerRow: 22
     readonly property int barRow: 22
-    readonly property int pillW: 120
-    readonly property int pillH: 44
     readonly property int inset: 12
 
     readonly property int radius: 12
@@ -41,14 +36,14 @@ Singleton {
     // Geometry ported from waybar/style.css/config.jsonc: three floating
     // pills, no fixed bar height, margin-top 6 / sides 8. hyprland.lua's
     // gaps_out (8) is tuned to this margin -- keep them matching.
-    readonly property int barHeight: 32
+    readonly property int barHeight: 40
     readonly property int barMarginTop: 6
     readonly property int barMarginSide: 8
-    readonly property int barPillPadH: 12
-    readonly property int barPillPadV: 4
-    readonly property int barPillGap: 4
-    readonly property int barModulePad: 4
-    readonly property int fsBar: 13
+    readonly property int barPillPadH: 16
+    readonly property int barPillPadV: 6
+    readonly property int barPillGap: 10
+    readonly property int barModulePad: 6
+    readonly property int fsBar: 16
 
     // #141C21 @ 85%, matches the old waybar pill exactly (QML hex is #AARRGGBB).
     readonly property color barPill: "#D9141C21"

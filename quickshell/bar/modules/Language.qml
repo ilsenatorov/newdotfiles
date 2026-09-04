@@ -10,7 +10,7 @@ Text {
 
     property string layout: ""
 
-    text: "  " + shortName(layout)
+    text: "  " + shortName(layout)
     height: Theme.barHeight
     verticalAlignment: Text.AlignVCenter
     font.family: Theme.font
