@@ -66,9 +66,10 @@ hl.on("hyprland.start", function()
     -- Without this, file dialogs and GNOME apps stay light on a dark desktop.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
 
-    app("mako")
-    -- Bar, dashboard corner and (soon) notifications all live in one
-    -- quickshell instance now -- see quickshell/shell.qml. -n makes this a
+    -- Bar, dashboard corner and notifications all live in one quickshell
+    -- instance now -- see quickshell/shell.qml. mako is retired: its
+    -- NotificationServer would fight quickshell's for the
+    -- org.freedesktop.Notifications D-Bus name if both ran. -n makes this a
     -- no-op if an instance is already running, so a config reload never
     -- stacks two of them.
     app("qs -d -n")
@@ -111,9 +112,10 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
--- mako, styled in mako/config to match the waybar pills, gets the same blur.
+-- quickshell notification toasts, styled to match the bar pills, get the
+-- same blur mako's did.
 hl.layer_rule({
-    match        = { namespace = "notifications" },
+    match        = { namespace = "quickshell-notifications" },
     blur         = true,
     ignore_alpha = 0.2,
 })
