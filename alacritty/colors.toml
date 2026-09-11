@@ -5,29 +5,29 @@
 # driven bits live in this file. Alacritty watches its config and live-reloads,
 # so a rewrite here recolours open terminals with no restart.
 [colors.cursor]
-cursor = "#e7c400"
+cursor = "#acc7ff"
 text   = "#141C21"
 
 [colors.vi_mode_cursor]
-cursor = "#c4cc84"
+cursor = "#cabff8"
 text   = "#141C21"
 
 [colors.selection]
-background = "#2e2a1a"
+background = "#262a33"
 text       = "CellForeground"
 
 [colors.search.matches]
-background = "#544600"
+background = "#004590"
 foreground = "#93A1A1"
 
 [colors.search.focused_match]
-background = "#e7c400"
+background = "#acc7ff"
 foreground = "#141C21"
 
 [colors.hints.start]
-background = "#e7c400"
+background = "#acc7ff"
 foreground = "#141C21"
 
 [colors.hints.end]
-background = "#544600"
+background = "#004590"
 foreground = "#93A1A1"

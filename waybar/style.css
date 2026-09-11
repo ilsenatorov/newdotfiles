@@ -32,7 +32,7 @@
     /* Iosevka Nerd Font is the primary; MesloLGS NF is the icon fallback.
        Both are installed -- verify with `fc-list : family | grep -i nerd`. */
     font-family: "Iosevka Nerd Font", "MesloLGS NF", "Hack", monospace;
-    font-size: 12pt;
+    font-size: 10pt;
     min-height: 0;
     border: none;
     border-radius: 0;
@@ -55,8 +55,8 @@ window#waybar.hidden {
 .modules-right {
     background-color: @pill;
     border-radius: 12px;
-    padding: 4px 12px;
-    margin: 0 4px;
+    padding: 2px 10px;
+    margin: 0 3px;
 }
 #workspaces,
 #submap,
