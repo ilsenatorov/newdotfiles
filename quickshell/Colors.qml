@@ -7,10 +7,10 @@ import QtQuick
 import Quickshell
 
 Singleton {
-    readonly property color accent: "#e7c400"
-    readonly property color accentAlt: "#c4cc84"
-    readonly property color accentDim: "#544600"
+    readonly property color accent: "#acc7ff"
+    readonly property color accentAlt: "#cabff8"
+    readonly property color accentDim: "#004590"
     readonly property color urgent: "#ffb4ab"
     // Wallpaper-tinted dark surface -- for hovered/selected backgrounds only.
-    readonly property color surface: "#2e2a1a"
+    readonly property color surface: "#262a33"
 }

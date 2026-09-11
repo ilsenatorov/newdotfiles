@@ -87,7 +87,7 @@ cat > "$STATE" <<STATEFILE
 WALLPAPER=${wall}
 STATEFILE
 
-"${DOTS}/hypr/scripts/wallpaper-daemon.sh" "$wall" || die "could not start mpvpaper"
+"${DOTS}/hypr/scripts/wallpaper-daemon.sh" "$wall" || echo "wallpaper daemon failed to start (non-fatal)" >&2
 
 # ---- 4. tell everything to re-read its colours ---------------------------
 # starship is the one config that is built rather than imported: its TOML has no

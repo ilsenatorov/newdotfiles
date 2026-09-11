@@ -19,35 +19,35 @@
 # variants are vivid pastels needing dark text; see the commented block.
 [palettes.dots]
 # --- the four coloured segments -------------------------------------------
-hue_red    = "#7c2e00"     # os + username  (was color_orange)
-hue_orange = "#653e00"  # directory      (was color_yellow)
-hue_green  = "#2f4f00"   # git            (was color_aqua)
-hue_cyan   = "#005045"    # languages      (was color_blue)
+hue_red    = "#91002f"     # os + username  (was color_orange)
+hue_orange = "#7e2c00"  # directory      (was color_yellow)
+hue_green  = "#005233"   # git            (was color_aqua)
+hue_cyan   = "#004e59"    # languages      (was color_blue)
 # Text on all four. Material guarantees this against the container tones.
-on_hue     = "#ebe2cb"
+on_hue     = "#dfe2ef"
 
 # --- vivid alternative ----------------------------------------------------
 # Swap these five lines in for the five above to get the bright variant: vivid
 # pastel segments with near-black text. Much louder, maximum separation between
 # segments. Nothing else in starship.base.toml has to change.
 #
-# hue_red    = "#ffb595"
-# hue_orange = "#ffb95c"
-# hue_green  = "#8adc00"
-# hue_cyan   = "#00dfc3"
+# hue_red    = "#ffb2b9"
+# hue_orange = "#ffb597"
+# hue_green  = "#00e295"
+# hue_cyan   = "#00daf4"
 # on_hue     = "#141C21"
 
 # --- spare hues -----------------------------------------------------------
 # Unused by the default chain, same as gruvbox_dark's own color_purple. Wired up
 # for the optional segments at the bottom of starship.base.toml.
-hue_blue   = "#004a77"
-hue_purple = "#790095"
+hue_blue   = "#004590"
+hue_purple = "#4a00d4"
 
 # --- the two dark tail segments -------------------------------------------
 # Greys, so these stay on the plain surface ramp -- gruvbox's bg3/bg1 are grey too.
-surface_bright    = "#3e3929"     # docker/conda (was color_bg3)
-surface_container = "#231f11"  # time         (was color_bg1)
-on_surface        = "#ebe2cb"         #              (was color_fg0)
+surface_bright    = "#353943"     # docker/conda (was color_bg3)
+surface_container = "#1b2029"  # time         (was color_bg1)
+on_surface        = "#dfe2ef"         #              (was color_fg0)
 
 # --- error ----------------------------------------------------------------
 error    = "#ffb4ab"
