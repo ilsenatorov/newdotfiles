@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Claude subscription limit utilisation, via scripts/claude-usage.sh.
 //
@@ -41,8 +42,9 @@ Singleton {
         }
     }
 
+    // local.conf's SVC_CLAUDE_USAGE=0 stops this timer outright.
     Timer {
-        running: true
+        running: Local.svcClaudeUsage
         repeat: true
         triggeredOnStart: true
         interval: 300000 // 5 min

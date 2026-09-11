@@ -1,4 +1,5 @@
-export ZSH="/home/ilya/.oh-my-zsh"
+ZSH="${ZSH:-$HOME/.oh-my-zsh}"
+export ZSH
 # No ZSH_THEME: starship is initialised at the bottom of this file and replaces
 # whatever oh-my-zsh sets, so setting one here only costs a wasted theme load.
 ZSH_THEME=""
@@ -32,10 +33,11 @@ alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 zstyle ':completion:*' menu select
 
-export CLAUDE_OBSIDIAN_VAULT="$HOME/Documents/MyKnowledgeVault"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
 
-alias code="code --ozone-platform=x11"
-
-. "$HOME/.local/bin/env"
+# Per-machine tail: CLAUDE_OBSIDIAN_VAULT, the NVIDIA VS Code workaround,
+# `. ~/.local/bin/env`, anything else that is true on this box but not the
+# other two. Lives outside the repo -- install.sh seeds it once, never
+# overwrites it, and never tracks it.
+[ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
