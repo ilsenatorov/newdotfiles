@@ -1,0 +1,13 @@
+configuration {
+	font:           "MesloLGS NF 14";
+  show-icons:           false;
+}
+
+
+* {
+  width: 500px;
+  cols: 1;
+  placeholder: "Placement";
+}
+
+@import "base.rasi"

@@ -48,8 +48,8 @@ hl.monitor({
 -- dofile() to override any of it.
 local colors = dofile(os.getenv("HOME") .. "/dotfiles/hypr/colors.lua")
 
-local terminal    = "alacritty"
-local fileManager = "alacritty -e ranger -r ~/dotfiles/ranger"
+local terminal    = "kitty"
+local fileManager = "kitty ranger -r ~/dotfiles/ranger"
 local dotfiles    = os.getenv("HOME") .. "/dotfiles"
 
 
@@ -66,10 +66,12 @@ hl.on("hyprland.start", function()
     -- Without this, file dialogs and GNOME apps stay light on a dark desktop.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
 
-    app("waybar")
-    app("mako")
-    -- Desktop dashboard (quickshell/). -n makes this a no-op if an instance
-    -- is already running, so a config reload never stacks two of them.
+    -- Bar, dashboard corner and notifications all live in one quickshell
+    -- instance now -- see quickshell/shell.qml. mako is retired: its
+    -- NotificationServer would fight quickshell's for the
+    -- org.freedesktop.Notifications D-Bus name if both ran. -n makes this a
+    -- no-op if an instance is already running, so a config reload never
+    -- stacks two of them.
     app("qs -d -n")
     -- Wallpaper: mpvpaper via wallpaper-daemon.sh, not hyprpaper. The wallpaper
     -- is a looping video (Disco-Elysium-4k.mp4) and hyprpaper only does stills;
@@ -77,7 +79,9 @@ hl.on("hyprland.start", function()
     -- The script reads hypr/wallpaper.conf, written by set-wallpaper.sh.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/wallpaper-daemon.sh")
     app("hypridle")
-    app("nm-applet --indicator")
+    -- nm-applet retired: the bar's network module + Network panel (SUPER+N)
+    -- replace it, and the tray it rendered into was disabled anyway
+    -- (waybar's tray module was commented out).
 
     -- Polkit agent: NOT started here. hyprpolkitagent ships its own systemd user
     -- unit (WantedBy=graphical-session.target), which is the right mechanism
@@ -105,14 +109,15 @@ end)
 
 
 hl.layer_rule({
-    match        = { namespace = "waybar" },
+    match        = { namespace = "quickshell-bar" },
     blur         = true,
     ignore_alpha = 0.2,
 })
 
--- mako, styled in mako/config to match the waybar pills, gets the same blur.
+-- quickshell notification toasts, styled to match the bar pills, get the
+-- same blur mako's did.
 hl.layer_rule({
-    match        = { namespace = "notifications" },
+    match        = { namespace = "quickshell-notifications" },
     blur         = true,
     ignore_alpha = 0.2,
 })
@@ -127,8 +132,9 @@ hl.layer_rule({
     ignore_alpha = 0.1,
 })
 
--- The desktop dashboard sits on the `bottom` layer, above mpvpaper's wallpaper
--- and below every window. Same 0xD9 surface as the bar, so the same ignore_alpha.
+-- SUPER+G's system-info overlay -- on the `overlay` layer now (shows above
+-- normal windows, not just the desktop), on demand only. Same 0xD9 surface
+-- as the bar, so the same ignore_alpha.
 hl.layer_rule({
     match        = { namespace = "quickshell-dashboard" },
     blur         = true,
@@ -139,9 +145,10 @@ hl.layer_rule({
 hl.config({
     general = {
         gaps_in  = 5,
-        -- waybar floats with margin-top 6 / left|right 8; matching that here
-        -- keeps windows off the screen edge so the detached bar reads as
-        -- deliberate rather than as a bar overlapping full-bleed windows.
+        -- The quickshell bar floats with margin-top/side from Theme.qml
+        -- (barMarginTop 6, barMarginSide 8); matching that here keeps windows
+        -- off the screen edge so the detached bar reads as deliberate rather
+        -- than as a bar overlapping full-bleed windows.
         gaps_out = 8,
 
         -- was 0, which made the col.* accent below dead config: the
@@ -166,8 +173,9 @@ hl.config({
     },
 
     decoration = {
-        -- 12px is the radius shared by the waybar pills, mako, the rofi window
-        -- and the hyprlock input field. 3 was the odd one out.
+        -- 12px is the radius shared by the quickshell bar pills, notification
+        -- toasts, the rofi window and the hyprlock input field. 3 was the
+        -- odd one out.
         rounding = 12,
         active_opacity   = 1.0,
         inactive_opacity = 0.8,
@@ -200,9 +208,9 @@ hl.config({
             border_inactive = "rgba(3C4449ff)",
         },
         groupbar = {
-            font_family = "Iosevka Nerd Font",
+            font_family = "MesloLGS NF",
             font_size   = 11,
-            -- match the waybar pills: 12px radius, accent indicator, some air
+            -- match the quickshell bar pills: 12px radius, accent indicator, some air
             height           = 20,
             indicator_height = 3,
             rounding         = 12,
@@ -227,7 +235,7 @@ hl.config({
         disable_splash_rendering = true,
 
         enable_swallow = true,
-        swallow_regex  = "^(Alacritty|alacritty|kitty)$",
+        swallow_regex  = "^(kitty)$",
     },
 })
 
@@ -280,10 +288,14 @@ hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "
 
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher.sh"),         { description = "App launcher" })
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.sh"), { description = "Run command" })
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("networkmanager_dmenu"),                  { description = "Network menu" })
-hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd(dotfiles .. "/rofi-bluetooth/rofi-bluetooth"), { description = "Bluetooth menu" })
+-- Network/bluetooth/audio now open the quickshell panels instead of
+-- launching a separate rofi/GTK tool -- see quickshell/panels/.
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"),   { description = "Network menu" })
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), { description = "Bluetooth menu" })
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"),     { description = "Audio menu" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
-hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle desktop dashboard" })
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), { description = "Monitor placement" })
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle system info overlay" })
 
 ---- Focus and movement -----------------------------------------------------
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
@@ -434,17 +446,19 @@ hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(shot .. "clip"), { descri
 for i = 1, 5 do
     hl.workspace_rule({ workspace = tostring(i), monitor = "eDP-1" })
 end
--- 6..10 are deliberately unpinned: they follow the focused monitor. The old i3
--- config pinned them to DP-3, which does not exist here and would not match a
--- dock enumerating as DP-1/HDMI-A-1 either. Pin them with a stable
--- `monitor = "desc:<vendor model>"` (see `hyprctl monitors`) once there is a
--- real external display to pin them to.
+-- 6..10 pinned to the external monitor by description rather than connector
+-- name (`desc:<vendor model>`, from `hyprctl monitors`) since the connector
+-- (DP-6, HDMI-A-1, ...) depends on which port it's plugged into, but the
+-- panel's own description doesn't.
+for i = 6, 10 do
+    hl.workspace_rule({ workspace = tostring(i), monitor = "desc:Dell Inc. DELL P2422H F4JL9D3" })
+end
 
 -- Terminals: solid-ish when focused, noticeably see-through when not.
--- Alacritty's own `opacity` is left at 1.0 so these two numbers are the whole story.
+-- kitty's own `background_opacity` is left at 1.0 so these two numbers are the whole story.
 hl.window_rule({
-    name    = "alacritty-opacity",
-    match   = { class = "(?i)^alacritty$" },
+    name    = "kitty-opacity",
+    match   = { class = "(?i)^kitty$" },
     opacity = "0.95 0.85",
 })
 

@@ -52,9 +52,9 @@ if [ "$preview_images" = "True" ]; then
         # Image previews for SVG files, disabled by default.
         ###image/svg+xml)
         ###   convert "$path" "$cached" && exit 6 || exit 1;;
-        # Image previews for image files. w3mimgdisplay will be called for all
-        # image files (unless overriden as above), but might fail for
-        # unsupported types.
+        # Image previews for image files. Exit 7 hands the file straight to
+        # ranger's configured image displayer (kitty here, see rc.conf);
+        # it might still fail for types that displayer cannot decode.
         image/*)
             exit 7;;
         # Image preview for video, disabled by default.:

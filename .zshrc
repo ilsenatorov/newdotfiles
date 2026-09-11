@@ -13,9 +13,13 @@ plugins=(git
 
 source $ZSH/oh-my-zsh.sh
 export EDITOR=vim
+# Deliberately NOT setting TERM: kitty ships correct terminfo and exports it
+# itself. Forcing xterm-256color costs true-colour and undercurl detection.
+# For hosts missing the entry, use `kitty +kitten ssh` or
+#   infocmp -x | ssh HOST -- tic -x -
 export BROWSER=/usr/bin/brave
 
-# fzf in the desktop palette (waybar/style.css). bat/delta/eza are not installed
+# fzf in the desktop palette (quickshell/Theme.qml). bat/delta/eza are not installed
 # here, so there is nothing to theme for them yet.
 export FZF_DEFAULT_OPTS="--color=bg+:#1E262B,bg:-1,spinner:#4DD0E1,hl:#EC7875 \
 --color=fg:#93A1A1,header:#EC7875,info:#FDD835,pointer:#4DD0E1 \
@@ -27,6 +31,7 @@ alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat 
 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 zstyle ':completion:*' menu select
+
 export CLAUDE_OBSIDIAN_VAULT="$HOME/Documents/MyKnowledgeVault"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"

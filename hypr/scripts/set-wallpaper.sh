@@ -93,14 +93,14 @@ STATEFILE
 # starship is the one config that is built rather than imported: its TOML has no
 # include directive, so the generated palette has to be concatenated onto the
 # hand-written base. starship re-reads its config on every prompt, so this
-# recolours already-open shells with no restart -- same as alacritty.
+# recolours already-open shells with no restart -- same as kitty.
 "${DOTS}/starship/build.sh" || echo "starship rebuild failed (non-fatal)" >&2
 
 hyprctl reload >/dev/null 2>&1 || true
-pkill -SIGUSR2 -x waybar 2>/dev/null || true   # waybar reloads CSS on SIGUSR2
-makoctl reload 2>/dev/null || true
-# alacritty watches its config and live-reloads, so open terminals recolour
-# themselves; rofi picks it up on next launch, hyprlock on next lock.
+# No reload signal needed for the bar/notifications/panels any more --
+# quickshell watches quickshell/Colors.qml itself and hot-reloads on write.
+# kitty re-reads its config on save, so open terminals recolour themselves;
+# rofi picks it up on next launch, hyprlock on next lock.
 # GTK apps re-read gtk.css only on restart.
 
 # ---- 5. login screen -----------------------------------------------------
@@ -119,5 +119,5 @@ if [ -f /usr/share/sddm/themes/sddm-astronaut-theme/Themes/main.conf ]; then
     fi
 fi
 
-accent=$(grep -oE '#[0-9a-fA-F]{6}' "${DOTS}/waybar/colors.css" | head -1)
+accent=$(grep -oE '#[0-9a-fA-F]{6}' "${DOTS}/quickshell/Colors.qml" | head -1)
 notify-send "Wallpaper set" "$(basename "$wall")\nAccent ${accent}"
