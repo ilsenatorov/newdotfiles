@@ -3,36 +3,76 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Hand-written half of the palette and all geometry. Mirrors waybar/style.css,
-// mako/config and rofi/styles/base.rasi -- radius 12, #141C21 base, #93A1A1 text,
-// Iosevka everywhere, no bold. Colors.qml holds the matugen-generated other half.
+// Hand-written half of the palette and all geometry. Mirrors rofi/styles/base.rasi
+// and hyprlock.conf -- radius 12, #141C21 base, #93A1A1 text, MesloLGS NF
+// everywhere, no bold. Colors.qml holds the matugen-generated other half.
+// This shell is now the single source of truth for the bar and notification
+// palette that waybar/style.css and mako/config used to own -- see the
+// per-module color roles below, ported straight from waybar/style.css.
 Singleton {
-    readonly property string font: "Iosevka"
+    readonly property string font: "MesloLGS NF"
 
     // Type scale, in one place. This panel is 1920x1080 on a 340mm-wide screen
     // (~143 DPI), so anything under 14px is genuinely hard to read at a glance.
     readonly property int fsClock: 64
-    readonly property int fsPill: 24
     readonly property int fsDate: 15
     readonly property int fsLabel: 14
     readonly property int fsValue: 15
 
-    // The PanelWindow is fixed at cardW+inset*2 x cardH+inset*2. The inset is
-    // headroom so the hover scale and the drop shadow have somewhere to bleed
-    // without being clipped at the surface edge.
+    // The dashboard PanelWindow (SUPER+G) is fixed at cardW+inset*2 x
+    // cardH+inset*2 -- sized for its tallest state (GPU rows + now-playing +
+    // top processes all present) so it never renegotiates layer-shell
+    // geometry while open. The inset is headroom for the drop shadow.
     readonly property int cardW: 420
-    readonly property int cardH: 430
-    // The now-playing row only exists while something is playing, so the card
-    // grows by this much when it appears. The window is sized for the maximum.
-    readonly property int npRow: 28
+    readonly property int cardH: 720
     readonly property int footerRow: 22
     readonly property int barRow: 22
-    readonly property int pillW: 120
-    readonly property int pillH: 44
     readonly property int inset: 12
 
     readonly property int radius: 12
     readonly property int pad: 22
+
+    // ---- bar ----------------------------------------------------------
+    // Geometry ported from waybar/style.css/config.jsonc: three floating
+    // pills, no fixed bar height, margin-top 6 / sides 8. hyprland.lua's
+    // gaps_out (8) is tuned to this margin -- keep them matching.
+    readonly property int barHeight: 40
+    readonly property int barMarginTop: 6
+    readonly property int barMarginSide: 8
+    readonly property int barPillPadH: 16
+    readonly property int barPillPadV: 6
+    readonly property int barPillGap: 10
+    readonly property int barModulePad: 6
+    readonly property int fsBar: 16
+
+    // #141C21 @ 85%, matches the old waybar pill exactly (QML hex is #AARRGGBB).
+    readonly property color barPill: "#D9141C21"
+
+    // ---- notifications --------------------------------------------------
+    readonly property int notifWidth: 380
+    readonly property int notifMinHeight: 76
+    readonly property int notifMaxVisible: 5
+    readonly property int notifMargin: 6
+    readonly property int notifBorder: 2
+    readonly property int notifIconSize: 48
+    readonly property int notifDefaultTimeout: 6000
+    readonly property int notifLowTimeout: 4000
+
+    // ---- panels -----------------------------------------------------------
+    readonly property int panelW: 340
+    readonly property int panelGap: 8
+
+    // ---- per-module bar colors, ported 1:1 from waybar/style.css ---------
+    // Fixed semantics: matugen never touches these, same values the bar and
+    // notifications have always used.
+    readonly property color pink: "#EC407A"
+    readonly property color purple: "#BA68C8"
+    readonly property color blue: "#42A5F5"
+    readonly property color cyan: "#4DD0E1"
+    readonly property color teal: "#00B19F"
+    readonly property color green: "#61C766"
+    readonly property color orange: "#E57C46"
+    readonly property color blueGray: "#6D8895"
 
     // QML hex is #AARRGGBB, not #RRGGBBAA. Lower than waybar's 0xD9 on purpose:
     // this is a big surface, so it can carry a real frosted-glass read where a
@@ -40,6 +80,11 @@ Singleton {
     // rule in hypr/hyprland.lua -- keep this above that rule's ignore_alpha (0.2)
     // or the blur stops being applied at all.
     readonly property color surface: "#66141C21"
+
+    // SUPER+G's dashboard specifically: it can pop up over arbitrary windows
+    // (overlay layer, not just the desktop background), so the frosted-glass
+    // `surface` above reads poorly over bright content. Solid instead.
+    readonly property color dashboardSurface: "#F2141C21"
     readonly property color fg: "#93A1A1"
     readonly property color dim: "#6D8895"
     readonly property color rule: "#3C4449"
