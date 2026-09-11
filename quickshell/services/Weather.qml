@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Current conditions from Open-Meteo: free, no API key, no account.
 Singleton {
@@ -62,8 +63,11 @@ Singleton {
         }
     }
 
+    // local.conf's SVC_WEATHER=0 stops this timer outright -- on a weak
+    // machine there is no reason to shell out to curl every 15 minutes for a
+    // widget that may not even be in BAR_LEFT/CENTER/RIGHT.
     Timer {
-        running: true
+        running: Local.svcWeather
         repeat: true
         triggeredOnStart: true
         interval: 900000 // 15 min -- the upstream model only updates every 15

@@ -10,57 +10,70 @@ import Quickshell
 // palette that waybar/style.css and mako/config used to own -- see the
 // per-module color roles below, ported straight from waybar/style.css.
 Singleton {
-    readonly property string font: "MesloLGS NF"
+    // font: local.conf FONT is empty by default (MesloLGS NF everywhere); set
+    // it to switch fonts on a machine without MesloLGS NF installed, the same
+    // reasoning hyprland.lua's cursor_theme() probe uses for cursors.
+    readonly property string font: Local.values["FONT"] || "MesloLGS NF"
 
-    // Type scale, in one place. This panel is 1920x1080 on a 340mm-wide screen
-    // (~143 DPI), so anything under 14px is genuinely hard to read at a glance.
-    readonly property int fsClock: 64
-    readonly property int fsDate: 15
-    readonly property int fsLabel: 14
-    readonly property int fsValue: 15
+    // Every geometry/font value below scales with local.conf's UI_SCALE
+    // (default 1.0, unchanged from today) -- the "make it fit the small
+    // screen" lever. A same-named local.conf key (BAR_HEIGHT, FONT_SIZE_BAR,
+    // DASHBOARD_W/H) overrides its derived value outright instead of scaling
+    // it, for a machine that needs one dimension tuned independently.
+    readonly property real s: Local.uiScale
+
+    // Type scale, in one place. At scale 1.0 this panel is 1920x1080 on a
+    // 340mm-wide screen (~143 DPI), so anything under 14px is genuinely hard
+    // to read at a glance -- a smaller/closer panel is exactly what UI_SCALE
+    // is for.
+    readonly property int fsClock: Math.round(64 * s)
+    readonly property int fsDate: Math.round(15 * s)
+    readonly property int fsLabel: Math.round(14 * s)
+    readonly property int fsValue: Math.round(15 * s)
 
     // The dashboard PanelWindow (SUPER+G) is fixed at cardW+inset*2 x
     // cardH+inset*2 -- sized for its tallest state (GPU rows + now-playing +
     // top processes all present) so it never renegotiates layer-shell
     // geometry while open. The inset is headroom for the drop shadow.
-    readonly property int cardW: 420
-    readonly property int cardH: 720
-    readonly property int footerRow: 22
-    readonly property int barRow: 22
-    readonly property int inset: 12
+    readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(420 * s)
+    readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(720 * s)
+    readonly property int footerRow: Math.round(22 * s)
+    readonly property int barRow: Math.round(22 * s)
+    readonly property int inset: Math.round(12 * s)
 
     readonly property int radius: 12
-    readonly property int pad: 22
+    readonly property int pad: Math.round(22 * s)
 
     // ---- bar ----------------------------------------------------------
     // Geometry ported from waybar/style.css/config.jsonc: three floating
     // pills, no fixed bar height, margin-top 6 / sides 8. hyprland.lua's
-    // gaps_out (8) is tuned to this margin -- keep them matching.
-    readonly property int barHeight: 40
-    readonly property int barMarginTop: 6
-    readonly property int barMarginSide: 8
-    readonly property int barPillPadH: 16
-    readonly property int barPillPadV: 6
-    readonly property int barPillGap: 10
-    readonly property int barModulePad: 6
-    readonly property int fsBar: 16
+    // gaps_out (8) is tuned to this margin -- keep them matching (M.gaps_out
+    // in local.lua overrides that side if this margin is scaled).
+    readonly property int barHeight: Local.barHeight > 0 ? Local.barHeight : Math.round(40 * s)
+    readonly property int barMarginTop: Math.round(6 * s)
+    readonly property int barMarginSide: Math.round(8 * s)
+    readonly property int barPillPadH: Math.round(16 * s)
+    readonly property int barPillPadV: Math.round(6 * s)
+    readonly property int barPillGap: Math.round(10 * s)
+    readonly property int barModulePad: Math.round(6 * s)
+    readonly property int fsBar: Local.fsBar > 0 ? Local.fsBar : Math.round(16 * s)
 
     // #141C21 @ 85%, matches the old waybar pill exactly (QML hex is #AARRGGBB).
     readonly property color barPill: "#D9141C21"
 
     // ---- notifications --------------------------------------------------
-    readonly property int notifWidth: 380
-    readonly property int notifMinHeight: 76
+    readonly property int notifWidth: Math.round(380 * s)
+    readonly property int notifMinHeight: Math.round(76 * s)
     readonly property int notifMaxVisible: 5
-    readonly property int notifMargin: 6
+    readonly property int notifMargin: Math.round(6 * s)
     readonly property int notifBorder: 2
-    readonly property int notifIconSize: 48
+    readonly property int notifIconSize: Math.round(48 * s)
     readonly property int notifDefaultTimeout: 6000
     readonly property int notifLowTimeout: 4000
 
     // ---- panels -----------------------------------------------------------
-    readonly property int panelW: 340
-    readonly property int panelGap: 8
+    readonly property int panelW: Math.round(340 * s)
+    readonly property int panelGap: Math.round(8 * s)
 
     // ---- per-module bar colors, ported 1:1 from waybar/style.css ---------
     // Fixed semantics: matugen never touches these, same values the bar and

@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Machine stats for the dashboard. CPU/RAM/temperature come straight off sysfs
 // with no subprocess; only disk needs one, and only once a minute.
@@ -93,8 +94,11 @@ Singleton {
         }
     }
 
+    // local.conf's SVC_GPU=0 skips the probe outright (rather than just hiding
+    // the module once probed) -- on weak/battery-limited hardware there is no
+    // reason to even shell out to nvidia-smi every poll.
     Process {
-        running: true
+        running: Local.svcGpu
         command: ["sh", "-c", "command -v nvidia-smi >/dev/null && nvidia-smi -L >/dev/null 2>&1 && echo yes || echo no"]
         stdout: StdioCollector {
             onStreamFinished: { root.gpuAvailable = text.trim() === "yes"; }
@@ -305,7 +309,7 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        interval: root.fast ? 2000 : 10000
+        interval: root.fast ? Local.sysmonIntervalFast : Local.sysmonIntervalSlow
         onTriggered: {
             statView.reload();
             root.sampleCpu();

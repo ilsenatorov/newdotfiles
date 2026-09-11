@@ -6,14 +6,18 @@
 #   ./install.sh --no-aur        skip the AUR step (mpvpaper -> no wallpaper daemon)
 #   ./install.sh --sddm          also install the SDDM theme (needs sudo)
 #   ./install.sh --minimal       core desktop only: no ranger previews, no extras
+#   ./install.sh --reconfigure   redo hardware detection: back up and rewrite
+#                                 ~/.config/dotfiles/{local.conf,local.lua} and
+#                                 ~/.zshrc.local from fresh probes
 #
 # Everything here is idempotent: re-running it is the supported way to pick up
 # new packages after a `git pull`. It never deletes a config -- link.sh moves
-# anything real out of the way to <name>.bak-<timestamp>.
+# anything real out of the way to <name>.bak-<timestamp>, and this script does
+# the same for --reconfigure.
 set -euo pipefail
 
 DOTS="${HOME}/dotfiles"
-NO_PACKAGES=0; NO_AUR=0; WITH_SDDM=0; MINIMAL=0
+NO_PACKAGES=0; NO_AUR=0; WITH_SDDM=0; MINIMAL=0; RECONFIGURE=0
 
 for arg in "$@"; do
 	case "$arg" in
@@ -21,10 +25,32 @@ for arg in "$@"; do
 		--no-aur)      NO_AUR=1 ;;
 		--sddm)        WITH_SDDM=1 ;;
 		--minimal)     MINIMAL=1 ;;
-		-h|--help)     sed -n '2,10p' "$0" | sed 's/^# \?//'; exit 0 ;;
+		--reconfigure) RECONFIGURE=1 ;;
+		-h|--help)     sed -n '2,13p' "$0" | sed 's/^# \?//'; exit 0 ;;
 		*)             echo "unknown option: $arg" >&2; exit 1 ;;
 	esac
 done
+
+stamp="$(date +%Y%m%d-%H%M%S)"
+# Write $2 to file $1 unless it already exists, UNLESS --reconfigure was
+# passed, in which case the existing file (if any) is backed up first. Used
+# for every per-machine file this script generates: local.conf, local.lua,
+# ~/.zshrc.local. Mirrors 20-va.conf's "detect once, never overwrite" contract.
+write_local() {
+	dst="$1"; content="$2"
+	if [ -f "$dst" ]; then
+		if [ "$RECONFIGURE" -eq 1 ]; then
+			bak="${dst}.bak-${stamp}"
+			echo "BACKUP  $(basename "$dst") -> $(basename "$bak")"
+			cp "$dst" "$bak"
+		else
+			echo "OK      $(basename "$dst")"
+			return 0
+		fi
+	fi
+	printf '%s' "$content" > "$dst"
+	echo "WROTE   $dst"
+}
 
 say()  { printf '\n\033[1;36m==>\033[0m %s\n' "$1"; }
 warn() { printf '\033[1;33mWARN\033[0m %s\n' "$1" >&2; }
@@ -153,14 +179,26 @@ clone_plugin() {
 clone_plugin zsh-autosuggestions     https://github.com/zsh-users/zsh-autosuggestions
 clone_plugin zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
 
-# The .zshrc hardcodes /home/ilya paths for $ZSH and conda. Point them out rather
-# than rewriting the file -- it is a tracked config, not generated.
-if ! grep -q "ZSH=\"${HOME}/.oh-my-zsh\"" "${DOTS}/.zshrc"; then
-	warn ".zshrc has a hardcoded \$ZSH path for another user -- edit it (line 1)"
+# ~/.zshrc.local: per-machine env/aliases that .zshrc's last line sources.
+# Prefilled from an NVIDIA probe (the Wayland/VS Code workaround only applies
+# there); never overwritten after that except with --reconfigure.
+say "per-machine shell tail (~/.zshrc.local)"
+zshrc_local_content="# Per-machine zsh tail, sourced from the end of ~/dotfiles/.zshrc. Generated
+# once by install.sh, never overwritten after that -- hand-edit freely.
+
+export CLAUDE_OBSIDIAN_VAULT=\"\$HOME/Documents/MyKnowledgeVault\"
+"
+if lspci -mm 2>/dev/null | grep -Eqi 'VGA compatible controller|3D controller' && \
+   lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' | grep -qi nvidia; then
+	zshrc_local_content="${zshrc_local_content}
+# VS Code: native Wayland backend segfaults on this NVIDIA setup; force XWayland
+alias code=\"code --ozone-platform=x11\"
+"
 fi
-if grep -q '/home/ilya/miniconda3' "${DOTS}/.zshrc"; then
-	warn ".zshrc still carries the conda block for /home/ilya/miniconda3 -- remove it if you have no conda"
-fi
+zshrc_local_content="${zshrc_local_content}
+[ -r \"\$HOME/.local/bin/env\" ] && . \"\$HOME/.local/bin/env\"
+"
+write_local "${HOME}/.zshrc.local" "$zshrc_local_content"
 
 if [ "${SHELL##*/}" != "zsh" ]; then
 	say "making zsh the login shell"
@@ -229,6 +267,144 @@ else
 	echo "OK      ~/.config/environment.d/20-va.conf"
 fi
 
+# ------------------------------------------------------- local config ----
+# Everything that would be WRONG if copied verbatim to another PC: UI scale,
+# which bar modules run, which pollers are worth their cost, monitor rules,
+# workspace pinning, keyboard layout. ~/.config/dotfiles/ is not a directory
+# link.sh manages, so it can never become a symlink into this repo -- same
+# reasoning as 20-va.conf above, generalised. local.conf (flat KEY=value) is
+# read by shell scripts and quickshell/Local.qml; local.lua (a Lua table) is
+# read by hypr/hyprland.lua for the knobs that are structured and
+# Hyprland-only. Prefilled from cheap hardware probes below; edit either
+# freely afterwards, or redo detection with --reconfigure.
+say "per-machine desktop config (~/.config/dotfiles)"
+mkdir -p "${HOME}/.config/dotfiles"
+
+mem_kb=$(awk '/MemTotal/ { print $2 }' /proc/meminfo 2>/dev/null || echo 0)
+ncores=$(nproc 2>/dev/null || echo 1)
+weak=0
+# ~4GB / 2 cores is this repo's own "small" box -- see hypr/hyprland.lua and
+# quickshell/Theme.qml comments for what UI_SCALE actually changes.
+[ "$mem_kb" -lt 6000000 ] 2>/dev/null && weak=1
+[ "$ncores" -le 2 ] 2>/dev/null && weak=1
+
+gpus_lc="$(lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' || true)"
+has_nvidia=0; echo "$gpus_lc" | grep -qi nvidia && has_nvidia=1
+has_battery=0; [ -d /sys/class/power_supply ] && \
+	ls /sys/class/power_supply 2>/dev/null | grep -qi '^BAT' && has_battery=1
+
+ui_scale=1.0; svc_weather=1; svc_claude=1; interval_fast=2000; interval_slow=10000
+bar_center="gpu,sys,battery"
+if [ "$weak" -eq 1 ]; then
+	ui_scale=0.8; svc_weather=0; svc_claude=0
+	interval_fast=4000; interval_slow=20000
+fi
+[ "$has_nvidia" -eq 1 ] || bar_center=$(echo "$bar_center" | sed 's/gpu,\?//')
+[ "$has_battery" -eq 1 ] || bar_center=$(echo "$bar_center" | sed 's/,\?battery//')
+
+local_conf_content="# Per-machine overrides -- read by shell scripts and quickshell/Local.qml.
+# See hypr/hyprland.lua's per-machine block and hypr/local.lua (if present)
+# for the monitor/workspace/keyboard knobs, which are structured and live
+# there instead. Generated once by install.sh from hardware probes
+# (mem=${mem_kb}kB cores=${ncores} nvidia=${has_nvidia} battery=${has_battery});
+# never overwritten after that except with --reconfigure. Blank/absent = the
+# hardcoded default in Theme.qml / SysMon.qml / etc stands.
+
+# --- UI scale ---------------------------------------------------------
+UI_SCALE=${ui_scale}
+BAR_HEIGHT=
+FONT_SIZE_BAR=
+DASHBOARD_W=
+DASHBOARD_H=
+FONT=
+
+# --- bar modules --------------------------------------------------------
+# Comma-separated; a module not listed is dropped. Empty = that pill hidden.
+BAR_LEFT=workspaces,submap,clock
+BAR_CENTER=${bar_center}
+BAR_RIGHT=network,bluetooth,audio,language
+
+# --- services -------------------------------------------------------------
+# Expensive pollers. 0 disables the poller outright, not just the widget.
+SVC_WEATHER=${svc_weather}
+SVC_CLAUDE_USAGE=${svc_claude}
+SVC_GPU=${has_nvidia}
+SYSMON_INTERVAL_FAST=${interval_fast}
+SYSMON_INTERVAL_SLOW=${interval_slow}
+
+# --- theme / wallpaper ------------------------------------------------
+# Seeds hypr/wallpaper.conf on first run if set; otherwise the first image
+# found in ~/Pictures/Wallpapers is used (see the wallpaper step below).
+WALLPAPER=
+"
+write_local "${HOME}/.config/dotfiles/local.conf" "$local_conf_content"
+
+# Detected outputs, offered as commented-out examples -- hyprctl usually isn't
+# running yet during a fresh install (no session up), so this falls back to
+# the DRM connector list. jq (a PKGS_DESKTOP package) is required for the
+# hyprctl path -- monitors -j nests other "name" keys (workspaces, etc.) that
+# a plain grep would also match.
+if command -v hyprctl >/dev/null && command -v jq >/dev/null && \
+   outs=$(hyprctl monitors -j 2>/dev/null) && [ -n "$outs" ]; then
+	conns=$(echo "$outs" | jq -r '.[].name' 2>/dev/null)
+else
+	conns=$(for f in /sys/class/drm/*/status; do
+		[ "$(cat "$f" 2>/dev/null)" = "connected" ] || continue
+		basename "$(dirname "$f")" | sed 's#^card[0-9]*-##'
+	done 2>/dev/null)
+fi
+
+local_lua_content="-- Per-machine overrides for hypr/hyprland.lua -- monitors, workspace
+-- pinning, keyboard layout, optional autostarts. See local.conf (sibling
+-- file) for everything else. Generated once by install.sh; never overwritten
+-- after that except with --reconfigure. Both blocks below are commented out,
+-- so hyprland.lua's generic defaults (eDP-1 + catch-all monitor, workspaces
+-- 1-5 -> eDP-1, kb_layout us,ru) stand until you fill one in.
+--
+-- Detected outputs at install time:$(for c in $conns; do printf '\n--   %s' "$c"; done)
+
+return {
+    monitors = {
+        -- { output = \"DP-1\", mode = \"preferred\", position = \"auto\", scale = 1 },
+        -- { output = \"\",     mode = \"preferred\", position = \"auto\", scale = 1 }, -- catch-all
+    },
+
+    -- { first_workspace, last_workspace, monitor }. monitor can be a
+    -- connector (\"DP-1\") or, more stable across replugs, \"desc:<hyprctl
+    -- monitors description>\".
+    -- workspaces = {
+    --     { 1, 5,  \"eDP-1\" },
+    --     { 6, 10, \"desc:Dell Inc. DELL P2422H F4JL9D3\" },
+    -- },
+
+    -- kb_layout = \"us,ru\",
+
+    -- gaps_out = 8,  -- keep matching Theme.barMarginSide if UI_SCALE changes it
+
+    autostart = {
+        -- hypridle = true,  -- idle timeouts / auto-lock (off everywhere by default)
+    },
+}
+"
+write_local "${HOME}/.config/dotfiles/local.lua" "$local_lua_content"
+
+# Fresh clone: seed the generated theme files from their committed snapshot so
+# the desktop is themed before the wallpaper step below (or SUPER+W) ever
+# runs matugen. Never overwrites a file that already exists -- those are this
+# machine's actual last-set theme, not stale defaults.
+say "generated theme defaults"
+while IFS= read -r -d '' src; do
+	rel="${src#"${DOTS}/matugen/defaults/"}"
+	dst="${DOTS}/${rel}"
+	if [ -f "$dst" ]; then
+		echo "OK      $rel"
+	else
+		mkdir -p "$(dirname "$dst")"
+		cp "$src" "$dst"
+		echo "SEEDED  $rel"
+	fi
+done < <(find "${DOTS}/matugen/defaults" -type f -print0)
+
 # ---------------------------------------------------------- user units ----
 # hyprpolkitagent ships its own user unit (WantedBy=graphical-session.target);
 # hyprland.lua deliberately does not exec it.
@@ -239,13 +415,16 @@ if [ -n "$(systemctl --user list-unit-files --no-legend hyprpolkitagent.service 
 fi
 
 # ---------------------------------------------------------- wallpaper ----
-# The wallpaper itself is not in git (too large). Without one, mpvpaper has
-# nothing to play and matugen has nothing to derive the accent from -- but the
-# generated colors.* files are committed, so the desktop still comes up themed.
+# The wallpaper itself is not in git (too large), and neither is
+# hypr/wallpaper.conf any more (it's machine state, see .gitignore) -- but the
+# generated colors.* files were just seeded from matugen/defaults/ above, so
+# the desktop comes up themed either way.
 say "wallpaper and accent colour"
 wall=""
 [ -f "${DOTS}/hypr/wallpaper.conf" ] && \
 	wall=$(sed -n 's/^WALLPAPER=//p' "${DOTS}/hypr/wallpaper.conf" | tail -1)
+[ -z "$wall" ] && [ -f "${HOME}/.config/dotfiles/local.conf" ] && \
+	wall=$(sed -n 's/^WALLPAPER=//p' "${HOME}/.config/dotfiles/local.conf" | tail -1)
 
 if [ -n "$wall" ] && [ -f "$wall" ]; then
 	echo "OK      $wall"
