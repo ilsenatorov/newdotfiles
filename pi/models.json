@@ -1,0 +1,12 @@
+{
+  "providers": {
+    "openrouter": {
+      "modelOverrides": {
+        "deepseek/deepseek-v4-flash-0731": { "name": "simple" },
+        "deepseek/deepseek-v4-pro-0813": { "name": "medium" },
+        "anthropic/claude-opus-5": { "name": "smart" },
+        "openai/gpt-6-astra": { "name": "megasmart" }
+      }
+    }
+  }
+}

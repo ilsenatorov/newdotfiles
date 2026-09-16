@@ -203,15 +203,17 @@ write_local "${HOME}/.config/git/config.local" "$git_local_content"
 # ------------------------------------------------------------------ pi -----
 # The pi coding agent's user dir (~/.pi/agent) also holds auth.json,
 # models-store.json, npm/ (installed packages) and sessions/ -- all machine
-# state, left alone. The two files worth sharing live in this repo under pi/:
-# AGENTS.md (global instructions) and settings.json (settings + package list,
-# see docs/packages.md). Both are symlinked, not copied: pi reads AGENTS.md
-# and also rewrites settings.json in place (package installs, /settings, or
-# Ctrl+S in /model), so a machine that changed something shows pi/settings.json
-# dirty until you commit -- that writes back to the repo by design.
+# state, left alone. The three files worth sharing live in this repo under
+# pi/: AGENTS.md (global instructions), settings.json (settings + package
+# list, see docs/packages.md) and models.json (custom providers / model
+# overrides, see docs/models.md). All are symlinked, not copied: pi reads
+# AGENTS.md, and rewrites settings.json/models.json in place (package
+# installs, /settings, /model Ctrl+S), so a machine that changed something
+# shows those files dirty until you commit -- that writes back to the repo
+# by design.
 say "pi agent config (~/.pi/agent)"
 mkdir -p "${HOME}/.pi/agent"
-for f in AGENTS.md settings.json; do
+for f in AGENTS.md settings.json models.json; do
 	if [ "$(readlink "${HOME}/.pi/agent/$f" 2>/dev/null)" = "${DOTS}/pi/$f" ]; then
 		echo "OK      pi/$f"
 		continue
