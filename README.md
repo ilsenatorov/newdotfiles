@@ -127,9 +127,9 @@ FONT=             # blank = MesloLGS NF
 
 # Bar modules, comma-separated per section. A name left out is dropped
 # entirely; an empty value hides that pill. Bar.qml's registry has the full
-# list: workspaces, submap, clock, gpu, sys, battery, network, bluetooth,
+# list: workspaces, clock, gpu, sys, battery, network, bluetooth,
 # audio, language.
-BAR_LEFT=workspaces,submap,clock
+BAR_LEFT=workspaces,clock
 BAR_CENTER=gpu,sys,battery
 BAR_RIGHT=network,bluetooth,audio,language
 

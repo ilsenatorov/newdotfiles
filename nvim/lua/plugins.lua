@@ -82,4 +82,17 @@ return {
 	},
 
 	{ "windwp/nvim-autopairs", config = true },
+
+	{
+		"numToStr/Comment.nvim",
+		config = function()
+			require("Comment").setup()
+			-- <C-_> is what terminals actually send for Ctrl+/ (0x1F); kitty's
+			-- keyboard protocol delivers a real <C-/>. Map both.
+			for _, key in ipairs({ "<C-/>", "<C-_>" }) do
+				vim.keymap.set("n", key, "gcc", { desc = "Toggle comment" })
+				vim.keymap.set("v", key, "gc", { desc = "Toggle comment" })
+			end
+		end,
+	},
 }

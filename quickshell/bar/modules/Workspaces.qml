@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.WindowManager
 import "../.."
 
@@ -12,11 +13,19 @@ import "../.."
 // handler below still shells out to hyprctl instead of calling a dispatch
 // method directly. Mirrors waybar's ext/workspaces module exactly: occupied
 // only, {name} labels, no persistent/visible state (ext-workspace-v1 doesn't
-// expose it), urgent highlighting.
+// expose it), urgent highlighting. The active-submap indicator that used to be a
+// standalone module (Submap.qml) lives in here so it shares the workspaces pill
+// with no ModuleRow separator.
 Item {
     id: root
 
     required property var screen
+
+    // Active submap (e.g. "resize" from hypr/hyprland.lua), updated from Hyprland's
+    // socket2 "submap" events below. Hyprland emits "submap global" when the submap
+    // is exited, so a genuinely active mode is any non-empty data other than
+    // "global" -- that is what the indicator's visible guard checks.
+    property string submap: ""
 
     // Workspace groups in ext-workspace-v1 map to outputs, so this is how
     // "only this monitor's workspaces" is expressed -- WindowManager.windowsets
@@ -77,6 +86,17 @@ Item {
                 }
             }
         }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.submap !== "" && root.submap !== "global"
+            text: "  " + root.submap
+            height: Theme.barHeight - 8
+            verticalAlignment: Text.AlignVCenter
+            font.family: Theme.font
+            font.pixelSize: Theme.fsBar
+            color: Theme.yellow
+        }
     }
 
     // Scroll anywhere on the workspace pill to switch, same Lua-dispatch form
@@ -95,5 +115,12 @@ Item {
 
     Process {
         id: scrollProc
+    }
+
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "submap") root.submap = event.data;
+        }
     }
 }

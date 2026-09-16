@@ -419,7 +419,7 @@ FONT=
 
 # --- bar modules --------------------------------------------------------
 # Comma-separated; a module not listed is dropped. Empty = that pill hidden.
-BAR_LEFT=workspaces,submap,clock
+BAR_LEFT=workspaces,clock
 BAR_CENTER=${bar_center}
 BAR_RIGHT=network,bluetooth,audio,language
 

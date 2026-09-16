@@ -19,10 +19,10 @@ Item {
 
     implicitHeight: Theme.barHeight
 
-    // name -> component. Workspaces needs `screen`; Network/Bluetooth/Audio
-    // forward clicked -> panelRequested. Everything else is parameterless.
+    // name -> component. Workspaces needs `screen` and embeds the submap
+    // indicator; Network/Bluetooth/Audio forward clicked -> panelRequested.
+    // Everything else is parameterless.
     Component { id: workspacesC; Workspaces { screen: root.screen } }
-    Component { id: submapC; Submap {} }
     Component { id: clockC; ClockModule { onCalendarRequested: root.panelRequested("calendar") } }
     Component { id: gpuC; Gpu {} }
     Component { id: sysC; Sys {} }
@@ -33,7 +33,7 @@ Item {
     Component { id: languageC; Language {} }
 
     readonly property var registry: ({
-        workspaces: workspacesC, submap: submapC, clock: clockC,
+        workspaces: workspacesC, clock: clockC,
         gpu: gpuC, sys: sysC, battery: batteryC,
         network: networkC, bluetooth: bluetoothC, audio: audioC, language: languageC,
     })
