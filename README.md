@@ -34,6 +34,9 @@ it, and the installer refuses to run from anywhere else.
    from hardware probes, and seeds the generated `colors.*` theme files from
    `matugen/defaults/` -- see **Per-machine config** below. Also skipped if
    already present, unless `--reconfigure` is passed;
+1. symlinks the pi agent's shared config into `~/.pi/agent` (`pi/` in this
+   repo) and `pi install`s every package listed in `pi/settings.json` -- see
+   **The pi coding agent** below;
 1. enables `hyprpolkitagent.service` as a user unit;
 1. sets the wallpaper and derives the accent with matugen, if one is found.
 
@@ -58,6 +61,33 @@ ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
 * Check `~/.config/dotfiles/local.conf` and `local.lua` -- the installer's
   guesses (small-screen scale, dropped bar modules, monitor layout) are a
   starting point, not gospel.
+
+### The pi coding agent
+
+`~/.pi/agent` mixes two kinds of state. The three files worth sharing live in
+this repo under `pi/` and are **symlinked** there by `install.sh` -- pi reads
+`AGENTS.md` and rewrites `settings.json`/`models.json` in place (package
+installs, `/settings`, Ctrl+S in `/model`), so the home-directory copy is only
+a pointer into the repo:
+
+| `~/.pi/agent/...` | Source / contents |
+|---|---|
+| `AGENTS.md` | `pi/AGENTS.md` -- global instructions for every session |
+| `settings.json` | `pi/settings.json` -- theme, default provider/model, package list |
+| `models.json` | `pi/models.json` -- custom providers / model overrides |
+| `auth.json` | machine-local -- API keys, never in git |
+| `models-store.json` | machine-local -- model registry cache |
+| `npm/`, `sessions/` | machine-local -- installed extensions, session history |
+
+The machine-local rows are left alone, same contract as `local.conf`. And
+because the symlinks point back into the repo, anything pi saves (a model
+override, a new package) shows up as a dirty `pi/*` file in `git status` --
+commit it to push that change to every machine.
+
+`install.sh` runs `pi install` for every package in `pi/settings.json`, so a
+fresh box gets the same extensions -- but it does not install pi itself. If
+`pi` isn't in PATH the installer just warns: grab the binary with the official
+installer and re-run.
 
 ## Per-machine config
 
