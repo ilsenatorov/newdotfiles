@@ -51,6 +51,9 @@ fi
 
 stamp=$(date +%Y%m%d-%H%M%S)
 
+# a freshly-provisioned user has no ~/.config yet; ln -s below would fail
+mkdir -p "$HOME/.config"
+
 for i in */; do
 	bas=$(basename "$i")
 

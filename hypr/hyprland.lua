@@ -323,12 +323,24 @@ hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher.sh"),    
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.sh"), { description = "Run command" })
 -- Network/bluetooth/audio now open the quickshell panels instead of
 -- launching a separate rofi/GTK tool -- see quickshell/panels/.
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"),   { description = "Network menu" })
-hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), { description = "Bluetooth menu" })
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"),     { description = "Audio menu" })
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), { description = "Power menu" })
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), { description = "Monitor placement" })
-hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"),            { description = "Toggle system info overlay" })
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), {
+	description = "Network menu",
+})
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), {
+	description = "Bluetooth menu",
+})
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
+	description = "Audio menu",
+})
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), {
+	description = "Power menu",
+})
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), {
+	description = "Monitor placement",
+})
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
+	description = "Toggle system info overlay",
+})
 
 ---- Focus and movement -----------------------------------------------------
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
@@ -367,14 +379,24 @@ hl.bind(mainMod .. " + Q", hl.dsp.group.next(),          { description = "Next i
 -- Note group:auto_group and group:merge_groups_on_drag are both true, so new
 -- windows join the focused group automatically and SUPER+drag onto a groupbar
 -- merges. These binds are for moving a window that already exists elsewhere.
-hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ direction = "left",  group_aware = true }), { description = "Move in/out of group (left)" })
-hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ direction = "right", group_aware = true }), { description = "Move in/out of group (right)" })
-hl.bind(mainMod .. " + CTRL + up",    hl.dsp.window.move({ direction = "up",    group_aware = true }), { description = "Move in/out of group (up)" })
-hl.bind(mainMod .. " + CTRL + down",  hl.dsp.window.move({ direction = "down",  group_aware = true }), { description = "Move in/out of group (down)" })
+hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ direction = "left",  group_aware = true }), {
+	description = "Move in/out of group (left)",
+})
+hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ direction = "right", group_aware = true }), {
+	description = "Move in/out of group (right)",
+})
+hl.bind(mainMod .. " + CTRL + up",    hl.dsp.window.move({ direction = "up",    group_aware = true }), {
+	description = "Move in/out of group (up)",
+})
+hl.bind(mainMod .. " + CTRL + down",  hl.dsp.window.move({ direction = "down",  group_aware = true }), {
+	description = "Move in/out of group (down)",
+})
 
 -- Unconditional escape hatch, mirroring SUPER+S / SUPER+A / SUPER+Q: pops the
 -- active window out of its group regardless of what is next to it.
-hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), { description = "Move out of group" })
+hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), {
+	description = "Move out of group",
+})
 
 ---- Workspaces -------------------------------------------------------------
 local wsKeys = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }
@@ -420,8 +442,10 @@ end)
 hl.bind(mainMod .. " + R", hl.dsp.submap("resize"), { description = "Resize mode" })
 
 ---- Media and hardware keys (unchanged commands from i3) -------------------
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ +2%"),  { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -2%"),  { locked = true, repeating = true })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ +2%"),
+	{ locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -2%"),
+	{ locked = true, repeating = true })
 hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"), { locked = true })
 hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("pactl set-source-mute @DEFAULT_SOURCE@ toggle"), { locked = true })
 
@@ -463,8 +487,12 @@ hl.bind("Print",                    hl.dsp.exec_cmd(shot .. "full"),   { descrip
 hl.bind("SHIFT + Print",            hl.dsp.exec_cmd(shot .. "region"), { description = "Screenshot: region" })
 hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd(shot .. "window"), { description = "Screenshot: pick a window" })
 hl.bind("ALT + Print",              hl.dsp.exec_cmd(shot .. "active"), { description = "Screenshot: focused window" })
-hl.bind("CTRL + Print",             hl.dsp.exec_cmd(shot .. "edit"),   { description = "Screenshot: region -> annotate" })
-hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(shot .. "clip"), { description = "Screenshot: region -> clipboard only" })
+hl.bind("CTRL + Print",             hl.dsp.exec_cmd(shot .. "edit"), {
+	description = "Screenshot: region -> annotate",
+})
+hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(shot .. "clip"), {
+	description = "Screenshot: region -> clipboard only",
+})
 
 
 --------------------------------
