@@ -63,16 +63,17 @@ ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
 
 This repo is symlinked wholesale into `~/.config` (`link.sh`), so anything
 written there syncs to every machine that clones it. Git holds **how the
-system is supposed to work**; two files outside the repo hold **what this
-particular box is**:
+system is supposed to work**; a handful of files outside the repo hold **what
+this particular box is**:
 
 | File | Read by | Holds |
 |---|---|---|
 | `~/.config/dotfiles/local.conf` | shell scripts, `quickshell/Local.qml` | UI scale, which bar modules run, poll intervals, wallpaper |
 | `~/.config/dotfiles/local.lua` | `hypr/hyprland.lua` | monitor rules, workspace pinning, keyboard layout, optional autostarts |
 | `~/.zshrc.local` | `.zshrc` (sourced at the end) | `$CLAUDE_OBSIDIAN_VAULT`, the NVIDIA VS Code workaround, anything else true only on this box |
+| `~/.config/git/config.local` | `git/config` (included at the end) | `[user] name`/`email`, anything else true only on this box |
 
-All three are **generated once by `install.sh` from hardware probes and never
+All four are **generated once by `install.sh` from hardware probes and never
 overwritten after that** -- the same contract `20-va.conf` already used for
 GPU video decode. Edit them freely; re-run with `--reconfigure` to redo
 detection (the old files are backed up, never discarded). A missing file (a
@@ -157,9 +158,18 @@ the why behind them.
   networkmanager_dmenu, rofi-bluetooth and pavucontrol
 * __matugen__ for wallpaper-derived accent colours
 * __sddm__ as the display manager, with the pixel_sakura astronaut theme (see `sddm/`)
-* __zsh__
+* __zsh__ with __oh-my-zsh__, __zoxide__ (replaces the `z` plugin), and
+  __fzf__ (`Ctrl-R`/`Ctrl-T`/`Alt-C`, themed to the desktop palette)
 * __starship__ as the zsh prompt (`starship/`), gruvbox-rainbow preset on a
   matugen palette -- replaces powerlevel10k
+* __neovim__ (`nvim/`), a compact lazy.nvim setup (treesitter, LSP via mason,
+  cmp, telescope, gitsigns) with its own accent from matugen, same as every
+  other app
+* __eza__/__bat__/__fd__/__ripgrep__ -- `.zshrc` aliases `ls`/`cat`/`grep` to
+  them, each guarded so a machine missing one still works
+* __git-delta__ + __lazygit__ (`git/config`) -- delta as the diff pager,
+  lazygit for the TUI
+* __shellcheck__/__shfmt__/__luacheck__ to run `check.sh` (dropped by `--minimal`)
 
 ## Theming
 
@@ -172,7 +182,7 @@ only handles stills and mpvpaper covers both) starts the daemon at session
 login and after every change.
 
 One accent colour is derived from the wallpaper by **matugen** and pushed into
-quickshell, rofi, hyprland, hyprlock, kitty, starship and GTK. Change
+quickshell, rofi, hyprland, hyprlock, kitty, starship, GTK and neovim. Change
 wallpaper and
 accent together with `SUPER+W` (or `hypr/scripts/set-wallpaper.sh`), which takes
 images and videos alike -- for a video it pulls a frame with ffmpeg and themes
@@ -211,7 +221,25 @@ the accent moves with the wallpaper.
   astronaut theme plays mp4/webm natively -- via `sudo sddm/sync-wallpaper.sh`
   (called automatically from `set-wallpaper.sh` when passwordless sudo is
   available, and from `sddm/install.sh`).
+* `nvim/colors.lua` is matugen-generated, imported by `nvim/init.lua`; unlike
+  kitty and quickshell it does not hot-reload, so a window opened before
+  `SUPER+W` keeps its old accent until reopened.
 
 Optional packages that the configs pick up automatically if installed:
 `adw-gtk3` (better GTK3 match for modern apps), `bibata-cursor-theme` (falls
 back to Adwaita). `papirus-icon-theme` and `ttf-meslo-nerd` are required.
+
+## Development
+
+```sh
+make check     # shellcheck, shfmt, luac, luacheck, qmllint (see check.sh)
+make doctor    # missing packages, dangling ~/.config links, per-machine files
+make link      # ./link.sh
+make unlink    # ./link.sh --unlink -- back out, restoring any .bak-* found
+```
+
+`check.sh` skips (rather than fails) any tool that isn't installed, so it
+still runs after `--minimal`. `.github/workflows/ci.yml` runs the same
+`check.sh`, plus a smoke test that installs into a scratch `$HOME` in an
+Arch container and asserts the links, per-machine files and matugen defaults
+all land correctly -- including that a second run is a true no-op.

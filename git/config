@@ -1,0 +1,54 @@
+# Machine-independent git config. Symlinked to ~/.config/git/config by
+# link.sh (git reads $XDG_CONFIG_HOME/git/config as a fallback below
+# ~/.gitconfig -- install.sh moves any existing ~/.gitconfig aside so this
+# file is actually the one that wins).
+#
+# [user] and anything else that is true on this box but not the others lives
+# in config.local (untracked, generated once by install.sh -- same
+# write-once-never-overwrite contract as local.conf/local.lua, see README).
+
+[init]
+	defaultBranch = main
+
+[pull]
+	rebase = true
+
+[push]
+	autoSetupRemote = true
+
+[rebase]
+	autostash = true
+
+[fetch]
+	prune = true
+
+[merge]
+	conflictStyle = zdiff3
+
+[diff]
+	algorithm = histogram
+
+[core]
+	excludesfile = ~/.config/git/ignore
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	line-numbers = true
+	syntax-theme = ansi
+
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	ci = commit
+	lg = log --oneline --graph --decorate
+	last = log -1 HEAD
+	amend = commit --amend --no-edit
+	unstage = restore --staged
+
+[include]
+	path = config.local

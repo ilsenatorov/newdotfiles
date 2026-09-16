@@ -61,3 +61,9 @@ output_path = '~/dotfiles/gtk-3.0/colors.css'
 [templates.gtk4]
 input_path  = '~/dotfiles/matugen/templates/colors-gtk.css'
 output_path = '~/dotfiles/gtk-4.0/colors.css'
+
+# nvim does not hot-reload -- a newly opened buffer picks up the change, same
+# as any other app that reads its colours once at startup.
+[templates.nvim]
+input_path  = '~/dotfiles/matugen/templates/colors-nvim.lua'
+output_path = '~/dotfiles/nvim/colors.lua'

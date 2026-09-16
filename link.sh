@@ -4,12 +4,52 @@
 # Unlike the original version this does NOT `rm -r` the destination: anything real that
 # is in the way is moved aside to <name>.bak-<timestamp> first, and correct symlinks are
 # left alone. That matters because ~/.config/hypr can hold a live config.
-
-stamp=$(date +%Y%m%d-%H%M%S)
+#
+#   ./link.sh            link every dir (see below), prune dangling links
+#   ./link.sh --unlink   remove every symlink this repo owns, restoring the
+#                        newest .bak-* for each if one exists
 
 # Dirs that are not ~/.config configs. sddm's theme goes to /usr/share and /etc
 # (see sddm/install.sh), and graphify-out is generated output.
 skip="sddm graphify-out"
+
+# Restore the newest backup for $1 (a full path, e.g. ~/.config/hypr) if one
+# exists, after $1 itself has been removed. Used by --unlink so backing out
+# never leaves a machine with no config at all.
+restore_backup() {
+	target="$1"
+	newest=$(ls -1dt "${target}".bak-* 2>/dev/null | head -1)
+	if [ -n "$newest" ]; then
+		echo "RESTORE $(basename "$target") <- $(basename "$newest")"
+		mv "$newest" "$target"
+	fi
+}
+
+if [ "$1" = "--unlink" ]; then
+	for dst in "$HOME"/.config/*; do
+		[ -L "$dst" ] || continue
+		target=$(readlink "$dst")
+		case "$target" in
+			"$HOME"/dotfiles/*) ;;
+			*) continue ;;
+		esac
+		echo "UNLINK  $(basename "$dst")"
+		rm "$dst"
+		restore_backup "$dst"
+	done
+
+	# .zshrc sits at the repo root; link.sh's own loop below only walks
+	# directories, so install.sh symlinks it separately -- unlink it here too.
+	if [ "$(readlink "$HOME/.zshrc" 2>/dev/null)" = "$HOME/dotfiles/.zshrc" ]; then
+		echo "UNLINK  .zshrc"
+		rm "$HOME/.zshrc"
+		restore_backup "$HOME/.zshrc"
+	fi
+
+	exit 0
+fi
+
+stamp=$(date +%Y%m%d-%H%M%S)
 
 for i in */; do
 	bas=$(basename "$i")

@@ -1,0 +1,9 @@
+# Global gitignore, pointed at by core.excludesfile in git/config. Editor and
+# OS noise that has no business in any per-project .gitignore.
+
+.DS_Store
+*.swp
+*.swo
+*~
+.direnv/
+.envrc.local

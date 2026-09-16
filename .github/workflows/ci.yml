@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install tooling
+        run: |
+          pacman-key --init && pacman-key --populate archlinux
+          pacman -Sy --noconfirm shellcheck shfmt lua luacheck qt6-declarative git
+      - name: check.sh
+        run: ./check.sh
+
+  smoke:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: create a non-root user
+        # install.sh refuses to run as root, and pacman also refuses to
+        # install as root without --asdeps games -- a real unprivileged user
+        # is the only way to exercise the actual install path.
+        run: |
+          pacman-key --init && pacman-key --populate archlinux
+          useradd -m runner
+          echo 'runner ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+          pacman -Sy --noconfirm sudo git
+      - name: place the repo at ~runner/dotfiles
+        # install.sh hard-requires this exact path (see its sanity check).
+        run: |
+          cp -a "$GITHUB_WORKSPACE" /home/runner/dotfiles
+          chown -R runner:runner /home/runner/dotfiles
+      - name: run install.sh --no-packages --no-aur
+        # This smoke test proves the links/theme/per-machine-config machinery
+        # works, not that every package installs -- pacman -S for the whole
+        # desktop stack belongs in a manual/scheduled job, not every push.
+        run: |
+          su - runner -c 'cd ~/dotfiles && ./install.sh --no-packages --no-aur'
+      - name: assert the install actually did its job
+        run: |
+          su - runner -c '
+            set -e
+            [ "$(readlink ~/.config/hypr)" = "$HOME/dotfiles/hypr" ] || { echo "hypr not linked"; exit 1; }
+            [ "$(readlink ~/.zshrc)" = "$HOME/dotfiles/.zshrc" ] || { echo ".zshrc not linked"; exit 1; }
+            [ "$(readlink ~/.config/git)" = "$HOME/dotfiles/git" ] || { echo "git not linked"; exit 1; }
+            [ -f ~/.config/dotfiles/local.conf ] || { echo "local.conf missing"; exit 1; }
+            [ -f ~/.config/dotfiles/local.lua ] || { echo "local.lua missing"; exit 1; }
+            [ -f ~/.config/git/config.local ] || { echo "git config.local missing"; exit 1; }
+            for f in hypr/colors.conf hypr/colors.lua kitty/colors.conf \
+                     quickshell/Colors.qml rofi/styles/colors.rasi \
+                     gtk-3.0/colors.css gtk-4.0/colors.css \
+                     starship/colors.toml nvim/colors.lua; do
+              [ -f "$HOME/dotfiles/$f" ] || { echo "matugen default not seeded: $f"; exit 1; }
+            done
+            echo "all assertions passed"
+          '
+      - name: re-run is a no-op
+        run: |
+          su - runner -c '
+            cd ~/dotfiles
+            out=$(./install.sh --no-packages --no-aur)
+            echo "$out"
+            echo "$out" | grep -q "^BACKUP" && { echo "second run produced a BACKUP -- not idempotent"; exit 1; }
+            exit 0
+          '

@@ -6,32 +6,73 @@ ZSH_THEME=""
 
 plugins=(git
 	sudo
-	pep8
-	web-search
 	zsh-autosuggestions
-	zsh-syntax-highlighting
-	z)
+	zsh-syntax-highlighting)
+
+# Completion function search path. Must be set BEFORE oh-my-zsh.sh, which runs
+# compinit itself (oh-my-zsh.sh:70) -- a second compinit after this file's own
+# would just be a wasted uncached run.
+fpath+=~/.zfunc
 
 source $ZSH/oh-my-zsh.sh
-export EDITOR=vim
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+
+export EDITOR=nvim
+export VISUAL=nvim
+alias vim=nvim
 # Deliberately NOT setting TERM: kitty ships correct terminfo and exports it
 # itself. Forcing xterm-256color costs true-colour and undercurl detection.
 # For hosts missing the entry, use `kitty +kitten ssh` or
 #   infocmp -x | ssh HOST -- tic -x -
 export BROWSER=/usr/bin/brave
 
-# fzf in the desktop palette (quickshell/Theme.qml). bat/delta/eza are not installed
-# here, so there is nothing to theme for them yet.
+# History -- oh-my-zsh sets no defaults of its own, so without this a shell
+# falls back to zsh's stock 1000-line unshared history.
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt HIST_IGNORE_ALL_DUPS HIST_REDUCE_BLANKS HIST_VERIFY SHARE_HISTORY \
+	EXTENDED_HISTORY INC_APPEND_HISTORY HIST_IGNORE_SPACE
+
+# zoxide replaces oh-my-zsh's `z` plugin -- faster, and `--cmd cd` means plain
+# `cd` learns to jump on a partial match with no new command to remember.
+command -v zoxide >/dev/null && eval "$(zoxide init zsh --cmd cd)"
+
+# fzf in the desktop palette (quickshell/Theme.qml). bat/delta/eza are themed
+# below via BAT_THEME / delta's config in git/config, not here.
 export FZF_DEFAULT_OPTS="--color=bg+:#1E262B,bg:-1,spinner:#4DD0E1,hl:#EC7875 \
 --color=fg:#93A1A1,header:#EC7875,info:#FDD835,pointer:#4DD0E1 \
 --color=marker:#61C766,fg+:#CDD6D6,prompt:#FDD835,hl+:#EC7875 \
 --color=border:#3C4449 --border=rounded --height=40% --layout=reverse"
+if command -v fd >/dev/null; then
+	export FZF_DEFAULT_COMMAND="fd --type f --hidden --exclude .git"
+	export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+# Ships in /usr/share/fzf on Arch; not sourced by the fzf package itself.
+[ -r /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
+[ -r /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
+
+# Modern CLI replacements -- each guarded so a machine missing the package
+# still gets a working shell, same style as the hyprsunset/cliphist guards in
+# hypr/hyprland.lua.
+if command -v eza >/dev/null; then
+	alias ls='eza --icons --group-directories-first'
+	alias ll='eza --icons --group-directories-first -l --git'
+	alias la='eza --icons --group-directories-first -la --git'
+	alias lt='eza --icons --group-directories-first --tree'
+fi
+if command -v bat >/dev/null; then
+	alias cat='bat --paging=never'
+	# ANSI theme -- matches kitty's 16-colour palette (kitty/colors.conf)
+	# rather than needing its own matugen template.
+	export BAT_THEME=ansi
+	export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+fi
+command -v rg >/dev/null && alias grep='rg'
+
 alias ranger='ranger -r ~/dotfiles/ranger'
 alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
-
-
-fpath+=~/.zfunc; autoload -Uz compinit; compinit
-zstyle ':completion:*' menu select
 
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"

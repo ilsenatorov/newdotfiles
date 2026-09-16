@@ -9,6 +9,8 @@
 #   ./install.sh --reconfigure   redo hardware detection: back up and rewrite
 #                                 ~/.config/dotfiles/{local.conf,local.lua} and
 #                                 ~/.zshrc.local from fresh probes
+#   ./install.sh --list-packages print every package this script would install,
+#                                 one per line, and exit (used by `make doctor`)
 #
 # Everything here is idempotent: re-running it is the supported way to pick up
 # new packages after a `git pull`. It never deletes a config -- link.sh moves
@@ -17,15 +19,16 @@
 set -euo pipefail
 
 DOTS="${HOME}/dotfiles"
-NO_PACKAGES=0; NO_AUR=0; WITH_SDDM=0; MINIMAL=0; RECONFIGURE=0
+NO_PACKAGES=0; NO_AUR=0; WITH_SDDM=0; MINIMAL=0; RECONFIGURE=0; LIST_PACKAGES=0
 
 for arg in "$@"; do
 	case "$arg" in
-		--no-packages) NO_PACKAGES=1 ;;
-		--no-aur)      NO_AUR=1 ;;
-		--sddm)        WITH_SDDM=1 ;;
-		--minimal)     MINIMAL=1 ;;
-		--reconfigure) RECONFIGURE=1 ;;
+		--no-packages)   NO_PACKAGES=1 ;;
+		--no-aur)        NO_AUR=1 ;;
+		--sddm)          WITH_SDDM=1 ;;
+		--minimal)       MINIMAL=1 ;;
+		--reconfigure)   RECONFIGURE=1 ;;
+		--list-packages) LIST_PACKAGES=1 ;;
 		-h|--help)     sed -n '2,13p' "$0" | sed 's/^# \?//'; exit 0 ;;
 		*)             echo "unknown option: $arg" >&2; exit 1 ;;
 	esac
@@ -106,15 +109,28 @@ PKGS_RANGER=(
 	atool 7zip unrar odt2txt transmission-cli elinks lynx
 )
 PKGS_SDDM=( sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative )
+# Terminal/dev tooling that .zshrc, git/config and nvim/ assume is present.
+# shellcheck/shfmt/luacheck are only needed to run check.sh; dropped by
+# --minimal along with the ranger preview tools.
+PKGS_CLI=( neovim eza bat fd zoxide ripgrep git-delta lazygit )
+PKGS_LINT=( shellcheck shfmt luacheck )
 
 # AUR. mpvpaper is the wallpaper daemon (stills and video); adw-gtk3 is optional
 # polish the GTK config picks up on its own if present.
 AUR_REQUIRED=( mpvpaper )
 AUR_OPTIONAL=( adw-gtk3 )
 
+if [ "$LIST_PACKAGES" -eq 1 ]; then
+	printf '%s\n' \
+		"${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}" \
+		"${PKGS_RANGER[@]}" "${PKGS_LINT[@]}" "${PKGS_SDDM[@]}" \
+		"${AUR_REQUIRED[@]}" "${AUR_OPTIONAL[@]}"
+	exit 0
+fi
+
 if [ "$NO_PACKAGES" -eq 0 ]; then
-	pkgs=( "${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" )
-	[ "$MINIMAL" -eq 1 ] || pkgs+=( "${PKGS_RANGER[@]}" )
+	pkgs=( "${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}" )
+	[ "$MINIMAL" -eq 1 ] || pkgs+=( "${PKGS_RANGER[@]}" "${PKGS_LINT[@]}" )
 	[ "$WITH_SDDM" -eq 0 ] || pkgs+=( "${PKGS_SDDM[@]}" )
 
 	say "installing ${#pkgs[@]} repo packages"
@@ -155,15 +171,47 @@ else
 	echo "OK      .zshrc"
 fi
 
+# git/ is symlinked to ~/.config/git by link.sh above, but git only reads
+# $XDG_CONFIG_HOME/git/config as a FALLBACK below ~/.gitconfig -- an existing
+# ~/.gitconfig would silently shadow the repo's config forever. Move it aside
+# once, same as the .zshrc step above.
+gitconfig_bak=""
+if [ -e "${HOME}/.gitconfig" ] || [ -L "${HOME}/.gitconfig" ]; then
+	gitconfig_bak="${HOME}/.gitconfig.bak-$(date +%Y%m%d-%H%M%S)"
+	echo "BACKUP  .gitconfig -> $(basename "$gitconfig_bak")"
+	mv "${HOME}/.gitconfig" "$gitconfig_bak"
+fi
+
+# ~/.config/git/config.local: per-machine git identity, included from the end
+# of git/config. Seeded from the ~/.gitconfig just backed up (if any), so
+# name/email survive the move; never overwritten after that except with
+# --reconfigure -- same contract as local.conf/local.lua/~/.zshrc.local.
+say "per-machine git identity (~/.config/git/config.local)"
+git_name=""; git_email=""
+if [ -n "$gitconfig_bak" ] && [ -f "$gitconfig_bak" ]; then
+	git_name=$(git config -f "$gitconfig_bak" user.name 2>/dev/null || true)
+	git_email=$(git config -f "$gitconfig_bak" user.email 2>/dev/null || true)
+fi
+git_local_content="# Per-machine git identity, included from the end of ~/.config/git/config.
+# Generated once by install.sh, never overwritten after that -- hand-edit freely.
+[user]
+	name = ${git_name:-CHANGE ME}
+	email = ${git_email:-change-me@example.com}
+"
+write_local "${HOME}/.config/git/config.local" "$git_local_content"
+
 # ------------------------------------------------------------------ zsh ----
 # .zshrc sources oh-my-zsh and lists zsh-autosuggestions / zsh-syntax-highlighting
 # as oh-my-zsh plugins, which means they have to be clones under $ZSH_CUSTOM --
 # the /usr/share copies from the repo packages are not on oh-my-zsh's plugin path.
 say "oh-my-zsh and plugins"
 if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+	# warn rather than die: a CI smoke-test container may have no network
+	# egress or a $HOME oh-my-zsh can't write to; the rest of the install
+	# (links, theme, per-machine config) is still worth completing.
 	RUNZSH=no KEEP_ZSHRC=yes sh -c \
 		"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-		|| die "oh-my-zsh install failed"
+		|| warn "oh-my-zsh install failed (no network? re-run install.sh once it's reachable)"
 else
 	echo "OK      oh-my-zsh"
 fi
@@ -176,8 +224,12 @@ clone_plugin() {
 		git clone --depth 1 "$2" "$dst"
 	fi
 }
-clone_plugin zsh-autosuggestions     https://github.com/zsh-users/zsh-autosuggestions
-clone_plugin zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
+if [ -d "${HOME}/.oh-my-zsh" ]; then
+	clone_plugin zsh-autosuggestions     https://github.com/zsh-users/zsh-autosuggestions
+	clone_plugin zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
+else
+	warn "no ~/.oh-my-zsh; skipping zsh-autosuggestions/zsh-syntax-highlighting clone"
+fi
 
 # ~/.zshrc.local: per-machine env/aliases that .zshrc's last line sources.
 # Prefilled from an NVIDIA probe (the Wayland/VS Code workaround only applies
