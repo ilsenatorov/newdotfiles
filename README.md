@@ -128,7 +128,10 @@ return {
     },
     kb_layout = "us,ru",
     gaps_out = 8,   -- keep matching Theme.barMarginSide if UI_SCALE changes it
-    autostart = { hypridle = true },
+    -- hypridle defaults OFF; wallpaper defaults ON (set false on a machine
+    -- with no video wallpaper / no mpvpaper, or wallpaper-daemon.sh nags with
+    -- a "mpvpaper is not installed" notification every login).
+    autostart = { hypridle = true, wallpaper = false },
 }
 ```
 

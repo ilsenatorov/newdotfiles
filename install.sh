@@ -382,7 +382,9 @@ return {
     -- gaps_out = 8,  -- keep matching Theme.barMarginSide if UI_SCALE changes it
 
     autostart = {
-        -- hypridle = true,  -- idle timeouts / auto-lock (off everywhere by default)
+        -- hypridle = true,   -- idle timeouts / auto-lock (off everywhere by default)
+        -- wallpaper = false, -- video wallpaper daemon (on everywhere by default;
+                               -- set false if this machine has no mpvpaper wallpaper)
     },
 }
 "

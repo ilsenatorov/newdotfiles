@@ -97,7 +97,13 @@ hl.on("hyprland.start", function()
     -- is a looping video (Disco-Elysium-4k.mp4) and hyprpaper only does stills;
     -- mpvpaper covers stills too, so it is the only wallpaper daemon now.
     -- The script reads hypr/wallpaper.conf, written by set-wallpaper.sh.
-    hl.exec_cmd(dotfiles .. "/hypr/scripts/wallpaper-daemon.sh")
+    -- On for machines by default; set `autostart = { wallpaper = false }` in
+    -- local.lua for a machine that doesn't use a video/mpvpaper wallpaper --
+    -- otherwise wallpaper-daemon.sh nags with a "mpvpaper is not installed"
+    -- notification every login.
+    if M.autostart == nil or M.autostart.wallpaper ~= false then
+        hl.exec_cmd(dotfiles .. "/hypr/scripts/wallpaper-daemon.sh")
+    end
     -- hypridle: disabled by default (no idle timeouts / auto-lock). Its config
     -- stays at hypr/hypridle.conf either way. Re-enable per machine with
     -- `autostart = { hypridle = true }` in local.lua.
