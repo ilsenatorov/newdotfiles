@@ -200,6 +200,51 @@ git_local_content="# Per-machine git identity, included from the end of ~/.confi
 "
 write_local "${HOME}/.config/git/config.local" "$git_local_content"
 
+# ------------------------------------------------------------------ pi -----
+# The pi coding agent's user dir (~/.pi/agent) also holds auth.json,
+# models-store.json, npm/ (installed packages) and sessions/ -- all machine
+# state, left alone. The two files worth sharing live in this repo under pi/:
+# AGENTS.md (global instructions) and settings.json (settings + package list,
+# see docs/packages.md). Both are symlinked, not copied: pi reads AGENTS.md
+# and also rewrites settings.json in place (package installs, /settings, or
+# Ctrl+S in /model), so a machine that changed something shows pi/settings.json
+# dirty until you commit -- that writes back to the repo by design.
+say "pi agent config (~/.pi/agent)"
+mkdir -p "${HOME}/.pi/agent"
+for f in AGENTS.md settings.json; do
+	if [ "$(readlink "${HOME}/.pi/agent/$f" 2>/dev/null)" = "${DOTS}/pi/$f" ]; then
+		echo "OK      pi/$f"
+		continue
+	fi
+	if [ -e "${HOME}/.pi/agent/$f" ] || [ -L "${HOME}/.pi/agent/$f" ]; then
+		bak="${HOME}/.pi/agent/$f.bak-$(date +%Y%m%d-%H%M%S)"
+		echo "BACKUP  pi/$f -> $(basename "$bak")"
+		mv "${HOME}/.pi/agent/$f" "$bak"
+	fi
+	echo "LINK    pi/$f"
+	ln -s "${DOTS}/pi/$f" "${HOME}/.pi/agent/$f"
+done
+
+# Packages listed in settings.json are not auto-installed for the user scope
+# (that startup auto-install is project-scoped only), so make sure this
+# machine has them. pi install is idempotent.
+if command -v pi >/dev/null; then
+	if command -v jq >/dev/null; then
+		while IFS= read -r pkg; do
+			[ -z "$pkg" ] && continue
+			if pi install "$pkg" >/dev/null 2>&1; then
+				echo "OK      pi package $pkg"
+			else
+				warn "pi install failed for $pkg (no network? re-run install.sh once it's reachable)"
+			fi
+		done < <(jq -r '.packages[]?' "${DOTS}/pi/settings.json" 2>/dev/null)
+	else
+		warn "jq not installed; not verifying pi packages (missing ones show up on first pi run)"
+	fi
+else
+	warn "pi not found in PATH; pi/ config linked but packages not installed"
+fi
+
 # ------------------------------------------------------------------ zsh ----
 # .zshrc sources oh-my-zsh and lists zsh-autosuggestions / zsh-syntax-highlighting
 # as oh-my-zsh plugins, which means they have to be clones under $ZSH_CUSTOM --

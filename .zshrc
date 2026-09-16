@@ -82,3 +82,6 @@ eval "$(starship init zsh)"
 # other two. Lives outside the repo -- install.sh seeds it once, never
 # overwrites it, and never tracks it.
 [ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
+
+# Pi
+export PATH="$HOME/.local/bin:$PATH"
