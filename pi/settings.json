@@ -7,5 +7,6 @@
     "npm:pi-web-access",
     "npm:pi-subagents",
     "npm:pi-mcp-adapter"
-  ]
+  ],
+  "hideThinkingBlock": true
 }

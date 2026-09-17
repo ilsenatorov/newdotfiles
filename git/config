@@ -24,6 +24,7 @@
 
 [merge]
 	conflictStyle = zdiff3
+	tool = nvimdiff
 
 [diff]
 	algorithm = histogram
