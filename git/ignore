@@ -7,3 +7,5 @@
 *~
 .direnv/
 .envrc.local
+
+**/.claude/settings.local.json
