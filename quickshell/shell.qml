@@ -85,9 +85,13 @@ ShellRoot {
     // "wallpaper" | "power" | "exit" | "monitor". Transient like activePanel.
     property string activeMenu: ""
 
-    // qs ipc call menu open <name> -- bound to SUPER+D/V/W and SUPER+SHIFT+S/E/M
+    // qs ipc call menu toggle <name> -- bound to SUPER+D/V/W and SUPER+SHIFT+S/E/M
     // in hypr/hyprland.lua. These six were the last things still shelling out
-    // to rofi; see quickshell/ui/Picker.qml.
+    // to rofi; see quickshell/ui/Picker.qml. The keybinds use `toggle`, not
+    // `open`: every overlay in this file closes on its own keybind the way the
+    // panels and the dashboard do (rofi died on a second SUPER+D too, since
+    // the bind re-ran a one-shot process). `open` stays for scripts that want
+    // an idempotent open.
     IpcHandler {
         target: "menu"
 

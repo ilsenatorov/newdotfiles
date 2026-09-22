@@ -327,7 +327,7 @@ hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "
 
 -- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
 -- launcher below covers what it was for.
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu open launcher"), {
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle launcher"), {
 	description = "App launcher",
 })
 -- Network/bluetooth/audio now open the quickshell panels instead of
@@ -346,10 +346,10 @@ hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("qs ipc call audio cycleSink"), {
 	description = "Cycle audio output",
 })
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu open power"), {
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
 	description = "Power menu",
 })
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("qs ipc call menu open monitor"), {
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("qs ipc call menu toggle monitor"), {
 	description = "Monitor placement",
 })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
@@ -442,7 +442,7 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 ---- Session ----------------------------------------------------------------
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload config" })
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("qs ipc call menu open exit"),
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("qs ipc call menu toggle exit"),
     { description = "Exit Hyprland (confirm)" })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
@@ -476,12 +476,12 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { lo
 ---- Wallpaper -------------------------------------------------------------
 -- The picker is quickshell's; set-wallpaper.sh still does the work once a
 -- file is chosen (ffmpeg frame-grab for videos, matugen, mpvpaper/swww).
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call menu open wallpaper"),
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call menu toggle wallpaper"),
     { description = "Pick wallpaper (regenerates accent)" })
 
 ---- Clipboard --------------------------------------------------------------
 -- cliphist is still the store; only the picker in the middle changed.
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call menu open clipboard"),
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call menu toggle clipboard"),
     { description = "Clipboard history" })
 
 ---- Scratchpad -------------------------------------------------------------
