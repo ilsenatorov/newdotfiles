@@ -32,6 +32,24 @@ ShellRoot {
         function status(): string { return state.expanded ? "expanded" : "collapsed" }
     }
 
+    // SUPER+I ask-a-quick-question overlay -- not persisted, like activePanel
+    // below (transient, resets each open; AskService is what actually
+    // remembers conversations across opens/closes -- see services/AskService.qml).
+    property bool askOpen: false
+
+    // qs ipc call ask toggle -- bound to SUPER+I in hypr/hyprland.lua. Opening
+    // always starts a brand-new conversation -- AskService.switchTo lets you
+    // get back to an old one (Tab/Shift+Tab inside the overlay) once it's open.
+    IpcHandler {
+        target: "ask"
+
+        function toggle(): void {
+            shell.askOpen = !shell.askOpen;
+            if (shell.askOpen) AskService.startNewConversation();
+        }
+        function close(): void { shell.askOpen = false; }
+    }
+
     // Which bar dropdown (if any) is open: "" | "calendar" | "network" |
     // "bluetooth" | "audio". Not persisted across reload -- these are
     // transient, unlike the dashboard corner.
@@ -253,6 +271,40 @@ ShellRoot {
                 anchors.fill: parent
                 active: state.expanded
                 sourceComponent: Card {}
+            }
+        }
+    }
+
+    // SUPER+I quick-question overlay. Same shape as dashboardWin above:
+    // centered (no anchors), Overlay layer, OnDemand focus, Escape closes.
+    PanelWindow {
+        id: askWin
+        visible: shell.askOpen
+
+        implicitWidth: Theme.askW + Theme.inset * 2
+        implicitHeight: Theme.askH + Theme.inset * 2
+
+        color: "transparent"
+        exclusiveZone: 0
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-ask"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+
+        mask: Region { item: askLoader.item ?? null }
+
+        FocusScope {
+            id: askFocus
+            anchors.fill: parent
+            focus: shell.askOpen
+
+            Keys.onEscapePressed: shell.askOpen = false
+
+            Loader {
+                id: askLoader
+                anchors.fill: parent
+                active: shell.askOpen
+                sourceComponent: Ask { onCloseRequested: shell.askOpen = false }
             }
         }
     }

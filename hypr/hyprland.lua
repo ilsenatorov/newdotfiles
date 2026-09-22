@@ -172,6 +172,13 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
+-- SUPER+I's ask-a-quick-question overlay -- same treatment as the dashboard.
+hl.layer_rule({
+    match        = { namespace = "quickshell-ask" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
 
 hl.config({
     general = {
@@ -340,6 +347,9 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/mo
 })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
+})
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("qs ipc call ask toggle"), {
+	description = "Ask AI a quick question",
 })
 
 ---- Focus and movement -----------------------------------------------------

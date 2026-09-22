@@ -37,6 +37,11 @@ Singleton {
     // geometry while open. The inset is headroom for the drop shadow.
     readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(420 * s)
     readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(720 * s)
+
+    // SUPER+I's ask-a-quick-question overlay. Fixed size like the dashboard,
+    // sized to show a full back-and-forth conversation, not just one answer.
+    readonly property int askW: Math.round(760 * s)
+    readonly property int askH: Math.round(640 * s)
     readonly property int footerRow: Math.round(22 * s)
     readonly property int barRow: Math.round(22 * s)
     readonly property int inset: Math.round(12 * s)
