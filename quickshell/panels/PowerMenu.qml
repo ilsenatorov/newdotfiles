@@ -33,25 +33,33 @@ Picker {
             "shutdown": ["systemctl", "poweroff"]
         })
 
+    // Nerd-font glyphs rather than XDG icon names, like the bar modules use:
+    // these five actions are fixed, so there is no icon theme to be missing
+    // and nothing to load. Theme.font (MesloLGS NF) carries all five.
     items: [
         {
             label: "Lock",
+            glyph: "󰌾",
             key: "lock"
         },
         {
             label: "Sleep",
+            glyph: "󰒲",
             key: "sleep"
         },
         {
             label: "Logout",
+            glyph: "󰍃",
             key: "logout"
         },
         {
             label: "Restart",
+            glyph: "󰜉",
             key: "restart"
         },
         {
             label: "Shutdown",
+            glyph: "󰐥",
             key: "shutdown"
         }
     ]

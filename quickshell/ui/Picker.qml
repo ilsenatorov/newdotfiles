@@ -22,7 +22,11 @@ Item {
     id: root
 
     // ---- in ----
-    // Each item: { label, sublabel?, icon?, key? }. `key` is the caller's
+    // Each item: { label, sublabel?, icon?, glyph?, key? }. `icon` is an XDG
+    // icon name (the launcher's .desktop icons); `glyph` is a nerd-font
+    // character, which is what the bar modules use and what a fixed menu of
+    // known actions wants -- no icon theme to miss, no image to load.
+    // `key` is the caller's
     // own handle (a DesktopEntry, a cliphist id, a path) -- passed straight
     // back on `accepted` and never interpreted here.
     property var items: []
@@ -226,6 +230,19 @@ Item {
                         anchors.rightMargin: 10
                         spacing: 8
 
+                        Text {
+                            id: glyph
+
+                            visible: glyph.text !== ""
+                            text: row.modelData.glyph ?? ""
+                            width: glyph.visible ? Theme.menuIconSize : 0
+                            anchors.verticalCenter: parent.verticalCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fsValue
+                            color: row.index === list.currentIndex ? Colors.accent : Theme.dim
+                        }
+
                         Image {
                             visible: root.showIcons
                             width: root.showIcons ? Theme.menuIconSize : 0
@@ -240,7 +257,7 @@ Item {
                         }
 
                         Text {
-                            width: parent.width - (root.showIcons ? Theme.menuIconSize + 8 : 0)
+                            width: parent.width - (root.showIcons ? Theme.menuIconSize + 8 : 0) - (glyph.visible ? glyph.width + 8 : 0)
                             anchors.verticalCenter: parent.verticalCenter
                             text: row.modelData.sublabel ? row.modelData.label + "   " + row.modelData.sublabel : row.modelData.label
                             elide: Text.ElideRight
