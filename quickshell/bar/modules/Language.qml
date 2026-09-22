@@ -13,6 +13,8 @@ import "../.."
 // updates instantly afterwards). The same 1s poll keeps the Caps Lock
 // indicator current -- Hyprland emits no event for key states, so a poll is
 // the only way in, mirroring how waybar polls its keyboard-state module.
+// Caps Lock is OR'd across all keyboard devices (not just `main`) since
+// some devices report it on a sub-device, e.g. a `-keyboard` suffix entry.
 // The us/ru layouts themselves come from Hyprland's input{} block, unchanged
 // here -- this only displays what Hyprland reports.
 Text {
@@ -52,6 +54,7 @@ Text {
     // First tick runs at startup (triggeredOnStart), covering initial layout
     // and Caps Lock before the user touches anything.
     Timer {
+        running: true
         repeat: true
         triggeredOnStart: true
         interval: 1000
@@ -66,7 +69,7 @@ Text {
         // Hyprland or exotic setups).
         const kb = keyboards.filter(k => k.main === true)[0] ?? keyboards[0];
         if (kb.active_keymap) root.layout = kb.active_keymap;
-        root.capsOn = kb.capsLock === true;
+        root.capsOn = keyboards.some(k => k.capsLock === true);
     }
 
     Connections {

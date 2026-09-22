@@ -219,7 +219,7 @@ ShellRoot {
     }
     Component {
         id: networkPanel
-        Panel { title: "Wi-Fi"; Network { onShareRequested: shell.activePanel = "wifiqr" } }
+        Panel { title: "Network"; Network { onShareRequested: shell.activePanel = "wifiqr" } }
     }
     Component {
         id: wifiSharePanel
