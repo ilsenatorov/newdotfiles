@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Effects
 import ".."
+import "../ui"
 import "../services"
 
 // SUPER+I quick-question overlay. Purely a view: all state and process
@@ -29,25 +29,8 @@ Item {
     // exists, so give it an explicit kick once it's actually on screen.
     Component.onCompleted: input.forceActiveFocus()
 
-    Rectangle {
-        id: bg
+    Surface {
         anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.dashboardSurface
-        border.width: 2
-        border.color: "transparent"
-        visible: false
-        layer.enabled: true
-    }
-
-    MultiEffect {
-        source: bg
-        anchors.fill: bg
-        shadowEnabled: true
-        shadowColor: "#0A0F12"
-        shadowBlur: 0.7
-        shadowVerticalOffset: 4
-        shadowOpacity: 0.6
     }
 
     // Anchors rather than Column below: the transcript needs to fill

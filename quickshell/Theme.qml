@@ -116,10 +116,15 @@ Singleton {
     // or the blur stops being applied at all.
     readonly property color surface: "#66141C21"
 
-    // SUPER+G's dashboard specifically: it can pop up over arbitrary windows
-    // (overlay layer, not just the desktop background), so the frosted-glass
-    // `surface` above reads poorly over bright content. Solid instead.
-    readonly property color dashboardSurface: "#F2141C21"
+    // Every popup window -- dropdown panels, menus, dashboard, Ask -- drawn
+    // by ui/Surface.qml. They can pop up over arbitrary windows, so the
+    // frosted-glass `surface` above reads poorly over bright content: nearly
+    // solid instead. Hyprland still blurs the little that shows through (the
+    // quickshell-* layer rules in hypr/hyprland.lua).
+    readonly property color windowSurface: "#F2141C21"
+    readonly property int windowBorderW: 1
+    readonly property color windowBorder: rule
+    readonly property color windowShadow: "#0A0F12"
     readonly property color fg: "#93A1A1"
     readonly property color dim: "#6D8895"
     readonly property color rule: "#3C4449"

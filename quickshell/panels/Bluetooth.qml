@@ -161,6 +161,8 @@ Column {
     Text {
         visible: Bt.powered && Bt.devices.length > 0
         text: "Right-click (or F) a device to forget it"
+        width: parent.width
+        wrapMode: Text.WordWrap
         color: Theme.dim
         font.family: Theme.font
         font.pixelSize: Theme.fsLabel - 1

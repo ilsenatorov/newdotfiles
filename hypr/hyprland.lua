@@ -178,6 +178,14 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
+-- The bar's dropdown panels (calendar, Wi-Fi, bluetooth, audio) -- same
+-- surface as the menus above (quickshell/ui/Surface.qml), so same blur.
+hl.layer_rule({
+    match        = { namespace = "quickshell-panel" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
 
 hl.config({
     general = {

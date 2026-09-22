@@ -161,12 +161,15 @@ ShellRoot {
             right: true
         }
 
+        // Flush to the screen edge on the right and pulled up by the shadow
+        // headroom on top: ui/Panel.qml pads its card back into the same
+        // spot the panel always sat in.
         margins {
-            top: Theme.barHeight + Theme.barMarginTop * 2
-            right: Theme.barMarginSide
+            top: Theme.barHeight + Theme.barMarginTop * 2 - Theme.inset
+            right: 0
         }
 
-        implicitWidth: Theme.panelW
+        implicitWidth: Theme.panelW + Theme.inset + Theme.barMarginSide
         implicitHeight: Math.max(1, panelLoader.item ? panelLoader.item.implicitHeight : 1)
         color: "transparent"
         exclusiveZone: 0
@@ -175,7 +178,7 @@ ShellRoot {
         WlrLayershell.namespace: "quickshell-panel"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        mask: Region { item: panelLoader.item ?? null }
+        mask: Region { item: panelLoader.item ? panelLoader.item.card : null }
 
         // Grabs keyboard focus the instant a panel opens (SUPER+N/Y/M all
         // route here via shell.togglePanel), so the network/bluetooth panels

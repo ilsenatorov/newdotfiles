@@ -93,17 +93,17 @@ Item {
     }
 
     // Step two: where it goes.
-    Rectangle {
+    Item {
         id: card
 
         visible: !root.needsTargetPick
         anchors.centerIn: parent
         width: Theme.menuW
         height: col.implicitHeight + Theme.pad
-        radius: Theme.radius
-        color: Theme.dashboardSurface
-        border.width: 1
-        border.color: Theme.rule
+
+        Surface {
+            anchors.fill: parent
+        }
 
         focus: card.visible
         Keys.onPressed: event => {

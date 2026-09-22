@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import ".."
 
@@ -99,7 +98,11 @@ Item {
         onClicked: root.closeRequested()
     }
 
-    Rectangle {
+    Surface {
+        anchors.fill: card
+    }
+
+    Item {
         id: card
 
         anchors.centerIn: parent
@@ -107,12 +110,6 @@ Item {
         // Bounded by the window (Theme.inset is shadow headroom), so a long
         // list scrolls instead of overflowing the layer-shell surface.
         height: Math.min(col.implicitHeight + Theme.pad, root.height - Theme.inset * 2)
-
-        radius: Theme.radius
-        color: Theme.dashboardSurface
-        border.width: 1
-        border.color: Theme.rule
-        layer.enabled: true
 
         // Swallow clicks on the card so the dismiss handler above only fires
         // for the empty space around it.
@@ -277,16 +274,6 @@ Item {
                 }
             }
         }
-    }
-
-    MultiEffect {
-        source: card
-        anchors.fill: card
-        shadowEnabled: true
-        shadowColor: "#0A0F12"
-        shadowBlur: 0.7
-        shadowVerticalOffset: 4
-        shadowOpacity: 0.6
     }
 
     // A Loader (shell.qml's menuLoader) can settle its FocusScope's focus
