@@ -76,6 +76,23 @@ Singleton {
     readonly property int notifDefaultTimeout: 6000
     readonly property int notifLowTimeout: 4000
 
+    // ---- menus ------------------------------------------------------------
+    // The ported rofi menus (SUPER+D launcher, clipboard, wallpaper, power,
+    // exit, monitor). rofi sized its window per-theme -- launcher.rasi was
+    // 500px, powermenu.rasi 300px -- so the same split is kept here: a wide
+    // card for searching long lists, a narrow one for a handful of fixed
+    // choices. menuMaxH caps the list so a 400-app launcher cannot grow
+    // taller than the screen; the ListView scrolls past it.
+    readonly property int menuW: Math.round(560 * s)
+    readonly property int menuNarrowW: Math.round(340 * s)
+    readonly property int menuMaxH: Math.round(520 * s)
+    readonly property int menuRowH: Math.round(38 * s)
+    readonly property int menuIconSize: Math.round(26 * s)
+    // One tile in the SUPER+SHIFT+M monitor diagram (Left/Right/Above/Below
+    // around the anchor). Wide and short, so a tile reads as a screen.
+    readonly property int menuTileW: Math.round(104 * s)
+    readonly property int menuTileH: Math.round(58 * s)
+
     // ---- panels -----------------------------------------------------------
     readonly property int panelW: Math.round(340 * s)
     readonly property int panelGap: Math.round(8 * s)

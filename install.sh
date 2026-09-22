@@ -63,7 +63,7 @@ die()  { printf '\033[1;31mERROR\033[0m %s\n' "$1" >&2; exit 1; }
 [ "$(id -u)" -ne 0 ] || die "run as your normal user, not root (it sudos where needed)"
 
 # link.sh and every script in here hardcode ~/dotfiles, and so do the configs
-# themselves (rofi -theme paths, ranger -r, matugen output paths). A clone
+# themselves (ranger -r, matugen output paths). A clone
 # somewhere else does not work without editing all of them.
 repo="$(cd "$(dirname "$0")" && pwd)"
 [ "$repo" = "$DOTS" ] || die "this repo must live at ${DOTS} (found: ${repo})"
@@ -76,10 +76,9 @@ PKGS_DESKTOP=(
 	# compositor + session
 	hyprland uwsm hyprlock hypridle hyprsunset hyprshot hyprpolkitagent
 	xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit
-	# bar, notifications, menus, dashboard -- bar+notifications+panels are
-	# quickshell now (see quickshell/), rofi stays for the app launcher and
-	# power menu
-	rofi quickshell
+	# bar, notifications, menus, dashboard -- all quickshell now
+	# (see quickshell/); rofi is gone, its last six menus were ported
+	quickshell
 	# terminal, shell, prompt, files
 	kitty zsh starship ranger
 	# theming

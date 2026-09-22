@@ -53,7 +53,7 @@ jobs:
             [ -f ~/.config/dotfiles/local.lua ] || { echo "local.lua missing"; exit 1; }
             [ -f ~/.config/git/config.local ] || { echo "git config.local missing"; exit 1; }
             for f in hypr/colors.conf hypr/colors.lua kitty/colors.conf \
-                     quickshell/Colors.qml rofi/styles/colors.rasi \
+                     quickshell/Colors.qml \
                      gtk-3.0/colors.css gtk-4.0/colors.css \
                      starship/colors.toml nvim/colors.lua; do
               [ -f "$HOME/dotfiles/$f" ] || { echo "matugen default not seeded: $f"; exit 1; }

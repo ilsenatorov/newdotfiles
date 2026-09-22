@@ -22,10 +22,6 @@ rainbow_cyan   = { color = "#00cccc", blend = true }
 rainbow_blue   = { color = "#3388ff", blend = true }
 rainbow_purple = { color = "#aa55ff", blend = true }
 
-[templates.rofi]
-input_path  = '~/dotfiles/matugen/templates/colors-rofi.rasi'
-output_path = '~/dotfiles/rofi/styles/colors.rasi'
-
 [templates.hyprlock]
 input_path  = '~/dotfiles/matugen/templates/colors-hypr.conf'
 output_path = '~/dotfiles/hypr/colors.conf'

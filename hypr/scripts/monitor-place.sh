@@ -7,10 +7,15 @@
 # runtime equivalent is `hyprctl eval 'hl.monitor({...})'`.
 #
 # Usage:
-#   monitor-place.sh                  # rofi picker
 #   monitor-place.sh above            # apply directly (single external display)
 #   monitor-place.sh above DP-6       # apply to a named output
 #   monitor-place.sh --dry-run above  # print the hl.monitor calls, change nothing
+#   monitor-place.sh --query          # JSON: anchor + each output's placement
+#
+# Picking interactively is quickshell's job now (SUPER+SHIFT+M ->
+# quickshell/panels/MonitorPlace.qml). --query is what that panel reads so it
+# can draw the tiles without re-deriving any of the geometry below; it still
+# resolves only to a (placement, output) pair and hands it straight back.
 #
 # Placements: left right above below mirror disable
 #
@@ -19,10 +24,11 @@
 
 set -euo pipefail
 
-ROFI="rofi -theme ${HOME}/dotfiles/rofi/styles/monitors.rasi -dmenu -i"
-
 dry_run=0
 [ "${1:-}" = "--dry-run" ] && { dry_run=1; shift; }
+
+query=0
+[ "${1:-}" = "--query" ] && { query=1; shift; }
 
 placement="${1:-}"
 target="${2:-}"
@@ -70,7 +76,61 @@ ascale=$(norm_scale "$ascale")
 alw=$(logical "$aw" "$ascale")
 alh=$(logical "$ah" "$ascale")
 
-# --- pick the output to move ------------------------------------------------
+# --- per-output metrics -----------------------------------------------------
+
+# "<logicalW> <logicalH> <scale> <x> <y> <disabled> <mirrorOf>" for one output,
+# substituting the preferred mode when it is currently disabled.
+target_metrics() {
+	local n=$1 w h s x y dis mir
+	read -r w h s x y dis mir < <(geom "$n")
+	if [ "$w" -eq 0 ] || [ "$h" -eq 0 ]; then
+		read -r w h < <(preferred_size "$n")
+	fi
+	s=$(norm_scale "$s")
+	# Trailing newline matters: `read` returns non-zero at EOF without one,
+	# which `set -e` would turn into a silent exit at every call site.
+	printf '%s %s %s %s %s %s %s\n' \
+		"$(logical "$w" "$s")" "$(logical "$h" "$s")" "$s" "$x" "$y" "$dis" "$mir"
+}
+
+# Where an output sits right now, so the picker can mark the active tile.
+# Derived from live coordinates rather than the anchor's nominal 0x0, since the
+# anchor may have been moved by a previous run or by the position = "auto" rules.
+current_placement() {
+	local tlw tlh _ts tx ty tdis tmir
+	read -r tlw tlh _ts tx ty tdis tmir < <(target_metrics "$1")
+	if [ "$tdis" = "true" ]; then
+		echo "Disable"
+	elif [ -n "$tmir" ] && [ "$tmir" != "none" ]; then
+		echo "Mirror"
+	elif [ "$tx" -ge $((ax + alw)) ]; then
+		echo "Right"
+	elif [ $((tx + tlw)) -le "$ax" ]; then
+		echo "Left"
+	elif [ $((ty + tlh)) -le "$ay" ]; then
+		echo "Above"
+	elif [ "$ty" -ge $((ay + alh)) ]; then
+		echo "Below"
+	else
+		echo ""
+	fi
+}
+
+# --- --query ----------------------------------------------------------------
+
+if [ "$query" = 1 ]; then
+	targets="[]"
+	while IFS=$'\t' read -r name desc; do
+		[ -z "$name" ] && continue
+		targets=$(jq --arg n "$name" --arg d "$desc" --arg c "$(current_placement "$name")" \
+			'. + [{name: $n, description: $d, current: $c}]' <<<"$targets")
+	done < <(jq -r --arg a "$anchor" '.[] | select(.name != $a) |
+		"\(.name)\t\(.description)"' <<<"$mons")
+	jq -n --arg a "$anchor" --argjson t "$targets" '{anchor: $a, targets: $t}'
+	exit 0
+fi
+
+# --- resolve the output to act on -------------------------------------------
 
 if [ -z "$target" ]; then
 	mapfile -t candidates < <(jq -r --arg a "$anchor" '.[] | select(.name != $a) | .name' <<<"$mons")
@@ -78,13 +138,8 @@ if [ -z "$target" ]; then
 	case ${#candidates[@]} in
 		0) die "No external display connected." ;;
 		1) target="${candidates[0]}" ;;
-		*)
-			menu=$(jq -r --arg a "$anchor" '.[] | select(.name != $a) |
-				"\(.name)\t\(.description)"' <<<"$mons")
-			pick=$(printf '%s\n' "$menu" | column -t -s $'\t' | $ROFI -p "Which display?") || exit 0
-			[ -z "$pick" ] && exit 0
-			target="${pick%% *}"
-			;;
+		# No interactive fallback any more: the caller names the output.
+		*) die "Several external displays; name one: ${candidates[*]}" ;;
 	esac
 fi
 
@@ -92,48 +147,9 @@ jq -e --arg n "$target" 'map(select(.name == $n)) | length > 0' <<<"$mons" >/dev
 	|| die "No such output: $target"
 [ "$target" = "$anchor" ] && die "$target is the anchor display; pick another output."
 
-read -r tw th tscale tx ty tdis tmir < <(geom "$target")
-if [ "$tw" -eq 0 ] || [ "$th" -eq 0 ]; then
-	read -r tw th < <(preferred_size "$target")
-fi
-tscale=$(norm_scale "$tscale")
-tlw=$(logical "$tw" "$tscale")
-tlh=$(logical "$th" "$tscale")
+read -r tlw tlh tscale _tx _ty _tdis _tmir < <(target_metrics "$target")
 
-# --- pick the placement -----------------------------------------------------
-
-# Where the target sits right now, so the menu can mark it. Derived from live
-# coordinates rather than the anchor's nominal 0x0, since the anchor may have
-# been moved by a previous run or by the position = "auto" rules.
-current=""
-if [ "$tdis" = "true" ]; then
-	current="Disable"
-elif [ -n "$tmir" ] && [ "$tmir" != "none" ]; then
-	current="Mirror"
-elif [ "$tx" -ge $((ax + alw)) ]; then
-	current="Right"
-elif [ $((tx + tlw)) -le "$ax" ]; then
-	current="Left"
-elif [ $((ty + tlh)) -le "$ay" ]; then
-	current="Above"
-elif [ "$ty" -ge $((ay + alh)) ]; then
-	current="Below"
-fi
-
-if [ -z "$placement" ]; then
-	options=""
-	for opt in Left Right Above Below Mirror Disable; do
-		if [ "$opt" = "$current" ]; then
-			options+="$opt  (current)"$'\n'
-		else
-			options+="$opt"$'\n'
-		fi
-	done
-	pick=$(printf '%s' "$options" | $ROFI -p "$target") || exit 0
-	[ -z "$pick" ] && exit 0
-	placement="${pick%% *}"
-fi
-
+[ -n "$placement" ] || die "No placement given (want: left right above below mirror disable)"
 placement=$(tr '[:upper:]' '[:lower:]' <<<"$placement")
 
 # --- compute the new position ----------------------------------------------

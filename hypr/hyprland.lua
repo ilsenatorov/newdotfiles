@@ -153,16 +153,6 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
--- rofi runs as a layer surface under Wayland (namespace "rofi"), so the
--- `class = rofi` window rule further down never applies to it -- the blur has
--- to be a layer rule. ignore_alpha is lower than the bar's because the rofi
--- window is drawn at 0xE6 alpha rather than 0xD9.
-hl.layer_rule({
-    match        = { namespace = "rofi" },
-    blur         = true,
-    ignore_alpha = 0.1,
-})
-
 -- SUPER+G's system-info overlay -- on the `overlay` layer now (shows above
 -- normal windows, not just the desktop), on demand only. Same 0xD9 surface
 -- as the bar, so the same ignore_alpha.
@@ -175,6 +165,15 @@ hl.layer_rule({
 -- SUPER+I's ask-a-quick-question overlay -- same treatment as the dashboard.
 hl.layer_rule({
     match        = { namespace = "quickshell-ask" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
+-- The ported rofi menus (launcher, clipboard, wallpaper, power, exit,
+-- monitor) -- this replaces the `namespace = "rofi"` rule that used to sit
+-- above, since they are layer surfaces for the same reason rofi was.
+hl.layer_rule({
+    match        = { namespace = "quickshell-menu" },
     blur         = true,
     ignore_alpha = 0.2,
 })
@@ -192,8 +191,8 @@ hl.config({
         gaps_out = M.gaps_out or 8,
 
         -- was 0, which made the col.* accent below dead config: the
-        -- wallpaper-derived accent showed on the bar, rofi and notifications
-        -- but never on the focused window.
+        -- wallpaper-derived accent showed on the bar, the menus and
+        -- notifications but never on the focused window.
         border_size = 2,
 
         col = {
@@ -214,8 +213,8 @@ hl.config({
 
     decoration = {
         -- 12px is the radius shared by the quickshell bar pills, notification
-        -- toasts, the rofi window and the hyprlock input field. 3 was the
-        -- odd one out.
+        -- toasts, the quickshell menu cards and the hyprlock input field.
+        -- 3 was the odd one out.
         rounding = 12,
         active_opacity   = 1.0,
         inactive_opacity = 0.8,
@@ -326,8 +325,11 @@ hl.bind(mainMod .. " + End",     hl.dsp.exec_cmd(terminal),   { description = "T
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close(),     { description = "Close window" })
 hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "File manager" })
 
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher.sh"),         { description = "App launcher" })
-hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.sh"), { description = "Run command" })
+-- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
+-- launcher below covers what it was for.
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu open launcher"), {
+	description = "App launcher",
+})
 -- Network/bluetooth/audio now open the quickshell panels instead of
 -- launching a separate rofi/GTK tool -- see quickshell/panels/.
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), {
@@ -339,10 +341,10 @@ hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth")
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
 	description = "Audio menu",
 })
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), {
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu open power"), {
 	description = "Power menu",
 })
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), {
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("qs ipc call menu open monitor"), {
 	description = "Monitor placement",
 })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
@@ -435,7 +437,7 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 ---- Session ----------------------------------------------------------------
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload config" })
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/exit-confirm.sh"),
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("qs ipc call menu open exit"),
     { description = "Exit Hyprland (confirm)" })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
@@ -467,12 +469,14 @@ hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"), { lo
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
 
 ---- Wallpaper -------------------------------------------------------------
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/set-wallpaper.sh"),
+-- The picker is quickshell's; set-wallpaper.sh still does the work once a
+-- file is chosen (ffmpeg frame-grab for videos, matugen, mpvpaper/swww).
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call menu open wallpaper"),
     { description = "Pick wallpaper (regenerates accent)" })
 
 ---- Clipboard --------------------------------------------------------------
--- cliphist history through the launcher theme that is already here.
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(dotfiles .. "/rofi/clipboard.sh"),
+-- cliphist is still the store; only the picker in the middle changed.
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call menu open clipboard"),
     { description = "Clipboard history" })
 
 ---- Scratchpad -------------------------------------------------------------
@@ -534,12 +538,6 @@ hl.window_rule({
     name    = "kitty-opacity",
     match   = { class = "(?i)^kitty$" },
     opacity = "0.95 0.85",
-})
-
-hl.window_rule({
-    name    = "rofi-opacity",
-    match   = { class = "(?i)^rofi$" },
-    opacity = 0.9,
 })
 
 -- Shadow only where it adds depth. A tiled grid of shadowed windows reads as

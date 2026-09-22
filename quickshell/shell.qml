@@ -69,6 +69,21 @@ ShellRoot {
         function close(): void { shell.activePanel = ""; }
     }
 
+    // Which ported rofi menu is open: "" | "launcher" | "clipboard" |
+    // "wallpaper" | "power" | "exit" | "monitor". Transient like activePanel.
+    property string activeMenu: ""
+
+    // qs ipc call menu open <name> -- bound to SUPER+D/V/W and SUPER+SHIFT+S/E/M
+    // in hypr/hyprland.lua. These six were the last things still shelling out
+    // to rofi; see quickshell/ui/Picker.qml.
+    IpcHandler {
+        target: "menu"
+
+        function open(name: string): void { shell.activeMenu = name; }
+        function toggle(name: string): void { shell.activeMenu = shell.activeMenu === name ? "" : name; }
+        function close(): void { shell.activeMenu = ""; }
+    }
+
     // The bar is always on screen now (it wasn't, before this migration --
     // only the dashboard corner was), so there is always something to poll
     // for. Fast stays permanently on rather than gated on state.expanded.
@@ -308,4 +323,60 @@ ShellRoot {
             }
         }
     }
+
+    // The six ported rofi menus. Same shape as askWin above: centered (no
+    // anchors), Overlay layer, OnDemand focus, Escape closes.
+    //
+    // Fixed at the largest a menu can be rather than sized to its content:
+    // the launcher's list changes length on every keystroke, and resizing a
+    // layer-shell surface that often makes it visibly jump. The card inside
+    // is what resizes; the leftover space is a click-away dismiss target.
+    PanelWindow {
+        id: menuWin
+        visible: shell.activeMenu !== ""
+
+        implicitWidth: Theme.menuW + Theme.inset * 2
+        implicitHeight: Theme.menuMaxH + Theme.inset * 2
+
+        color: "transparent"
+        exclusiveZone: 0
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-menu"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+
+        mask: Region { item: menuLoader.item ?? null }
+
+        FocusScope {
+            id: menuFocus
+            anchors.fill: parent
+            focus: shell.activeMenu !== ""
+
+            Keys.onEscapePressed: shell.activeMenu = ""
+
+            Loader {
+                id: menuLoader
+                anchors.fill: parent
+                active: shell.activeMenu !== ""
+                sourceComponent: {
+                    switch (shell.activeMenu) {
+                    case "launcher": return launcherMenu;
+                    case "clipboard": return clipboardMenu;
+                    case "wallpaper": return wallpaperMenu;
+                    case "power": return powerMenu;
+                    case "exit": return exitMenu;
+                    case "monitor": return monitorMenu;
+                    default: return null;
+                    }
+                }
+            }
+        }
+    }
+
+    Component { id: launcherMenu;  Launcher     { onCloseRequested: shell.activeMenu = "" } }
+    Component { id: clipboardMenu; Clipboard    { onCloseRequested: shell.activeMenu = "" } }
+    Component { id: wallpaperMenu; Wallpaper    { onCloseRequested: shell.activeMenu = "" } }
+    Component { id: powerMenu;     PowerMenu    { onCloseRequested: shell.activeMenu = "" } }
+    Component { id: exitMenu;      ExitConfirm  { onCloseRequested: shell.activeMenu = "" } }
+    Component { id: monitorMenu;   MonitorPlace { onCloseRequested: shell.activeMenu = "" } }
 }

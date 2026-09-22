@@ -19,7 +19,7 @@ lint: check
 fmt:
 	shfmt -i 1 -ci -w install.sh link.sh check.sh starship/build.sh \
 		sddm/install.sh sddm/sync-wallpaper.sh \
-		hypr/scripts/*.sh rofi/*.sh quickshell/scripts/*.sh
+		hypr/scripts/*.sh quickshell/scripts/*.sh
 
 # Compares the PKGS_*/AUR_* arrays in install.sh against what's actually
 # installed, and sanity-checks the machine's config state.

@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # Set the wallpaper and regenerate the accent colour from it.
 #
-#   set-wallpaper.sh            -> rofi picker over ~/Pictures/Wallpapers
-#   set-wallpaper.sh <file>     -> use that image or video directly
+#   set-wallpaper.sh <file>          -> use that image or video directly
+#   set-wallpaper.sh --set <rel>     -> path relative to ~/Pictures/Wallpapers
+#   set-wallpaper.sh --list          -> print the wallpapers, one per line
+#
+# Picking one interactively is quickshell's job now (SUPER+W ->
+# quickshell/panels/Wallpaper.qml); this script no longer prompts. --list is
+# what that picker reads, so the set of wallpaper extensions below stays in
+# one place instead of being duplicated in QML.
 #
 # Videos are first-class here: mpvpaper plays them (see wallpaper-daemon.sh) and
 # matugen gets a frame pulled out with ffmpeg, so a video wallpaper drives the
@@ -31,33 +37,41 @@ is_video() {
     esac
 }
 
-wall="${1:-}"
-
-if [ -z "$wall" ]; then
+# Recursive on purpose, and each entry is printed RELATIVE to WALLDIR: find
+# descends, so a bare basename is ambiguous the moment a wallpaper lives in a
+# subfolder -- "nature/forest.mp4" would come back as "forest.mp4" and the
+# path rebuilt from it would not exist. A relative path is unique per file and
+# maps straight back by concatenation.
+list_wallpapers() {
     [ -d "$WALLDIR" ] || die "No wallpaper directory at $WALLDIR"
+    local files=()
     mapfile -t files < <(find "$WALLDIR" -type f \
         \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \
            -o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' -o -iname '*.mov' \
            -o -iname '*.m4v' -o -iname '*.gif' \) \
         | sort)
     [ "${#files[@]}" -gt 0 ] || die "No wallpapers in $WALLDIR"
+    printf '%s\n' "${files[@]#"${WALLDIR}"/}"
+}
 
-    # Show each entry as its path RELATIVE to WALLDIR, not as a bare basename:
-    # find recurses, so a basename is ambiguous the moment a wallpaper lives in
-    # a subfolder -- "nature/forest.mp4" would come back as "forest.mp4" and the
-    # path rebuilt below would not exist.
-    #
-    # A relative path is unique per file, so it maps straight back by
-    # concatenation. Deliberately NOT using rofi's `-format i` to return a row
-    # index: this box has rofi 2.0.0, a major version past the usual 1.7.x, and
-    # a prompt that silently does nothing is far worse than one that cannot tell
-    # a video from a still.
-    choice=$(printf '%s\n' "${files[@]#"${WALLDIR}"/}" \
-        | rofi -dmenu -i -p "Wallpaper" \
-            -theme "${DOTS}/rofi/styles/launcher_scripts.rasi") || exit 0
-    [ -n "$choice" ] || exit 0          # dismissed with Escape
-    wall="${WALLDIR}/${choice}"
-fi
+case "${1:-}" in
+    --list)
+        list_wallpapers
+        exit 0
+        ;;
+    --set)
+        [ -n "${2:-}" ] || die "--set needs a path relative to $WALLDIR"
+        wall="${WALLDIR}/${2}"
+        ;;
+    "")
+        # No interactive fallback any more -- failing loudly beats silently
+        # doing nothing if something still calls this the old way.
+        die "Usage: set-wallpaper.sh <file> | --set <relative-path> | --list"
+        ;;
+    *)
+        wall="$1"
+        ;;
+esac
 
 [ -f "$wall" ] || die "Not a file: $wall"
 
@@ -100,7 +114,7 @@ hyprctl reload >/dev/null 2>&1 || true
 # No reload signal needed for the bar/notifications/panels any more --
 # quickshell watches quickshell/Colors.qml itself and hot-reloads on write.
 # kitty re-reads its config on save, so open terminals recolour themselves;
-# rofi picks it up on next launch, hyprlock on next lock.
+# hyprlock picks it up on next lock.
 # GTK apps re-read gtk.css only on restart.
 
 # ---- 5. login screen -----------------------------------------------------
