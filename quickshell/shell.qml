@@ -69,6 +69,18 @@ ShellRoot {
         function close(): void { shell.activePanel = ""; }
     }
 
+    // qs ipc call audio cycleSink -- bound to SUPER+SHIFT+M in hypr/hyprland.lua,
+    // for switching output without opening the panel at all (SUPER+M does that,
+    // and is where the full list with arrow-key picking lives).
+    IpcHandler {
+        target: "audio"
+
+        function cycleSink(): void { Audio.cycleSink(1); }
+        function prevSink(): void { Audio.cycleSink(-1); }
+        function toggleMute(): void { Audio.toggleMute(); }
+        function sink(): string { return Audio.sinkName; }
+    }
+
     // Which ported rofi menu is open: "" | "launcher" | "clipboard" |
     // "wallpaper" | "power" | "exit" | "monitor". Transient like activePanel.
     property string activeMenu: ""

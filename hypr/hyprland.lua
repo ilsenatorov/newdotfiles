@@ -341,6 +341,11 @@ hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth")
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
 	description = "Audio menu",
 })
+-- Switch output without opening the panel: SUPER+M then arrows/Enter picks a
+-- specific device, this just steps to the next one (laptop <-> headset).
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("qs ipc call audio cycleSink"), {
+	description = "Cycle audio output",
+})
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu open power"), {
 	description = "Power menu",
 })

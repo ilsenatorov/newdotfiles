@@ -4,7 +4,8 @@ import "../../services"
 
 // Ported from waybar's pulseaudio module. Scroll to nudge volume (was
 // scroll-step: 2 there); click opens the Audio panel instead of launching
-// pavucontrol.
+// pavucontrol; middle-click cycles to the next output device without
+// opening anything (waybar had no equivalent -- that was a pavucontrol trip).
 Text {
     id: root
 
@@ -24,7 +25,11 @@ Text {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: root.clicked()
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        onClicked: mouse => {
+            if (mouse.button === Qt.MiddleButton) Audio.cycleSink(1);
+            else root.clicked();
+        }
         onWheel: wheel => Audio.nudgeVolume(wheel.angleDelta.y > 0 ? 0.02 : -0.02)
     }
 }
