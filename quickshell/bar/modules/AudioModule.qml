@@ -17,9 +17,9 @@ Text {
     text: Audio.muted ? "  Muted" : Audio.volumeGlyph() + "  " + Math.round(Audio.volume * 100) + "%"
 
     color: {
-        if (Audio.muted || Audio.volume >= 1.0) return Theme.red;
-        if (Audio.volume >= 0.5) return Theme.yellow;
-        return Theme.green;
+        if (Audio.muted) return Theme.dim;
+        if (Audio.volume >= 1.0) return Theme.red;
+        return Colors.cyan;
     }
 
     MouseArea {

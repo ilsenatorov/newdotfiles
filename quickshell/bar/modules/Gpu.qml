@@ -15,7 +15,7 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: Theme.green
+        color: Colors.green
     }
 
     Text {
@@ -24,6 +24,6 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: SysMon.gpuTempC >= 85 ? Theme.red : Theme.green
+        color: SysMon.gpuTempC >= 85 ? Theme.red : Colors.green
     }
 }

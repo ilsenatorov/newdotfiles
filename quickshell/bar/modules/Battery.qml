@@ -28,10 +28,10 @@ Text {
     }
 
     color: {
-        if (charging) return Theme.green;
-        if (full || critical) return Theme.red;
+        if (charging || full) return Colors.green;
+        if (critical) return Theme.red;
         if (warning) return Theme.yellow;
-        return Theme.pink;
+        return Colors.red;
     }
 
     function icon(): string {

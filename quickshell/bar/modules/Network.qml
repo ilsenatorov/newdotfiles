@@ -22,7 +22,7 @@ Text {
         return "󰖪 ";
     }
 
-    color: Net.connected ? Theme.purple : Theme.orange
+    color: Net.connected ? Colors.purple : Theme.orange
 
     MouseArea {
         anchors.fill: parent
