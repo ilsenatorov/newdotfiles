@@ -322,7 +322,7 @@ local mainMod = "SUPER"
 ---- Launchers and terminal -------------------------------------------------
 hl.bind(mainMod .. " + Return",  hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
 hl.bind(mainMod .. " + End",     hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close(),     { description = "Close window" })
+hl.bind(mainMod .. " + Q", hl.dsp.window.close(),     { description = "Close window" })
 hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "File manager" })
 
 -- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
@@ -338,16 +338,13 @@ hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), 
 hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), {
 	description = "Bluetooth menu",
 })
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
-	description = "Audio menu",
-})
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
 	description = "Audio menu",
 })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
 	description = "Power menu",
 })
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("qs ipc call menu toggle monitor"), {
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call menu toggle monitor"), {
 	description = "Monitor placement",
 })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
