@@ -76,10 +76,33 @@ alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat 
 
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
-# Collapse past prompts to a bare ❯ once the command runs -- the rainbow bar is
-# for the prompt you are typing at, not for the scrollback. Must come after the
-# init line above, which defines the function.
-enable_transience
+
+# Transient prompt: once a command is submitted, redraw the prompt it was typed
+# at as a bare ❯ (the `transient` profile in starship.base.toml) and drop the
+# right prompt, so scrollback is commands and output rather than a rainbow bar
+# per line. Starship has no `enable_transience` for zsh -- it ships one for
+# fish/bash/cmd/nu/pwsh only -- so the widget is ours.
+#
+# It must come after the init above (which sets PROMPT/RPROMPT) and after
+# oh-my-zsh loads zsh-autosuggestions, which wraps accept-line: `zle -A` keeps
+# a callable alias to whatever is bound now instead of dropping that wrapper.
+_STARSHIP_PROMPT=$PROMPT
+_STARSHIP_RPROMPT=$RPROMPT
+# Single-quoted: promptsubst re-runs this at redraw time, so the collapsed ❯
+# still reflects the exit status the original prompt was rendered with.
+_STARSHIP_TRANSIENT_PROMPT='$('/usr/bin/starship' prompt --profile transient --status="${STARSHIP_CMD_STATUS:-0}" --keymap="${KEYMAP:-}")'
+
+zle -A accept-line _starship_orig_accept_line
+_starship_transient_accept_line() {
+	# zsh-autosuggestions' grey completion lives in POSTDISPLAY; without this it
+	# survives the redraw and is left hanging off the transient line.
+	POSTDISPLAY=""
+	PROMPT=$_STARSHIP_TRANSIENT_PROMPT RPROMPT=""
+	zle .reset-prompt
+	PROMPT=$_STARSHIP_PROMPT RPROMPT=$_STARSHIP_RPROMPT
+	zle _starship_orig_accept_line
+}
+zle -N accept-line _starship_transient_accept_line
 
 # Per-machine tail: CLAUDE_OBSIDIAN_VAULT, the NVIDIA VS Code workaround,
 # `. ~/.local/bin/env`, anything else that is true on this box but not the

@@ -18,7 +18,7 @@
 #
 #   1. No instant prompt. POWERLEVEL9K_INSTANT_PROMPT=verbose relied on p10k
 #      being a zsh-native theme; starship is a subprocess per prompt. The real
-#      startup cost in .zshrc is `conda init` + `compinit`, not the prompt.
+#      startup cost in .zshrc is oh-my-zsh's `compinit`, not the prompt.
 #   2. The git segment cannot change background with git state. p10k swapped the
 #      whole segment green/yellow for clean/dirty; starship has no
 #      state-conditional module style, so state is carried by the +!?~* counts
@@ -66,8 +66,6 @@ $haskell\
 $python\
 [](fg:hue_cyan bg:surface_bright)\
 $docker_context\
-$conda\
-$pixi\
 [](fg:surface_bright bg:surface_container)\
 $time\
 [ ](fg:surface_container)\
@@ -234,29 +232,22 @@ format = '[$state( $progress_current/$progress_total) ]($style)'
 [python]
 symbol = ""
 style = "bg:hue_cyan"
-format = '[[ $symbol( $version)(($virtualenv)) ](fg:on_hue bg:hue_cyan)]($style)'
+# The parens around $virtualenv are escaped: starship reads a bare `(...)` as a
+# conditional group, so `(($virtualenv))` renders the name with no brackets.
+format = '[[ $symbol( $version)( \($virtualenv\)) ](fg:on_hue bg:hue_cyan)]($style)'
 detect_extensions = []
 detect_files = ["pyproject.toml", ".python-version", "requirements.txt", "setup.py", "Pipfile", "tox.ini"]
 
-# --- docker / env slot ----------------------------------------------------
+# --- docker slot ----------------------------------------------------------
+# Was the docker/env slot: [conda] and [pixi] lived here too, carrying p10k's
+# POWERLEVEL9K_ANACONDA segment. Neither is installed any more -- uv handles
+# python environments, and $virtualenv in the cyan segment above reports them.
+# Put one back by re-adding its $module to `format` alongside $docker_context.
 
 [docker_context]
 symbol = ""
 style = "bg:surface_bright"
 format = '[[ $symbol( $context) ](fg:on_surface bg:surface_bright)]($style)'
-
-# POWERLEVEL9K_ANACONDA: p10k stripped the "(...)" that CONDA_PROMPT_MODIFIER
-# wraps the env name in, and showed the base env too.
-[conda]
-symbol = " "
-style = "bg:surface_bright"
-format = '[[ $symbol$environment ](fg:on_surface bg:surface_bright)]($style)'
-ignore_base = false
-truncation_length = 1
-
-[pixi]
-style = "bg:surface_bright"
-format = '[[ $symbol( $version)( $environment) ](fg:on_surface bg:surface_bright)]($style)'
 
 # POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'. The preset uses %R (HH:MM); p10k
 # showed seconds, so that is kept.
@@ -357,7 +348,14 @@ symbol_threshold = 1
 # Transient prompt: past prompts collapse to a bare ❯ so scrollback stays clean.
 # POWERLEVEL9K_TRANSIENT_PROMPT was `off`; turned ON here because the six
 # segments always render, so every scrolled-back prompt is a full-width bar of
-# colour around a command you are trying to read. Only the live prompt needs it.
-# Enabled by `enable_transience` in .zshrc, AFTER `eval "$(starship init zsh)"`.
-# The collapsed form defaults to $character; override it with, e.g.
-#   [](fg:hue_red)  in a `transient_prompt` variable set in .zshrc.
+# colour wrapped around a command you are trying to read. Only the prompt you
+# are typing at needs the bar.
+#
+# Starship's `enable_transience` exists for fish, bash+ble.sh, cmd, nushell and
+# PowerShell -- NOT for zsh (check `starship init zsh --print-full-init`; as of
+# 1.26 the function is simply absent, and calling it errors on every startup).
+# So the accept-line widget that swaps the prompt lives in .zshrc, and this is
+# the profile it renders. Keep it to $character: anything wider defeats the
+# point, and anything that shells out makes every ENTER pay for it.
+[profiles]
+transient = "$character"
