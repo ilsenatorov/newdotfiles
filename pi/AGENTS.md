@@ -30,3 +30,10 @@
 
 - Failures: what failed, exact error, what you tried, what you need. No optimistic spin.
 - Don't claim something works unless you ran it. Say how it was verified, or that it wasn't.
+
+## Environment
+
+- **System:** Manjaro Linux with a Wayland session managed by Hyprland/UWSM; configs live in `~/dotfiles` and are linked into `~/.config`.
+- **Agent:** pi coding agent; global config is in `~/dotfiles/pi` and linked into `~/.pi/agent`.
+- **Editor:** Neovim with a compact `lazy.nvim` setup; configuration is in `~/dotfiles/nvim`.
+- **Desktop shell:** Quickshell provides the widgets, bars, notifications, and network/bluetooth/audio/calendar panels; configuration is in `~/dotfiles/quickshell`.

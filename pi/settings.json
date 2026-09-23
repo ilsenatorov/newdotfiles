@@ -1,12 +1,11 @@
 {
-  "lastChangelogVersion": "0.86.1",
+  "lastChangelogVersion": "0.87.0",
   "theme": "dark",
-  "defaultProvider": "openrouter",
-  "defaultModel": "moonshotai/kimi-k2.6",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-luna",
   "packages": [
     "npm:pi-web-access",
     "npm:pi-subagents",
     "npm:pi-mcp-adapter"
-  ],
-  "hideThinkingBlock": true
+  ]
 }

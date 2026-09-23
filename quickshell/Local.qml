@@ -33,6 +33,8 @@ Singleton {
     readonly property var barCenter: list("BAR_CENTER", ["gpu", "sys", "battery"])
     readonly property var barRight: list("BAR_RIGHT", ["network", "bluetooth", "audio", "language"])
 
+    readonly property string hddDevice: values["HDD_DEVICE"] || ""
+
     // Expensive pollers/services -- 0 disables outright on weak hardware.
     readonly property bool svcWeather: bool_("SVC_WEATHER", true)
     readonly property bool svcClaudeUsage: bool_("SVC_CLAUDE_USAGE", true)

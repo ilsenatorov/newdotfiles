@@ -14,7 +14,7 @@ cd "$(dirname "$0")" || exit 1
 SHELL_SCRIPTS=(
 	install.sh link.sh check.sh starship/build.sh
 	sddm/install.sh sddm/sync-wallpaper.sh
-	hypr/scripts/*.sh rofi/*.sh quickshell/scripts/*.sh
+	hypr/scripts/*.sh quickshell/scripts/*.sh
 )
 
 say "shellcheck"

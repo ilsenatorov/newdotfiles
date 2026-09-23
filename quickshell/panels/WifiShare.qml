@@ -119,7 +119,7 @@ Column {
         Text { text: Net.ip !== "" ? Net.ip : "--"; color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fsLabel }
 
         Text { text: "Signal"; color: Theme.dim; font.family: Theme.font; font.pixelSize: Theme.fsLabel }
-        Text { text: Net.wifiConnected ? Math.round(Net.signalStrength) + "%" : "--"; color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fsLabel }
+        Text { text: Net.wifiConnected ? Math.round(Net.signalStrength * 100) + "%" : "--"; color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fsLabel }
     }
 
     Rectangle {

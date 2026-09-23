@@ -1,19 +1,19 @@
-# matugen drives the ACCENT colour only. Backgrounds, foregrounds and the fixed
-# semantic colours (battery red, disk orange, ...) stay hand-written in the real
+# matugen drives accents and wallpaper-harmonized module/prompt colours.
+# Backgrounds, foregrounds and warning colours stay hand-written in the real
 # config files, which import these generated files and can override anything.
 #
 # Regenerate with hypr/scripts/set-wallpaper.sh -- never edit the outputs.
 
 [config]
 
-# Seed hues for the starship prompt chain. A Material scheme is generated from a
+# Seed hues for the starship prompt chain and Quickshell bar. A Material scheme is generated from a
 # single source colour, so primary/secondary/tertiary all land on nearly the same
 # hue -- fine for an accent, useless for starship's gruvbox-rainbow layout, which
 # needs six visibly different segments. custom_colors with blend = true fixes
 # that: each seed below keeps its own hue but is harmonized toward the wallpaper,
 # so the chain reads as a real rainbow that still belongs to the palette.
 #
-# Only colors-starship.toml consumes these; every other template ignores them.
+# Starship uses dark containers; Quickshell uses the bright foreground variants.
 [config.custom_colors]
 rainbow_red    = { color = "#ff0000", blend = true }
 rainbow_orange = { color = "#ff8800", blend = true }
@@ -21,10 +21,6 @@ rainbow_green  = { color = "#00cc44", blend = true }
 rainbow_cyan   = { color = "#00cccc", blend = true }
 rainbow_blue   = { color = "#3388ff", blend = true }
 rainbow_purple = { color = "#aa55ff", blend = true }
-
-[templates.rofi]
-input_path  = '~/dotfiles/matugen/templates/colors-rofi.rasi'
-output_path = '~/dotfiles/rofi/styles/colors.rasi'
 
 [templates.hyprlock]
 input_path  = '~/dotfiles/matugen/templates/colors-hypr.conf'

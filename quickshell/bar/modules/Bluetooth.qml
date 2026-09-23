@@ -4,7 +4,7 @@ import "../../services"
 
 // Ported from waybar's native bluetooth module -- same Material Design glyph
 // set (chosen there because MD has a real crossed-out icon FontAwesome
-// lacks) and the same state -> color mapping. Click opens the Bluetooth
+// lacks). Click opens the Bluetooth
 // panel (replaces rofi-bluetooth).
 Text {
     id: root
@@ -24,8 +24,8 @@ Text {
 
     color: {
         if (!Bt.available || !Bt.powered) return Theme.rule;
-        if (Bt.discovering) return Theme.orange;
-        if (Bt.anyConnected) return Theme.blue;
+        if (Bt.discovering) return Colors.purple;
+        if (Bt.anyConnected) return Colors.blue;
         return Theme.blueGray;
     }
 

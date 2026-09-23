@@ -3,7 +3,7 @@ import ".."
 
 // One labelled capsule gauge. The hover treatment -- tinted surface fill plus a
 // 3px accent bar on the left edge -- is lifted straight from the selected-element
-// rule in rofi/styles/base.rasi so the card feels native to the rest of the rice.
+// rule shared with the menu cards so it feels native to the rest of the rice.
 Item {
     id: root
 

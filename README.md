@@ -11,7 +11,7 @@ cd ~/dotfiles
 ```
 
 The repo **must** live at `~/dotfiles` -- link.sh, the scripts and the configs
-themselves (rofi `-theme` paths, `ranger -r`, matugen output paths) all hardcode
+themselves (`ranger -r`, matugen output paths) all hardcode
 it, and the installer refuses to run from anywhere else.
 
 `install.sh` is idempotent; re-run it after every `git pull`. It:
@@ -178,14 +178,15 @@ Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 The authoritative list is the `PKGS_*` / `AUR_*` arrays in `install.sh`; this is
 the why behind them.
 
-* __rofi__ for launching software and the power menu (`SUPER+D`, `SUPER+SHIFT+S`)
 * __hyprland__ as the compositor/WM, with __mpvpaper__ for the video wallpaper
 * __kitty__ as the terminal emulator -- its native graphics protocol lets
   __ranger__ preview images inline with no overlay process
 * __ranger__ as the file manager in terminal
-* __quickshell__ for the bar, notifications, and the network/bluetooth/audio/
-  calendar panels (`quickshell/`; SUPER+N/Y/M/G) -- replaces waybar, mako,
-  networkmanager_dmenu, rofi-bluetooth and pavucontrol
+* __quickshell__ for the bar, notifications, the network/bluetooth/audio/
+  calendar panels (`quickshell/`; SUPER+N/Y/M/G), and every menu -- the app
+  launcher, clipboard, wallpaper, power, exit-confirm and monitor-placement
+  pickers (SUPER+D/V/W, SUPER+SHIFT+S/E/M). Replaces waybar, mako,
+  networkmanager_dmenu, rofi-bluetooth, pavucontrol and rofi
 * __matugen__ for wallpaper-derived accent colours
 * __sddm__ as the display manager, with the pixel_sakura astronaut theme (see `sddm/`)
 * __zsh__ with __oh-my-zsh__, __zoxide__ (replaces the `z` plugin), and
@@ -212,7 +213,7 @@ only handles stills and mpvpaper covers both) starts the daemon at session
 login and after every change.
 
 One accent colour is derived from the wallpaper by **matugen** and pushed into
-quickshell, rofi, hyprland, hyprlock, kitty, starship, GTK and neovim. Change
+quickshell, hyprland, hyprlock, kitty, starship, GTK and neovim. Change
 wallpaper and
 accent together with `SUPER+W` (or `hypr/scripts/set-wallpaper.sh`), which takes
 images and videos alike -- for a video it pulls a frame with ffmpeg and themes

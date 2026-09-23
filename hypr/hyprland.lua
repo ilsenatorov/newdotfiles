@@ -153,21 +153,35 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
--- rofi runs as a layer surface under Wayland (namespace "rofi"), so the
--- `class = rofi` window rule further down never applies to it -- the blur has
--- to be a layer rule. ignore_alpha is lower than the bar's because the rofi
--- window is drawn at 0xE6 alpha rather than 0xD9.
-hl.layer_rule({
-    match        = { namespace = "rofi" },
-    blur         = true,
-    ignore_alpha = 0.1,
-})
-
 -- SUPER+G's system-info overlay -- on the `overlay` layer now (shows above
 -- normal windows, not just the desktop), on demand only. Same 0xD9 surface
 -- as the bar, so the same ignore_alpha.
 hl.layer_rule({
     match        = { namespace = "quickshell-dashboard" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
+-- SUPER+I's ask-a-quick-question overlay -- same treatment as the dashboard.
+hl.layer_rule({
+    match        = { namespace = "quickshell-ask" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
+-- The ported rofi menus (launcher, clipboard, wallpaper, power, exit,
+-- monitor) -- this replaces the `namespace = "rofi"` rule that used to sit
+-- above, since they are layer surfaces for the same reason rofi was.
+hl.layer_rule({
+    match        = { namespace = "quickshell-menu" },
+    blur         = true,
+    ignore_alpha = 0.2,
+})
+
+-- The bar's dropdown panels (calendar, Wi-Fi, bluetooth, audio) -- same
+-- surface as the menus above (quickshell/ui/Surface.qml), so same blur.
+hl.layer_rule({
+    match        = { namespace = "quickshell-panel" },
     blur         = true,
     ignore_alpha = 0.2,
 })
@@ -185,8 +199,8 @@ hl.config({
         gaps_out = M.gaps_out or 8,
 
         -- was 0, which made the col.* accent below dead config: the
-        -- wallpaper-derived accent showed on the bar, rofi and notifications
-        -- but never on the focused window.
+        -- wallpaper-derived accent showed on the bar, the menus and
+        -- notifications but never on the focused window.
         border_size = 2,
 
         col = {
@@ -207,8 +221,8 @@ hl.config({
 
     decoration = {
         -- 12px is the radius shared by the quickshell bar pills, notification
-        -- toasts, the rofi window and the hyprlock input field. 3 was the
-        -- odd one out.
+        -- toasts, the quickshell menu cards and the hyprlock input field.
+        -- 3 was the odd one out.
         rounding = 12,
         active_opacity   = 1.0,
         inactive_opacity = 0.8,
@@ -316,11 +330,14 @@ local mainMod = "SUPER"
 ---- Launchers and terminal -------------------------------------------------
 hl.bind(mainMod .. " + Return",  hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
 hl.bind(mainMod .. " + End",     hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close(),     { description = "Close window" })
+hl.bind(mainMod .. " + Q", hl.dsp.window.close(),     { description = "Close window" })
 hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "File manager" })
 
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher.sh"),         { description = "App launcher" })
-hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(dotfiles .. "/rofi/launcher_scripts.sh"), { description = "Run command" })
+-- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
+-- launcher below covers what it was for.
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle launcher"), {
+	description = "App launcher",
+})
 -- Network/bluetooth/audio now open the quickshell panels instead of
 -- launching a separate rofi/GTK tool -- see quickshell/panels/.
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), {
@@ -329,17 +346,20 @@ hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), 
 hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), {
 	description = "Bluetooth menu",
 })
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
 	description = "Audio menu",
 })
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(dotfiles .. "/rofi/powermenu-hypr.sh"), {
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
 	description = "Power menu",
 })
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/monitor-place.sh"), {
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call menu toggle monitor"), {
 	description = "Monitor placement",
 })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
+})
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("qs ipc call ask toggle"), {
+	description = "Ask AI a quick question",
 })
 
 ---- Focus and movement -----------------------------------------------------
@@ -361,39 +381,109 @@ hl.bind(mainMod .. " + space", hl.dsp.window.cycle_next(),            { descript
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
 
 -- i3's stacking layout -> Hyprland groups (tabbed groupbar).
-hl.bind(mainMod .. " + S", hl.dsp.group.toggle(),        { description = "Toggle group (was: stacking)" })
-hl.bind(mainMod .. " + A", hl.dsp.group.prev(),          { description = "Previous in group" })
-hl.bind(mainMod .. " + Q", hl.dsp.group.next(),          { description = "Next in group" })
-
--- Moving an existing window in/out of a group lives on window.move, NOT on
--- hl.dsp.group.* (that table only has toggle/next/prev/active/move_window/
--- lock/lock_active -- none of which adds a window). group.move_window()
--- reorders a window *within* its group and warns if it is not in one.
 --
--- `into_group = dir` maps to the moveintogroup dispatcher, which is one-way:
--- it can only pull a window in, so there was no way back out on the same key.
--- `direction = dir, group_aware = true` maps to movewindoworgroup instead,
--- which is the symmetric one: group in that direction -> move in; already in
--- a group -> move out; otherwise -> plain directional move.
+-- Grouping here is directional and purely additive: no keystroke toggles a
+-- group, so none can implode one by accident. SUPER+S is the sole destructive
+-- key and is guarded below so it can only ever dissolve, never create.
+hl.bind(mainMod .. " + A", hl.dsp.group.prev(), { description = "Previous in group" })
+hl.bind(mainMod .. " + Q", hl.dsp.group.next(), { description = "Next in group" })
+
+-- group.toggle() maps to togglegroup, which is symmetric: it creates a group
+-- on an ungrouped window and destroys the whole group on a grouped one. That
+-- second half was the accident -- one stray SUPER+S scattered a stack that
+-- then had to be rebuilt window by window. Bound raw it is also useless now
+-- that merging is directional, since creating a group of one achieves nothing.
+-- So: dissolve when there is something to dissolve, otherwise do nothing.
+hl.bind(mainMod .. " + S", function()
+	local w = hl.get_active_window()
+	if w and w.group then
+		hl.dispatch(hl.dsp.group.toggle())
+	end
+end, { description = "Dissolve group" })
+
+-- SUPER+CTRL+<dir> is the third rung of the ladder that starts at
+-- SUPER+<dir> (focus it) and SUPER+SHIFT+<dir> (move it): move the active
+-- window in that direction *and* merge it with whatever is there, creating
+-- the group on the fly when the neighbour is a plain window.
 --
--- Note group:auto_group and group:merge_groups_on_drag are both true, so new
--- windows join the focused group automatically and SUPER+drag onto a groupbar
--- merges. These binds are for moving a window that already exists elsewhere.
-hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ direction = "left",  group_aware = true }), {
-	description = "Move in/out of group (left)",
+-- Hyprland ships no dispatcher for that last part. `moveintogroup <dir>`
+-- merges only into a target that is ALREADY a group and silently no-ops
+-- against a plain window; `movewindoworgroup` (what this key used to be)
+-- degrades to a plain move in the same case. Neither can promote a neighbour,
+-- so the "group it first, then merge" half has to live in Lua.
+--
+-- Finding the neighbour: there is no "window in direction X" query either, so
+-- this borrows Hyprland's own logic -- dispatch focus(dir), read back the
+-- active window, restore focus. That guarantees SUPER+CTRL+left merges with
+-- exactly the window SUPER+left would have focused, rather than a second
+-- adjacency rule that drifts from it. The whole round-trip runs inside one
+-- bind handler, so no intermediate focus state is ever painted.
+--
+-- Only the active window moves, never its whole group -- the same scope as
+-- SUPER+SHIFT+<dir>. group:auto_group stays true, so windows spawned later
+-- still join the focused group on their own.
+local function merge_into(dir)
+	return function()
+		local a = hl.get_active_window()
+		if not a or a.floating then return end
+
+		-- Walk to the neighbour, note it, come straight back.
+		hl.dispatch(hl.dsp.focus({ direction = dir }))
+		local b = hl.get_active_window()
+		hl.dispatch(hl.dsp.focus({ window = a }))
+
+		-- Bounced off the edge of the layout: nothing in that direction.
+		if not b or b.address == a.address then return end
+		-- Floating windows sit outside the tiling layout; a group of one
+		-- tiled and one floating window is not worth having.
+		if b.floating then return end
+		-- movefocus happily crosses a monitor edge, but a group cannot span
+		-- two monitors -- stop at the edge rather than teleport the window.
+		if tostring(b.monitor) ~= tostring(a.monitor) then return end
+		-- Focus cycled within our own group instead of leaving it (see
+		-- binds:movefocus_cycles_groupfirst) -- already siblings, nothing to do.
+		if a.group and b.group and tostring(a.group) == tostring(b.group) then return end
+
+		-- Plain neighbour: promote it to a group of one so there is something
+		-- to merge into. togglegroup acts on the focused window, so hand it
+		-- focus for exactly that one call.
+		if not b.group then
+			hl.dispatch(hl.dsp.focus({ window = b }))
+			hl.dispatch(hl.dsp.group.toggle())
+			b = hl.get_active_window()
+			hl.dispatch(hl.dsp.focus({ window = a }))
+			if not (b and b.group) then return end
+		end
+
+		-- Leave the old group before joining the new one: group:add is
+		-- documented to add a window, not to migrate one between groups.
+		if a.group then
+			hl.dispatch(hl.dsp.window.move({ out_of_group = true }))
+			a = hl.get_active_window()
+			if not a then return end
+		end
+
+		b.group:add(a)
+		hl.dispatch(hl.dsp.focus({ window = a }))
+	end
+end
+
+hl.bind(mainMod .. " + CTRL + left",  merge_into("left"), {
+	description = "Merge window into group (left)",
 })
-hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ direction = "right", group_aware = true }), {
-	description = "Move in/out of group (right)",
+hl.bind(mainMod .. " + CTRL + right", merge_into("right"), {
+	description = "Merge window into group (right)",
 })
-hl.bind(mainMod .. " + CTRL + up",    hl.dsp.window.move({ direction = "up",    group_aware = true }), {
-	description = "Move in/out of group (up)",
+hl.bind(mainMod .. " + CTRL + up",    merge_into("up"), {
+	description = "Merge window into group (up)",
 })
-hl.bind(mainMod .. " + CTRL + down",  hl.dsp.window.move({ direction = "down",  group_aware = true }), {
-	description = "Move in/out of group (down)",
+hl.bind(mainMod .. " + CTRL + down",  merge_into("down"), {
+	description = "Merge window into group (down)",
 })
 
--- Unconditional escape hatch, mirroring SUPER+S / SUPER+A / SUPER+Q: pops the
--- active window out of its group regardless of what is next to it.
+-- The only way out of a group, and the only way to shrink one: pops the
+-- active window out regardless of what is next to it. Repeat it to empty a
+-- group one window at a time; SUPER+S above does it in a single stroke.
 hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), {
 	description = "Move out of group",
 })
@@ -425,7 +515,7 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 ---- Session ----------------------------------------------------------------
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload config" })
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/exit-confirm.sh"),
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("qs ipc call menu toggle exit"),
     { description = "Exit Hyprland (confirm)" })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
@@ -457,12 +547,14 @@ hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"), { lo
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
 
 ---- Wallpaper -------------------------------------------------------------
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(dotfiles .. "/hypr/scripts/set-wallpaper.sh"),
+-- The picker is quickshell's; set-wallpaper.sh still does the work once a
+-- file is chosen (ffmpeg frame-grab for videos, matugen, mpvpaper/swww).
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call menu toggle wallpaper"),
     { description = "Pick wallpaper (regenerates accent)" })
 
 ---- Clipboard --------------------------------------------------------------
--- cliphist history through the launcher theme that is already here.
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(dotfiles .. "/rofi/clipboard.sh"),
+-- cliphist is still the store; only the picker in the middle changed.
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call menu toggle clipboard"),
     { description = "Clipboard history" })
 
 ---- Scratchpad -------------------------------------------------------------
@@ -524,12 +616,6 @@ hl.window_rule({
     name    = "kitty-opacity",
     match   = { class = "(?i)^kitty$" },
     opacity = "0.95 0.85",
-})
-
-hl.window_rule({
-    name    = "rofi-opacity",
-    match   = { class = "(?i)^rofi$" },
-    opacity = 0.9,
 })
 
 -- Shadow only where it adds depth. A tiled grid of shadowed windows reads as

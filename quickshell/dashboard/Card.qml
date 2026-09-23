@@ -1,8 +1,8 @@
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Services.UPower
 import ".."
+import "../ui"
 import "../services"
 
 // SUPER+G's system-info overlay: fastfetch-style identity header, the
@@ -27,26 +27,8 @@ Item {
     }
     Component.onDestruction: SysMon.procsActive = false
 
-    // Drawn through the MultiEffect below, which is why this is hidden.
-    Rectangle {
-        id: bg
+    Surface {
         anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.dashboardSurface
-        border.width: 2
-        border.color: "transparent"
-        visible: false
-        layer.enabled: true
-    }
-
-    MultiEffect {
-        source: bg
-        anchors.fill: bg
-        shadowEnabled: true
-        shadowColor: "#0A0F12"
-        shadowBlur: 0.7
-        shadowVerticalOffset: 4
-        shadowOpacity: 0.6
     }
 
     Item {

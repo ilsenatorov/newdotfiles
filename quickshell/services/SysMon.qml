@@ -18,6 +18,7 @@ Singleton {
     property real tempC: 0
     property real disk: 0
     property real diskFreeBytes: 0
+    property real hddFreeBytes: -1
     property real swapUsedBytes: 0
     property real swapTotalBytes: 0
     property real uptimeSeconds: 0
@@ -75,6 +76,7 @@ Singleton {
     }
 
     function fmtBytes(b: real): string {
+        if (b >= 1024 ** 4) return (b / (1024 ** 4)).toFixed(1) + "T";
         if (b >= 1024 * 1024 * 1024) return (b / (1024 * 1024 * 1024)).toFixed(b < 10.5 * 1024 * 1024 * 1024 ? 1 : 0) + "G";
         if (b >= 1024 * 1024) return Math.round(b / (1024 * 1024)) + "M";
         if (b >= 1024) return Math.round(b / 1024) + "K";
@@ -206,6 +208,26 @@ Singleton {
                 if (!isNaN(availKb)) root.diskFreeBytes = availKb * 1024;
             }
         }
+    }
+
+    Process {
+        id: hddProc
+        command: ["findmnt", "--bytes", "--noheadings", "--raw", "--first-only",
+                  "--source", Local.hddDevice, "--output", "AVAIL"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const bytes = parseFloat(text.trim());
+                root.hddFreeBytes = isNaN(bytes) ? -1 : bytes;
+            }
+        }
+    }
+
+    Timer {
+        running: Local.hddDevice !== ""
+        repeat: true
+        triggeredOnStart: true
+        interval: 60000
+        onTriggered: hddProc.running = true
     }
 
     Process {

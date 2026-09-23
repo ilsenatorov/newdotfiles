@@ -1,6 +1,7 @@
 import QtQuick
 import "../.."
 import "../../services"
+import "../../ui"
 
 // cpu / temperature / memory / disk / net-up / net-down, one Row of Text
 // items -- direct port of waybar's cpu/temperature/memory/disk/network#up
@@ -17,7 +18,7 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: Colors.accent
+        color: Colors.cyan
     }
 
     Text {
@@ -27,7 +28,7 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: SysMon.tempC >= 85 ? Theme.red : Colors.accent
+        color: SysMon.tempC >= 85 ? Theme.red : Colors.cyan
     }
 
     Text {
@@ -36,17 +37,31 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: Theme.blue
+        color: Colors.cyan
     }
 
+    Sep {}
+
     Text {
-        text: "  " + SysMon.fmtBytes(SysMon.diskFreeBytes)
+        text: "  " + SysMon.fmtBytes(SysMon.diskFreeBytes)
         height: Theme.barHeight
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: Theme.orange
+        color: Colors.orange
     }
+
+    Text {
+        visible: Local.hddDevice !== ""
+        text: "" + (SysMon.hddFreeBytes < 0 ? "" : "  " + SysMon.fmtBytes(SysMon.hddFreeBytes))
+        height: Theme.barHeight
+        verticalAlignment: Text.AlignVCenter
+        font.family: Theme.font
+        font.pixelSize: Theme.fsBar
+        color: SysMon.hddFreeBytes < 0 ? Theme.dim : Colors.orange
+    }
+
+    Sep {}
 
     Text {
         text: "  " + SysMon.fmtBytes(SysMon.netUp) + "/s"
@@ -54,7 +69,7 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: Theme.purple
+        color: Colors.purple
     }
 
     Text {
@@ -63,6 +78,6 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        color: Theme.purple
+        color: Colors.purple
     }
 }
