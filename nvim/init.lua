@@ -24,7 +24,9 @@ o.splitright = true
 o.splitbelow = true
 o.undofile = true
 o.scrolloff = 8
-o.wrap = false
+o.wrap = true
+o.linebreak = true
+o.breakindent = true
 
 -- ---------------------------------------------------------------- keymaps --
 local map = vim.keymap.set
