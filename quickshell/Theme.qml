@@ -93,6 +93,21 @@ Singleton {
     readonly property int menuTileW: Math.round(104 * s)
     readonly property int menuTileH: Math.round(58 * s)
 
+    // SUPER+W's wallpaper carousel is the one menu that is not a list of
+    // rows: it shows a 16:9 slide with its neighbours peeking in at the
+    // edges, which does not fit menuW. The menu window widens for it (see
+    // shell.qml) -- on open only, never mid-keystroke, so the "don't
+    // renegotiate layer-shell geometry while typing" rule still holds.
+    readonly property int menuWideW: Math.round(1200 * s)
+    readonly property int menuWideH: Math.round(620 * s)
+    readonly property int wallSlideW: Math.round(760 * s)
+    readonly property int wallSlideH: Math.round(428 * s)
+    // How far apart two slides sit. Well under a slide's width, so the
+    // neighbours are overlapped by the current one rather than sitting
+    // beside it -- a stack of wallpapers with the chosen one on top.
+    readonly property int wallSlideStep: Math.round(460 * s)
+    readonly property int wallSwatchH: Math.round(18 * s)
+
     // ---- panels -----------------------------------------------------------
     readonly property int panelW: Math.round(340 * s)
     readonly property int panelGap: Math.round(8 * s)

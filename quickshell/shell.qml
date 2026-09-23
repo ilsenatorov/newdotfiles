@@ -354,8 +354,11 @@ ShellRoot {
         id: menuWin
         visible: shell.activeMenu !== ""
 
-        implicitWidth: Theme.menuW + Theme.inset * 2
-        implicitHeight: Theme.menuMaxH + Theme.inset * 2
+        // The wallpaper carousel is wider than the row-list menus; every
+        // other menu keeps the old width. This changes on open, not on
+        // keystrokes, which is the case the fixed sizing above guards.
+        implicitWidth: (shell.activeMenu === "wallpaper" ? Theme.menuWideW : Theme.menuW) + Theme.inset * 2
+        implicitHeight: (shell.activeMenu === "wallpaper" ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
 
         color: "transparent"
         exclusiveZone: 0

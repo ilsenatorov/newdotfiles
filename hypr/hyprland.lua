@@ -547,8 +547,9 @@ hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"), { lo
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
 
 ---- Wallpaper -------------------------------------------------------------
--- The picker is quickshell's; set-wallpaper.sh still does the work once a
--- file is chosen (ffmpeg frame-grab for videos, matugen, mpvpaper/swww).
+-- The picker is quickshell's -- a carousel showing each wallpaper with the
+-- colour scheme it would generate; set-wallpaper.sh still does the work once
+-- a file is chosen (ffmpeg frame-grab for videos, matugen, mpvpaper/swww).
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call menu toggle wallpaper"),
     { description = "Pick wallpaper (regenerates accent)" })
 

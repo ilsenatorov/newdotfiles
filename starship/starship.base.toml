@@ -45,10 +45,12 @@ format = """\
 [](hue_red)\
 $os\
 $username\
+$hostname\
 [](bg:hue_orange fg:hue_red)\
 $directory\
 [](fg:hue_orange bg:hue_green)\
 $git_branch\
+$git_state\
 $git_status\
 [](fg:hue_green bg:hue_cyan)\
 $c\
@@ -108,6 +110,14 @@ style_root = "bg:error fg:on_error bold"
 format = '[ $user ]($style)'
 disabled = false
 
+# NOT in the preset. p10k's POWERLEVEL9K_CONTEXT only showed over ssh, and that
+# is the behaviour worth keeping: locally the hostname is noise, but on the pi a
+# prompt identical to this one is how you run the wrong command on the wrong box.
+[hostname]
+ssh_only = true
+style = "bg:hue_red fg:on_hue bold"
+format = '[@$hostname ]($style)'
+
 [directory]
 style = "fg:on_hue bg:hue_orange"
 format = "[ $path$read_only ]($style)"
@@ -163,7 +173,9 @@ diverged   = "⇡$ahead_count⇣$behind_count"
 up_to_date = ""
 
 # p10k appended VCS_STATUS_ACTION (rebase, merge, ...) to the same segment.
-# Not in the preset; add $git_state after $git_branch in `format` to use it.
+# Not in the preset, but wired into `format` between $git_branch and $git_status:
+# mid-rebase the branch name alone tells you nothing, which is the one moment the
+# git segment has to be right.
 [git_state]
 style = "bold fg:on_hue bg:hue_green"
 format = '[$state( $progress_current/$progress_total) ]($style)'
@@ -214,10 +226,17 @@ format = '[$state( $progress_current/$progress_total) ]($style)'
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [python]
-# symbol = ""
-# style = "bg:hue_cyan"
-# format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
+# The one language module that is ON. It is here for $virtualenv, not the
+# version: `uv` activates and swaps .venv silently, and nothing else on the line
+# would tell you which interpreter a bare `python` is about to be. The detect_*
+# keys below are narrowed from starship's defaults -- upstream fires on any
+# directory containing a .py file, which lights the segment up in ~/Downloads.
+[python]
+symbol = ""
+style = "bg:hue_cyan"
+format = '[[ $symbol( $version)(($virtualenv)) ](fg:on_hue bg:hue_cyan)]($style)'
+detect_extensions = []
+detect_files = ["pyproject.toml", ".python-version", "requirements.txt", "setup.py", "Pipfile", "tox.ini"]
 
 # --- docker / env slot ----------------------------------------------------
 
@@ -335,6 +354,10 @@ symbol_threshold = 1
 # format = '[](fg:error)[ $symbol ]($style)'
 # symbol = "󰒃 "
 
-# Transient prompt: collapse past prompts to a bare ❯ so scrollback stays clean.
-# POWERLEVEL9K_TRANSIENT_PROMPT was `off`, so this is off here too. Needs
-# `enable_transience` in .zshrc AFTER `eval "$(starship init zsh)"`.
+# Transient prompt: past prompts collapse to a bare ❯ so scrollback stays clean.
+# POWERLEVEL9K_TRANSIENT_PROMPT was `off`; turned ON here because the six
+# segments always render, so every scrolled-back prompt is a full-width bar of
+# colour around a command you are trying to read. Only the live prompt needs it.
+# Enabled by `enable_transience` in .zshrc, AFTER `eval "$(starship init zsh)"`.
+# The collapsed form defaults to $character; override it with, e.g.
+#   [](fg:hue_red)  in a `transient_prompt` variable set in .zshrc.

@@ -4,11 +4,15 @@
 #   set-wallpaper.sh <file>          -> use that image or video directly
 #   set-wallpaper.sh --set <rel>     -> path relative to ~/Pictures/Wallpapers
 #   set-wallpaper.sh --list          -> print the wallpapers, one per line
+#   set-wallpaper.sh --palette <rel> -> print a thumbnail path + its palette
 #
 # Picking one interactively is quickshell's job now (SUPER+W ->
 # quickshell/panels/Wallpaper.qml); this script no longer prompts. --list is
 # what that picker reads, so the set of wallpaper extensions below stays in
-# one place instead of being duplicated in QML.
+# one place instead of being duplicated in QML. --palette is what draws the
+# colourbar under each slide: the picker shows the real scheme a wallpaper
+# would produce, not an approximation of it, because it asks matugen the same
+# question --set does -- same config, same -t, same --prefer.
 #
 # Videos are first-class here: mpvpaper plays them (see wallpaper-daemon.sh) and
 # matugen gets a frame pulled out with ffmpeg, so a video wallpaper drives the
@@ -23,6 +27,9 @@ DOTS="${HOME}/dotfiles"
 WALLDIR="${HOME}/Pictures/Wallpapers"
 STATE="${DOTS}/hypr/wallpaper.conf"
 CACHE="${XDG_CACHE_HOME:-${HOME}/.cache}"
+# Per-wallpaper, so browsing the picker cannot clobber what --set is using.
+FRAMEDIR="${CACHE}/wallpaper-frames"
+PALDIR="${CACHE}/wallpaper-palettes"
 SCHEME="scheme-vibrant"
 # matugen needs a tie-break when an image yields several candidate colours and
 # there is no TTY to ask on; "saturation" keeps the accent punchy.
@@ -35,6 +42,71 @@ is_video() {
         *.mp4|*.mkv|*.webm|*.mov|*.avi|*.m4v|*.gif) return 0 ;;
         *) return 1 ;;
     esac
+}
+
+# A stable filename for anything cached about one wallpaper. The absolute
+# path is hashed rather than slugified: a path can contain anything, a hash
+# cannot, and two wallpapers with the same basename stay apart.
+cache_key() { printf '%s' "$1" | sha1sum | cut -d' ' -f1; }
+
+# A path that can be read as an image: a still is itself, a video is a frame
+# pulled out with ffmpeg at 00:03 (past any fade-in from black, which would
+# otherwise yield a grey accent). Used both to feed matugen and as the
+# picker's thumbnail, which is why video frames are kept rather than
+# overwritten -- the picker shows several at once.
+#
+# Prints the path; returns non-zero (silently) if there is no getting one,
+# so --palette can skip a wallpaper instead of dying on the whole listing.
+still_frame() {
+    local wall="$1" out
+    if ! is_video "$wall"; then
+        printf '%s\n' "$wall"
+        return 0
+    fi
+    command -v ffmpeg >/dev/null || return 1
+    out="${FRAMEDIR}/$(cache_key "$wall").png"
+    mkdir -p "$FRAMEDIR"
+    if [ ! -s "$out" ] || [ "$wall" -nt "$out" ]; then
+        ffmpeg -y -loglevel error -ss 3 -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$out" \
+            </dev/null >/dev/null 2>&1 \
+            || ffmpeg -y -loglevel error -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$out" \
+                </dev/null >/dev/null 2>&1 \
+            || return 1
+    fi
+    printf '%s\n' "$out"
+}
+
+# The colourbar under a slide, as the picker wants it: line 1 is a thumbnail
+# path, then one hex per line. The keys are exactly the ones
+# matugen/templates/colors-quickshell.qml fills in, in bar order, so what the
+# picker draws is what Colors.qml ends up holding.
+#
+# matugen takes ~0.4s per image, so the answer is cached and only recomputed
+# when the wallpaper itself is newer than the cache entry.
+palette_keys=(primary tertiary rainbow_red rainbow_orange rainbow_green rainbow_cyan rainbow_blue rainbow_purple)
+
+print_palette() {
+    local wall="$1" cache src json filter
+    cache="${PALDIR}/$(cache_key "$wall")"
+    if [ -s "$cache" ] && [ ! "$wall" -nt "$cache" ]; then
+        cat "$cache"
+        return 0
+    fi
+    src=$(still_frame "$wall") || return 1
+    json=$(matugen -c "${DOTS}/matugen/config.toml" --dry-run -q -j hex \
+        image "$src" -t "$SCHEME" --prefer "$PREFER" 2>/dev/null) || return 1
+    # .dark.color, not .hex: that is the json shape, while the templates use
+    # their own {{...hex}} spelling for the same value.
+    filter=$(printf '.colors.%s.dark.color, ' "${palette_keys[@]}")
+    mkdir -p "$PALDIR"
+    {
+        printf '%s\n' "$src"
+        printf '%s' "$json" | jq -er "${filter%, }"
+    } > "${cache}.tmp" || { rm -f "${cache}.tmp"; return 1; }
+    # Renamed into place so a killed run cannot leave a half-written palette
+    # that the next open would happily read back.
+    mv -f "${cache}.tmp" "$cache"
+    cat "$cache"
 }
 
 # Recursive on purpose, and each entry is printed RELATIVE to WALLDIR: find
@@ -59,6 +131,11 @@ case "${1:-}" in
         list_wallpapers
         exit 0
         ;;
+    --palette)
+        [ -n "${2:-}" ] || die "--palette needs a path relative to $WALLDIR"
+        print_palette "${WALLDIR}/${2}" || exit 1
+        exit 0
+        ;;
     --set)
         [ -n "${2:-}" ] || die "--set needs a path relative to $WALLDIR"
         wall="${WALLDIR}/${2}"
@@ -66,7 +143,7 @@ case "${1:-}" in
     "")
         # No interactive fallback any more -- failing loudly beats silently
         # doing nothing if something still calls this the old way.
-        die "Usage: set-wallpaper.sh <file> | --set <relative-path> | --list"
+        die "Usage: set-wallpaper.sh <file> | --set <rel> | --list | --palette <rel>"
         ;;
     *)
         wall="$1"
@@ -76,18 +153,11 @@ esac
 [ -f "$wall" ] || die "Not a file: $wall"
 
 # ---- 1. a still frame for matugen ----------------------------------------
-# matugen only reads images, so a video wallpaper is sampled at 00:03 (past any
-# fade-in from black, which would otherwise yield a grey accent).
-src="$wall"
-if is_video "$wall"; then
-    command -v ffmpeg >/dev/null || die "ffmpeg is needed to theme from a video"
-    src="${CACHE}/wallpaper-frame.png"
-    ffmpeg -y -loglevel error -ss 3 -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$src" \
-        </dev/null >/dev/null 2>&1 \
-        || ffmpeg -y -loglevel error -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$src" \
-            </dev/null >/dev/null 2>&1 \
-        || die "ffmpeg could not read a frame from $(basename "$wall")"
-fi
+# matugen only reads images; still_frame() is what makes a video wallpaper
+# theme exactly like a still does, and the picker draws its thumbnail from
+# the same cached frame.
+src=$(still_frame "$wall") \
+    || die "could not get a still frame from $(basename "$wall") (ffmpeg missing?)"
 
 # ---- 2. colours ----------------------------------------------------------
 matugen -c "${DOTS}/matugen/config.toml" image "$src" \

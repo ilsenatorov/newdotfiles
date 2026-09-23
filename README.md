@@ -217,7 +217,10 @@ quickshell, hyprland, hyprlock, kitty, starship, GTK and neovim. Change
 wallpaper and
 accent together with `SUPER+W` (or `hypr/scripts/set-wallpaper.sh`), which takes
 images and videos alike -- for a video it pulls a frame with ffmpeg and themes
-from that. Never edit the generated `colors.*` files, edit `matugen/templates/`
+from that. `SUPER+W` is a carousel: arrow keys step through the wallpapers and
+each one is shown with the palette it would generate, asked of matugen itself
+(`set-wallpaper.sh --palette`, cached under `~/.cache/wallpaper-palettes`), so
+the swatches are the real scheme rather than a guess at it. Never edit the generated `colors.*` files, edit `matugen/templates/`
 instead. Each config imports its generated file first and may override anything
 below the import -- except starship, which is built rather than imported (see
 below). A committed snapshot in `matugen/defaults/` seeds all of them on a

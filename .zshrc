@@ -76,6 +76,10 @@ alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat 
 
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
+# Collapse past prompts to a bare ❯ once the command runs -- the rainbow bar is
+# for the prompt you are typing at, not for the scrollback. Must come after the
+# init line above, which defines the function.
+enable_transience
 
 # Per-machine tail: CLAUDE_OBSIDIAN_VAULT, the NVIDIA VS Code workaround,
 # `. ~/.local/bin/env`, anything else that is true on this box but not the
