@@ -150,6 +150,17 @@ Singleton {
     property real prevTxTotal: -1
     property real prevSampleAt: 0
 
+    onPrimaryIfaceChanged: {
+        root.prevRxTotal = -1;
+        root.prevTxTotal = -1;
+        root.rxRate = 0;
+        root.txRate = 0;
+        root.rxTotalBytes = 0;
+        root.txTotalBytes = 0;
+        root.ip = "";
+        root.gateway = "";
+    }
+
     FileView {
         id: netDevView
         path: "/proc/net/dev"
@@ -191,20 +202,23 @@ Singleton {
         gatewayProc.running = true;
 
         netDevView.reload();
-        const m = new RegExp("^\\s*" + iface + ":\\s*(.*)$", "m").exec(netDevView.text());
-        if (!m) return;
+        const line = netDevView.text().split("\n").find(l => l.slice(0, l.indexOf(":")).trim() === iface);
+        if (!line) return;
 
-        const f = m[1].trim().split(/\s+/).map(Number);
+        const f = line.slice(line.indexOf(":") + 1).trim().split(/\s+/).map(Number);
         const rx = f[0];
         const tx = f[8];
         root.rxTotalBytes = rx;
         root.txTotalBytes = tx;
 
         const now = Date.now() / 1000;
-        if (root.prevRxTotal >= 0 && now > root.prevSampleAt) {
+        if (root.prevRxTotal >= 0 && rx >= root.prevRxTotal && tx >= root.prevTxTotal && now > root.prevSampleAt) {
             const dt = now - root.prevSampleAt;
             root.rxRate = Math.max(0, (rx - root.prevRxTotal) / dt);
             root.txRate = Math.max(0, (tx - root.prevTxTotal) / dt);
+        } else {
+            root.rxRate = 0;
+            root.txRate = 0;
         }
         root.prevRxTotal = rx;
         root.prevTxTotal = tx;

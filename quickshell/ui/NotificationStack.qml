@@ -17,10 +17,7 @@ Column {
             required property int index
             notification: modelData
             visible: index < Theme.notifMaxVisible
-            onDismissAll: {
-                const list = Notifications.tracked.values;
-                for (const n of list) n.dismiss();
-            }
+            onDismissAll: Notifications.dismissAll()
         }
     }
 }

@@ -26,6 +26,13 @@
 - Do not agree just because I pushed back. Change position only on new evidence or argument; otherwise restate the objection once and follow my final call.
 - When you're unsure of your own claim, label the confidence. Don't present a guess as fact.
 
+## Keyboard-first desktop
+
+- The system aims to be mouseless. New widgets and scripts should be driven by keybinds as much as possible: a Hyprland bind (`hl.bind` in `hypr/hyprland.lua`, with a `description`) to open them, and keys for every action inside.
+- All new or changed Quickshell interfaces must be fully usable with the keyboard alone, including navigation, selection, editing, saving, and dismissal.
+- Provide predictable focus order, visible focus indicators, and on-screen key hints. Mouse support is optional, never the only way to perform an action.
+- Avoid QtQuick.Controls widgets whose keyboard behaviour is surprising (ComboBox applies on a bare arrow key, Button ignores Enter); prefer plain items with explicit `Keys` handlers, like `ui/Picker.qml`.
+
 ## Reporting
 
 - Failures: what failed, exact error, what you tried, what you need. No optimistic spin.

@@ -31,6 +31,7 @@ Item {
     property var items: []
     property string placeholder: ""
     property bool showIcons: false
+    property bool deletable: false
     // false => a fixed set of choices (power, exit): no input box, and the
     // first row starts selected the way `rofi -selected-row 0` did.
     property bool searchable: true
@@ -42,6 +43,7 @@ Item {
 
     // ---- out ----
     signal accepted(var item)
+    signal deleteRequested(var item)
     signal closeRequested
 
     readonly property var filtered: root.filter(root.items, input.text)
@@ -78,6 +80,10 @@ Item {
         } else if (event.key === Qt.Key_Up || (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier))) {
             if (count > 0)
                 list.currentIndex = (list.currentIndex - 1 + count) % count;
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Delete && root.deletable) {
+            const item = root.filtered[list.currentIndex];
+            if (item) root.deleteRequested(item);
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             root.acceptCurrent();
@@ -224,7 +230,7 @@ Item {
                     Row {
                         anchors.fill: parent
                         anchors.leftMargin: 10
-                        anchors.rightMargin: 10
+                        anchors.rightMargin: root.deletable ? 40 : 10
                         spacing: 8
 
                         Text {
@@ -269,6 +275,24 @@ Item {
                         onClicked: {
                             list.currentIndex = row.index;
                             root.acceptCurrent();
+                        }
+                    }
+
+                    Text {
+                        visible: root.deletable
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 36
+                        height: parent.height
+                        text: "×"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: Theme.red
+                        font.pixelSize: Theme.fsValue
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.deleteRequested(row.modelData)
                         }
                     }
                 }

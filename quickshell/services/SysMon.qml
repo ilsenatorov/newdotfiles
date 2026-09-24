@@ -59,8 +59,8 @@ Singleton {
 
     property string tempPath: ""
     property string netIface: ""
-    property int prevBusy: -1
-    property int prevTotal: -1
+    property real prevBusy: -1
+    property real prevTotal: -1
     property real prevRx: -1
     property real prevTx: -1
     property real prevNetAt: 0
@@ -87,7 +87,7 @@ Singleton {
     // by name once at startup rather than hardcoding an index.
     Process {
         running: true
-        command: ["sh", "-c", "grep -l coretemp /sys/class/hwmon/*/name | head -1"]
+        command: ["sh", "-c", "grep -El '^(coretemp|k10temp|zenpower|cpu_thermal)$' /sys/class/hwmon/*/name | head -1"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const p = text.trim();
@@ -108,12 +108,22 @@ Singleton {
     }
 
     Process {
-        running: true
-        command: ["sh", "-c", "ip route show default | awk '{ print $5; exit }'"]
+        id: routeProc
+        // Route lookups do not send packets; repeat to follow Wi-Fi, docks and VPNs.
+        command: ["sh", "-c", "ip -j route get 1.1.1.1 2>/dev/null || ip -j -6 route get 2606:4700:4700::1111 2>/dev/null"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const n = text.trim();
-                if (n !== "") root.netIface = n;
+                let iface = "";
+                try { iface = JSON.parse(text)[0]?.dev ?? ""; } catch (e) {}
+                if (iface !== root.netIface || iface === "") {
+                    root.prevRx = -1;
+                    root.prevTx = -1;
+                    root.netUp = 0;
+                    root.netDown = 0;
+                }
+                root.netIface = iface;
+                netView.reload();
+                root.sampleNet();
             }
         }
     }
@@ -237,7 +247,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 // "12, 512, 2048, 47" -- util%, vram used/total in MiB, temp C.
-                const f = text.trim().split(",").map(s => parseFloat(s.trim()));
+                const f = text.trim().split("\n")[0].split(",").map(s => parseFloat(s.trim()));
                 if (f.length < 4 || f.some(isNaN)) return;
                 root.gpuUtil = f[0] / 100;
                 root.gpuVramUsedBytes = f[1] * 1024 * 1024;
@@ -257,7 +267,8 @@ Singleton {
         if (f.length < 5) return;
 
         let total = 0;
-        for (const v of f) total += v;
+        // guest/guest_nice are already included in user/nice.
+        for (const v of f.slice(0, 8)) total += v;
         const busy = total - f[3] - f[4]; // minus idle and iowait
 
         if (root.prevTotal >= 0) {
@@ -302,18 +313,21 @@ Singleton {
         if (root.netIface === "") return;
 
         for (const line of netView.text().split("\n")) {
-            const m = new RegExp("^\\s*" + root.netIface + ":\\s*(.*)$").exec(line);
-            if (!m) continue;
+            const colon = line.indexOf(":");
+            if (line.slice(0, colon).trim() !== root.netIface) continue;
 
-            const f = m[1].trim().split(/\s+/).map(Number);
+            const f = line.slice(colon + 1).trim().split(/\s+/).map(Number);
             const rx = f[0];
             const tx = f[8];
             const now = Date.now() / 1000;
 
-            if (root.prevRx >= 0 && now > root.prevNetAt) {
+            if (root.prevRx >= 0 && rx >= root.prevRx && tx >= root.prevTx && now > root.prevNetAt) {
                 const dt = now - root.prevNetAt;
                 root.netDown = Math.max(0, (rx - root.prevRx) / dt);
                 root.netUp = Math.max(0, (tx - root.prevTx) / dt);
+            } else {
+                root.netDown = 0;
+                root.netUp = 0;
             }
             root.prevRx = rx;
             root.prevTx = tx;
@@ -344,9 +358,8 @@ Singleton {
             uptimeView.reload();
             loadView.reload();
             root.sampleMisc();
-            netView.reload();
-            root.sampleNet();
-            if (root.gpuAvailable) gpuProc.running = true;
+            if (!routeProc.running) routeProc.running = true;
+            if (Local.svcGpu && root.gpuAvailable) gpuProc.running = true;
         }
     }
 

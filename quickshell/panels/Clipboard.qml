@@ -13,7 +13,8 @@ import "../ui"
 Picker {
     id: root
 
-    placeholder: "Clipboard"
+    placeholder: "Clipboard · Delete removes selected"
+    deletable: true
     cardWidth: Theme.menuW
     items: []
     // cliphist is optional (the old script checked `command -v` and
@@ -21,6 +22,7 @@ Picker {
     emptyText: "No clipboard history -- is cliphist installed?"
 
     Process {
+        id: listProc
         running: true
         command: ["cliphist", "list"]
 
@@ -35,6 +37,21 @@ Picker {
                         }));
             }
         }
+    }
+
+    Process {
+        id: deleteProc
+        stderr: StdioCollector { id: deleteError; waitForEnd: true }
+        onExited: exitCode => {
+            if (exitCode === 0) listProc.running = true;
+            else Quickshell.execDetached(["notify-send", "Clipboard deletion failed", deleteError.text.trim()]);
+        }
+    }
+
+    onDeleteRequested: item => {
+        if (deleteProc.running) return;
+        deleteProc.command = ["sh", "-c", 'printf "%s\\n" "$1" | cliphist delete', "delete", item.key];
+        deleteProc.running = true;
     }
 
     onAccepted: item => {

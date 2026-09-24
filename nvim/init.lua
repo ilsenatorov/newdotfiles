@@ -27,7 +27,6 @@ o.scrolloff = 8
 o.wrap = true
 o.linebreak = true
 o.breakindent = true
-o.wrap = false
 
 -- ---------------------------------------------------------------- keymaps --
 local map = vim.keymap.set

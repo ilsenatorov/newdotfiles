@@ -1,21 +1,14 @@
 import QtQuick
 import Quickshell.Io
 import Quickshell.Hyprland
-import Quickshell.WindowManager
 import "../.."
 
-// Occupied-workspace pills. Deliberately NOT Quickshell.Hyprland's dispatch --
-// this Hyprland config is Lua (hypr/hyprland.lua) and its IPC socket wraps
-// whatever it receives as `return hl.dispatch(<arg>)`, evaluating it as Lua,
-// so a bare `dispatch workspace <id>` string is a syntax error there. Reading
-// workspace state over ext-workspace-v1 (this module) is unaffected; only
-// *dispatching* needs the Lua-form escape hatch, which is why the scroll
-// handler below still shells out to hyprctl instead of calling a dispatch
-// method directly. Mirrors waybar's ext/workspaces module exactly: occupied
-// only, {name} labels, no persistent/visible state (ext-workspace-v1 doesn't
-// expose it), urgent highlighting. The active-submap indicator that used to be a
-// standalone module (Submap.qml) lives in here so it shares the workspaces pill
-// with no ModuleRow separator.
+// Workspace pills for this bar's monitor, read from Quickshell.Hyprland.
+// ext-workspace-v1 (Quickshell.WindowManager) was used before, but its
+// per-output groups never picked up the external monitor, so that bar stayed
+// empty. Dispatching still shells out to hyprctl in Lua form: this Hyprland
+// config is Lua and its IPC evaluates dispatch arguments as Lua. The active
+// submap indicator lives here so it shares the workspaces pill.
 Item {
     id: root
 
@@ -27,23 +20,10 @@ Item {
     // "global" -- that is what the indicator's visible guard checks.
     property string submap: ""
 
-    // Workspace groups in ext-workspace-v1 map to outputs, so this is how
-    // "only this monitor's workspaces" is expressed -- WindowManager.windowsets
-    // is the flat, unfiltered list across every output.
-    readonly property var projection: {
-        for (const p of WindowManager.windowsetProjections) {
-            if (p.screens.some(s => s.name === root.screen.name)) return p;
-        }
-        return null;
-    }
-
-    // The protocol makes no ordering guarantee (observed as e.g. 5 7 1 0), so
-    // sort explicitly by the numeric workspace name.
-    readonly property var sortedWorkspaces: {
-        const list = projection ? projection.windowsets.slice() : [];
-        list.sort((a, b) => parseInt(a.name) - parseInt(b.name));
-        return list;
-    }
+    // Special workspaces have negative ids; only numbered ones get a pill.
+    readonly property var sortedWorkspaces: Hyprland.workspaces.values
+        .filter(w => w.id > 0 && w.monitor && w.monitor.name === root.screen.name)
+        .sort((a, b) => a.id - b.id)
 
     implicitWidth: row.implicitWidth
     implicitHeight: Theme.barHeight
@@ -80,7 +60,7 @@ Item {
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton
                     hoverEnabled: true
-                    onClicked: ws.modelData.activate()
+                    onClicked: root.dispatch("hl.dsp.focus({workspace=" + ws.modelData.id + "})")
                     onEntered: if (!ws.modelData.active) label.color = Colors.accent
                     onExited: if (!ws.modelData.active) label.color = Theme.fg
                 }
@@ -108,13 +88,17 @@ Item {
         acceptedButtons: Qt.NoButton
         onWheel: wheel => {
             const dir = wheel.angleDelta.y > 0 ? "e+1" : "e-1";
-            scrollProc.command = ["hyprctl", "dispatch", "hl.dsp.focus({workspace='" + dir + "'})"];
-            scrollProc.running = true;
+            root.dispatch("hl.dsp.focus({workspace='" + dir + "'})");
         }
     }
 
+    function dispatch(call: string): void {
+        dispatchProc.command = ["hyprctl", "dispatch", call];
+        dispatchProc.running = true;
+    }
+
     Process {
-        id: scrollProc
+        id: dispatchProc
     }
 
     Connections {

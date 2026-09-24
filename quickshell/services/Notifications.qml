@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 
 // Replaces mako. NotificationServer owns the org.freedesktop.Notifications
@@ -17,6 +18,16 @@ Singleton {
     id: root
 
     readonly property alias tracked: server.trackedNotifications
+
+    function dismissAll(): void {
+        const notifications = Array.from(server.trackedNotifications.values);
+        for (const notification of notifications) notification.dismiss();
+    }
+
+    IpcHandler {
+        target: "notifications"
+        function dismiss(): void { root.dismissAll(); }
+    }
 
     NotificationServer {
         id: server

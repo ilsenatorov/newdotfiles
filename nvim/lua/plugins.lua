@@ -3,12 +3,17 @@
 return {
 	{
 		"nvim-treesitter/nvim-treesitter",
+		lazy = false,
 		build = ":TSUpdate",
 		config = function()
-			require("nvim-treesitter").setup({
-				ensure_installed = { "lua", "bash", "python", "qmljs", "json", "markdown", "vim", "vimdoc" },
-				highlight = { enable = true },
-				indent = { enable = true },
+			require("nvim-treesitter").setup({})
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "lua", "sh", "python", "qml", "json", "markdown", "vim", "help" },
+				callback = function()
+					if pcall(vim.treesitter.start) then
+						vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+					end
+				end,
 			})
 		end,
 	},
@@ -28,13 +33,28 @@ return {
 	},
 	{
 		"neovim/nvim-lspconfig",
-		dependencies = { "mason-lspconfig.nvim" },
+		dependencies = { "mason-lspconfig.nvim", "cmp-nvim-lsp" },
 		config = function()
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 			for _, server in ipairs({ "lua_ls", "bashls", "pyright" }) do
 				vim.lsp.config(server, { capabilities = capabilities })
 				vim.lsp.enable(server)
 			end
+			vim.lsp.config("lua_ls", {
+				settings = { Lua = {
+					diagnostics = { globals = { "vim", "hl" } },
+					workspace = { library = { "/usr/share/hypr/stubs" }, checkThirdParty = false },
+				} },
+			})
+			local qmlls = vim.fn.executable("qmlls") == 1 and "qmlls" or "/usr/lib/qt6/bin/qmlls"
+			if vim.fn.executable(qmlls) == 1 then
+				vim.lsp.config("qmlls", {
+					cmd = { qmlls, "-I", "/usr/lib/qt6/qml" },
+					capabilities = capabilities,
+				})
+				vim.lsp.enable("qmlls")
+			end
+			vim.keymap.set("n", "<leader>cf", function() require("format").buffer() end, { desc = "Format buffer" })
 			vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
 			vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover docs" })
 			vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })

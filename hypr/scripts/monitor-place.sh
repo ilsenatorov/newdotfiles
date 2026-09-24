@@ -19,8 +19,8 @@
 #
 # Placements: left right above below mirror disable
 #
-# NOTE: this is runtime-only. `hyprctl reload` or restarting Hyprland reverts to
-# the position = "auto" rules in hyprland.lua. Re-press the bind to reapply.
+# Changes are remembered per connected display set by monitor-layout.py.
+# Hyprland restores them after login, config reload and monitor hotplug.
 
 set -euo pipefail
 
@@ -190,8 +190,7 @@ fi
 # Anchor first: it is pinned to 0x0 so the target's coordinates mean what they
 # say. Left/Above put the target at negative coordinates, and an anchor left on
 # position = "auto" would otherwise re-flow out from under it.
-hyprctl eval "$anchor_call" >/dev/null
-hyprctl eval "$target_call" >/dev/null
+python3 "$(dirname "$0")/monitor-layout.py" --place "$placement" "$target"
 
 case "$placement" in
 	mirror)      msg="$target mirroring $anchor" ;;

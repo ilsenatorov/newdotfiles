@@ -35,10 +35,10 @@ Text {
     }
 
     function icon(): string {
-        if (pct >= 90) return "";
-        if (pct >= 70) return "";
+        if (pct >= 90) return "";
+        if (pct >= 70) return "";
         if (pct >= 40) return "";
-        if (pct >= 15) return "";
-        return "";
+        if (pct >= 15) return "";
+        return "";
     }
 }
