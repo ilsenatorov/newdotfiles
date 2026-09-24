@@ -13,11 +13,19 @@ import ".."
 Item {
     id: root
 
+    // Split so ui/Panel.qml's droplet can hang flat-topped from the bar and
+    // round off into a card as it opens.
+    property real topRadius: Theme.radius
+    property real bottomRadius: Theme.radius
+
     Rectangle {
         id: bg
 
         anchors.fill: parent
-        radius: Theme.radius
+        topLeftRadius: root.topRadius
+        topRightRadius: root.topRadius
+        bottomLeftRadius: root.bottomRadius
+        bottomRightRadius: root.bottomRadius
         color: Theme.windowSurface
         border.width: Theme.windowBorderW
         border.color: Theme.windowBorder

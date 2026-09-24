@@ -54,6 +54,20 @@ ShellRoot {
     // "bluetooth" | "audio". Not persisted across reload -- these are
     // transient, unlike the dashboard corner.
     property string activePanel: ""
+    // The last non-empty activePanel: what the Loader shows, so a closing
+    // panel keeps its content on screen while ui/Reveal.qml animates it out.
+    property string shownPanel: ""
+    // Where the open panel's droplet hangs from -- see Bar.originFromRight.
+    // Looked up on every open (click or keybind alike) from the first bar;
+    // every screen's bar has the same layout, so any one will do.
+    property real panelOrigin: -1
+    property Item primaryBar: null
+    onActivePanelChanged: {
+        if (activePanel === "")
+            return;
+        shownPanel = activePanel;
+        panelOrigin = primaryBar ? primaryBar.originFromRight(activePanel) : -1;
+    }
 
     function togglePanel(name: string): void {
         shell.activePanel = shell.activePanel === name ? "" : name;
@@ -84,6 +98,9 @@ ShellRoot {
     // Which ported rofi menu is open: "" | "launcher" | "clipboard" |
     // "wallpaper" | "power" | "exit" | "monitor". Transient like activePanel.
     property string activeMenu: ""
+    // Same latch as shownPanel, for the menu window.
+    property string shownMenu: ""
+    onActiveMenuChanged: if (activeMenu !== "") shownMenu = activeMenu
 
     // qs ipc call menu toggle <name> -- bound to SUPER+D/V/W and SUPER+SHIFT+S/E/M
     // in hypr/hyprland.lua. These six were the last things still shelling out
@@ -142,7 +159,10 @@ ShellRoot {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
             Bar {
+                id: bar
                 anchors.fill: parent
+                Component.onCompleted: if (!shell.primaryBar) shell.primaryBar = bar
+                Component.onDestruction: if (shell.primaryBar === bar) shell.primaryBar = null
                 screen: barWin.screen
                 onPanelRequested: name => shell.togglePanel(name)
             }
@@ -154,7 +174,7 @@ ShellRoot {
     // it, or `qs ipc call panel close`.
     PanelWindow {
         id: panelWin
-        visible: shell.activePanel !== ""
+        visible: panelReveal.live
 
         anchors {
             top: true
@@ -172,13 +192,20 @@ ShellRoot {
         implicitWidth: Theme.panelW + Theme.inset + Theme.barMarginSide
         implicitHeight: Math.max(1, panelLoader.item ? panelLoader.item.implicitHeight : 1)
         color: "transparent"
-        exclusiveZone: 0
+        // Measured from the screen edge, not from below the bar's exclusive
+        // zone: with the default mode the compositor first pushes the window
+        // under the bar and the margin above then counts the bar a second
+        // time, leaving the card ~a bar-height adrift. ui/Panel.qml's droplet
+        // needs the card exactly barMarginTop under the pill it hangs from.
+        exclusionMode: ExclusionMode.Ignore
 
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "quickshell-panel"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        mask: Region { item: panelLoader.item ? panelLoader.item.card : null }
+        // Empty while closing, so a click during the exit motion goes to
+        // whatever is underneath instead of the panel on its way out.
+        mask: Region { item: panelReveal.shown && panelLoader.item ? panelLoader.item.card : null }
 
         // Grabs keyboard focus the instant a panel opens (SUPER+N/Y/M all
         // route here via shell.togglePanel), so the network/bluetooth panels
@@ -194,19 +221,39 @@ ShellRoot {
 
             Keys.onEscapePressed: shell.activePanel = ""
 
-            Loader {
-                id: panelLoader
+            Reveal {
+                id: panelReveal
                 anchors.fill: parent
-                active: shell.activePanel !== ""
+                shown: shell.activePanel !== ""
+                style: "morph"
 
-                sourceComponent: {
-                    switch (shell.activePanel) {
-                    case "calendar": return calendarPanel;
-                    case "network": return networkPanel;
-                    case "wifiqr": return wifiSharePanel;
-                    case "bluetooth": return bluetoothPanel;
-                    case "audio": return audioPanelC;
-                    default: return null;
+                Loader {
+                    id: panelLoader
+                    anchors.fill: parent
+                    active: panelReveal.live
+
+                    Binding {
+                        target: panelLoader.item
+                        property: "reveal"
+                        value: panelReveal.progress
+                        when: panelLoader.item !== null
+                    }
+                    Binding {
+                        target: panelLoader.item
+                        property: "originFromRight"
+                        value: shell.panelOrigin
+                        when: panelLoader.item !== null
+                    }
+
+                    sourceComponent: {
+                        switch (shell.shownPanel) {
+                        case "calendar": return calendarPanel;
+                        case "network": return networkPanel;
+                        case "wifiqr": return wifiSharePanel;
+                        case "bluetooth": return bluetoothPanel;
+                        case "audio": return audioPanelC;
+                        default: return null;
+                        }
                     }
                 }
             }
@@ -277,7 +324,7 @@ ShellRoot {
     // fastfetch+htop-style glance at the machine from inside anything.
     PanelWindow {
         id: dashboardWin
-        visible: state.expanded
+        visible: dashReveal.live
 
         implicitWidth: Theme.cardW + Theme.inset * 2
         implicitHeight: Theme.cardH + Theme.inset * 2
@@ -289,7 +336,7 @@ ShellRoot {
         WlrLayershell.namespace: "quickshell-dashboard"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        mask: Region { item: dashLoader.item ?? null }
+        mask: Region { item: dashReveal.shown ? (dashLoader.item ?? null) : null }
 
         // Same FocusScope + Loader + forceActiveFocus pattern as panelWin
         // above -- Escape closes it, no click needed first.
@@ -300,11 +347,17 @@ ShellRoot {
 
             Keys.onEscapePressed: state.expanded = false
 
-            Loader {
-                id: dashLoader
+            Reveal {
+                id: dashReveal
                 anchors.fill: parent
-                active: state.expanded
-                sourceComponent: Card {}
+                shown: state.expanded
+
+                Loader {
+                    id: dashLoader
+                    anchors.fill: parent
+                    active: dashReveal.live
+                    sourceComponent: Card {}
+                }
             }
         }
     }
@@ -313,7 +366,7 @@ ShellRoot {
     // centered (no anchors), Overlay layer, OnDemand focus, Escape closes.
     PanelWindow {
         id: askWin
-        visible: shell.askOpen
+        visible: askReveal.live
 
         implicitWidth: Theme.askW + Theme.inset * 2
         implicitHeight: Theme.askH + Theme.inset * 2
@@ -325,7 +378,7 @@ ShellRoot {
         WlrLayershell.namespace: "quickshell-ask"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        mask: Region { item: askLoader.item ?? null }
+        mask: Region { item: askReveal.shown ? (askLoader.item ?? null) : null }
 
         FocusScope {
             id: askFocus
@@ -334,11 +387,17 @@ ShellRoot {
 
             Keys.onEscapePressed: shell.askOpen = false
 
-            Loader {
-                id: askLoader
+            Reveal {
+                id: askReveal
                 anchors.fill: parent
-                active: shell.askOpen
-                sourceComponent: Ask { onCloseRequested: shell.askOpen = false }
+                shown: shell.askOpen
+
+                Loader {
+                    id: askLoader
+                    anchors.fill: parent
+                    active: askReveal.live
+                    sourceComponent: Ask { onCloseRequested: shell.askOpen = false }
+                }
             }
         }
     }
@@ -352,13 +411,13 @@ ShellRoot {
     // is what resizes; the leftover space is a click-away dismiss target.
     PanelWindow {
         id: menuWin
-        visible: shell.activeMenu !== ""
+        visible: menuReveal.live
 
         // The wallpaper carousel is wider than the row-list menus; every
         // other menu keeps the old width. This changes on open, not on
         // keystrokes, which is the case the fixed sizing above guards.
-        implicitWidth: (shell.activeMenu === "wallpaper" ? Theme.menuWideW : Theme.menuW) + Theme.inset * 2
-        implicitHeight: (shell.activeMenu === "wallpaper" ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
+        implicitWidth: (shell.shownMenu === "wallpaper" ? Theme.menuWideW : Theme.menuW) + Theme.inset * 2
+        implicitHeight: (shell.shownMenu === "wallpaper" ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
 
         color: "transparent"
         exclusiveZone: 0
@@ -367,7 +426,7 @@ ShellRoot {
         WlrLayershell.namespace: "quickshell-menu"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        mask: Region { item: menuLoader.item ?? null }
+        mask: Region { item: menuReveal.shown ? (menuLoader.item ?? null) : null }
 
         FocusScope {
             id: menuFocus
@@ -376,19 +435,25 @@ ShellRoot {
 
             Keys.onEscapePressed: shell.activeMenu = ""
 
-            Loader {
-                id: menuLoader
+            Reveal {
+                id: menuReveal
                 anchors.fill: parent
-                active: shell.activeMenu !== ""
-                sourceComponent: {
-                    switch (shell.activeMenu) {
-                    case "launcher": return launcherMenu;
-                    case "clipboard": return clipboardMenu;
-                    case "wallpaper": return wallpaperMenu;
-                    case "power": return powerMenu;
-                    case "exit": return exitMenu;
-                    case "monitor": return monitorMenu;
-                    default: return null;
+                shown: shell.activeMenu !== ""
+
+                Loader {
+                    id: menuLoader
+                    anchors.fill: parent
+                    active: menuReveal.live
+                    sourceComponent: {
+                        switch (shell.shownMenu) {
+                        case "launcher": return launcherMenu;
+                        case "clipboard": return clipboardMenu;
+                        case "wallpaper": return wallpaperMenu;
+                        case "power": return powerMenu;
+                        case "exit": return exitMenu;
+                        case "monitor": return monitorMenu;
+                        default: return null;
+                        }
                     }
                 }
             }

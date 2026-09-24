@@ -38,13 +38,26 @@ Item {
         network: networkC, bluetooth: bluetoothC, audio: audioC, language: languageC,
     })
 
+    // Distance from the screen's right edge to the centre of the module that
+    // owns dropdown `panel`, or -1 if this bar doesn't show it. ui/Panel.qml
+    // hangs its opening droplet from that point. Measured from the right
+    // because the dropdown window is right-anchored.
+    function originFromRight(panel: string): real {
+        const mod = ({ calendar: "clock", wifiqr: "network" })[panel] ?? panel;
+        const item = leftRow.find(mod) ?? centerRow.find(mod) ?? rightRow.find(mod);
+        if (!item || !item.visible)
+            return -1;
+        const cx = item.mapToItem(root, item.width / 2, 0).x;
+        return root.width + Theme.barMarginSide - cx;
+    }
+
     Pill {
         id: left
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         visible: Local.barLeft.length > 0
 
-        ModuleRow { names: Local.barLeft; registry: root.registry }
+        ModuleRow { id: leftRow; names: Local.barLeft; registry: root.registry }
     }
 
     Pill {
@@ -53,7 +66,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         visible: Local.barCenter.length > 0
 
-        ModuleRow { names: Local.barCenter; registry: root.registry }
+        ModuleRow { id: centerRow; names: Local.barCenter; registry: root.registry }
     }
 
     Pill {
@@ -62,6 +75,6 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         visible: Local.barRight.length > 0
 
-        ModuleRow { names: Local.barRight; registry: root.registry }
+        ModuleRow { id: rightRow; names: Local.barRight; registry: root.registry }
     }
 }

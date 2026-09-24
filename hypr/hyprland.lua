@@ -98,21 +98,29 @@ hl.layer_rule({
     match        = { namespace = "quickshell-dashboard" },
     blur         = true,
     ignore_alpha = 0.2,
+    -- quickshell/ui/Reveal.qml animates this surface itself.
+    no_anim      = true,
 })
 hl.layer_rule({
     match        = { namespace = "quickshell-ask" },
     blur         = true,
     ignore_alpha = 0.2,
+    -- quickshell/ui/Reveal.qml animates this surface itself.
+    no_anim      = true,
 })
 hl.layer_rule({
     match        = { namespace = "quickshell-menu" },
     blur         = true,
     ignore_alpha = 0.2,
+    -- quickshell/ui/Reveal.qml animates this surface itself.
+    no_anim      = true,
 })
 hl.layer_rule({
     match        = { namespace = "quickshell-panel" },
     blur         = true,
     ignore_alpha = 0.2,
+    -- quickshell/ui/Reveal.qml animates this surface itself.
+    no_anim      = true,
 })
 
 hl.config({
@@ -284,12 +292,7 @@ hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" 
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(),                { description = "Fullscreen" })
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
 hl.bind(mainMod .. " + A", hl.dsp.group.prev(), { description = "Previous in group" })
-hl.bind(mainMod .. " + S", function()
-	local w = hl.get_active_window()
-	if w and w.group then
-		hl.dispatch(hl.dsp.group.toggle())
-	end
-end, { description = "Dissolve group" })
+hl.bind(mainMod .. " + S", hl.dsp.group.toggle(), { description = "Toggle group" })
 local function merge_into(dir)
 	return function()
 		local a = hl.get_active_window()

@@ -13,7 +13,20 @@ Row {
     required property var registry
     spacing: Theme.barPillGap
 
+    // The loaded module item for `name`, or null -- how Bar.qml finds where a
+    // dropdown's droplet should hang from.
+    function find(name: string): var {
+        for (let i = 0; i < rep.count; i++) {
+            if (root.names[i] === name) {
+                const row = rep.itemAt(i);
+                return row ? row.children[1].item : null;
+            }
+        }
+        return null;
+    }
+
     Repeater {
+        id: rep
         model: root.names
         delegate: Row {
             spacing: root.spacing

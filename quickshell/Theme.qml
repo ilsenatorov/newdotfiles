@@ -160,4 +160,7 @@ Singleton {
     readonly property int durExpand: 380
     readonly property int durBar: 450
     readonly property int durStagger: 40
+    // ui/Panel.qml's droplet: long enough to read as liquid, not a flicker.
+    readonly property int durMorphIn: 620
+    readonly property int durMorphOut: 300
 }

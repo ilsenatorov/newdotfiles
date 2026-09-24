@@ -48,6 +48,17 @@ Item {
 
     readonly property var filtered: root.filter(root.items, input.text)
 
+    // True for the opening moment only -- the window a delegate has to be
+    // created in to play the row cascade. Long enough to cover items that
+    // arrive a beat late from a Process (cliphist), short enough that the
+    // first keystroke's re-filter never replays it.
+    property bool intro: true
+    Timer {
+        running: true
+        interval: 250
+        onTriggered: root.intro = false
+    }
+
     // rofi -i: case-insensitive substring, matched against the sublabel too
     // (that is what makes the wallpaper picker findable by subdirectory and
     // the launcher findable by a .desktop Comment).
@@ -215,6 +226,45 @@ Item {
                     height: Theme.menuRowH
                     radius: Theme.radius / 2
                     color: row.index === list.currentIndex ? Colors.surface : "transparent"
+
+                    // Rows present while the menu is still opening cascade
+                    // in behind ui/Reveal.qml's pop; rows created later by
+                    // typing or scrolling just appear.
+                    transform: Translate { id: rowShift }
+                    Component.onCompleted: {
+                        if (root.intro && row.index < 10)
+                            rowIn.start();
+                    }
+
+                    SequentialAnimation {
+                        id: rowIn
+
+                        ScriptAction {
+                            script: {
+                                row.opacity = 0;
+                                rowShift.y = 6;
+                            }
+                        }
+                        PauseAnimation { duration: row.index * 18 }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: row
+                                property: "opacity"
+                                to: 1
+                                duration: Theme.durRow
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.easeOutQuint
+                            }
+                            NumberAnimation {
+                                target: rowShift
+                                property: "y"
+                                to: 0
+                                duration: Theme.durRow
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.easeOutQuint
+                            }
+                        }
+                    }
 
                     // base.rasi's `element selected` accent left-border.
                     Rectangle {
