@@ -25,9 +25,10 @@ Text {
 
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         onClicked: mouse => {
             if (mouse.button === Qt.MiddleButton) Audio.cycleSink(1);
+            else if (mouse.button === Qt.RightButton) Audio.toggleMute();
             else root.clicked();
         }
         onWheel: wheel => Audio.nudgeVolume(wheel.angleDelta.y > 0 ? 0.02 : -0.02)
