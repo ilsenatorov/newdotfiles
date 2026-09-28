@@ -268,6 +268,10 @@ hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
 })
+-- Also on the SUPER+M hub (c); the Lua API has no reload dispatcher.
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprctl reload"), {
+	description = "Reload Hyprland config",
+})
 
 ---- Focus and movement -----------------------------------------------------
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
