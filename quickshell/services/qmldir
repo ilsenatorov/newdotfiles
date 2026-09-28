@@ -10,3 +10,4 @@ singleton Notifications 1.0 Notifications.qml
 singleton SysMon 1.0 SysMon.qml
 singleton Time 1.0 Time.qml
 singleton Weather 1.0 Weather.qml
+singleton AppStyle 1.0 AppStyle.qml
