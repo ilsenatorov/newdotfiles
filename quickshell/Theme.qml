@@ -38,7 +38,7 @@ Singleton {
     readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(420 * s)
     readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(720 * s)
 
-    // SUPER+I's ask-a-quick-question overlay. Fixed size like the dashboard,
+    // SUPER+M i's ask-a-quick-question overlay. Fixed size like the dashboard,
     // sized to show a full back-and-forth conversation, not just one answer.
     readonly property int askW: Math.round(760 * s)
     readonly property int askH: Math.round(640 * s)
@@ -88,12 +88,12 @@ Singleton {
     readonly property int menuMaxH: Math.round(520 * s)
     readonly property int menuRowH: Math.round(38 * s)
     readonly property int menuIconSize: Math.round(26 * s)
-    // One tile in the SUPER+SHIFT+M monitor diagram (Left/Right/Above/Below
+    // One tile in the SUPER+M m monitor diagram (Left/Right/Above/Below
     // around the anchor). Wide and short, so a tile reads as a screen.
     readonly property int menuTileW: Math.round(104 * s)
     readonly property int menuTileH: Math.round(58 * s)
 
-    // SUPER+W's wallpaper carousel is the one menu that is not a list of
+    // SUPER+M w's wallpaper carousel is the one menu that is not a list of
     // rows: it shows a 16:9 slide with its neighbours peeking in at the
     // edges, which does not fit menuW. The menu window widens for it (see
     // shell.qml) -- on open only, never mid-keystroke, so the "don't

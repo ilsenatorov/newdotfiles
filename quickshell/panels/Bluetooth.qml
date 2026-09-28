@@ -2,7 +2,7 @@ import QtQuick
 import ".."
 import "../services"
 
-// Replaces rofi-bluetooth (SUPER+Y). Live Bluez state via
+// Replaces rofi-bluetooth (SUPER+M, b). Live Bluez state via
 // Quickshell.Bluetooth -- no bluetoothctl scraping.
 // Fully keyboard-drivable: Up/Down move the selection, Enter/Return acts on
 // it (connect/disconnect/pair, mirroring a left click), F forgets the

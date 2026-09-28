@@ -48,7 +48,7 @@ ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
 ### After it finishes
 
 * **Wallpaper**: not in git (too large). Drop an image or video into
-  `~/Pictures/Wallpapers` and press `SUPER+W`, or run
+  `~/Pictures/Wallpapers` and press `SUPER+M` then `w`, or run
   `hypr/scripts/set-wallpaper.sh <file>`. Until then the theme files seeded
   from `matugen/defaults/` keep the desktop themed.
 * Log out and pick **"Hyprland (uwsm-managed)"** in the greeter. Every autostart
@@ -183,9 +183,11 @@ the why behind them.
   __ranger__ preview images inline with no overlay process
 * __ranger__ as the file manager in terminal
 * __quickshell__ for the bar, notifications, the network/bluetooth/audio/
-  calendar panels (`quickshell/`; SUPER+N/Y/M/G), and every menu -- the app
-  launcher, clipboard, wallpaper, power, exit-confirm and monitor-placement
-  pickers (SUPER+D/V/W, SUPER+SHIFT+S/E/M). Replaces waybar, mako,
+  calendar panels (`quickshell/`; SUPER+N/G), and every menu -- the app
+  launcher, clipboard, power and exit-confirm pickers (SUPER+D/V,
+  SUPER+SHIFT+S/E), plus the SUPER+M menu that opens network, bluetooth,
+  audio, displays, wallpaper, ask, resize, reload and power from one card
+  (workspaces live on SUPER+Q..P, so those keys went there). Replaces waybar, mako,
   networkmanager_dmenu, rofi-bluetooth, pavucontrol and rofi
 * __matugen__ for wallpaper-derived accent colours
 * __sddm__ as the display manager, with the pixel_sakura astronaut theme (see `sddm/`)
@@ -215,9 +217,9 @@ login and after every change.
 One accent colour is derived from the wallpaper by **matugen** and pushed into
 quickshell, hyprland, hyprlock, kitty, starship, GTK and neovim. Change
 wallpaper and
-accent together with `SUPER+W` (or `hypr/scripts/set-wallpaper.sh`), which takes
+accent together with `SUPER+M` then `w` (or `hypr/scripts/set-wallpaper.sh`), which takes
 images and videos alike -- for a video it pulls a frame with ffmpeg and themes
-from that. `SUPER+W` is a carousel: arrow keys step through the wallpapers and
+from that. `SUPER+M` then `w` is a carousel: arrow keys step through the wallpapers and
 each one is shown with the palette it would generate, asked of matugen itself
 (`set-wallpaper.sh --palette`, cached under `~/.cache/wallpaper-palettes`), so
 the swatches are the real scheme rather than a guess at it. Never edit the generated `colors.*` files, edit `matugen/templates/`
@@ -257,7 +259,7 @@ the accent moves with the wallpaper.
   available, and from `sddm/install.sh`).
 * `nvim/colors.lua` is matugen-generated, imported by `nvim/init.lua`; unlike
   kitty and quickshell it does not hot-reload, so a window opened before
-  `SUPER+W` keeps its old accent until reopened.
+  `SUPER+M` then `w` keeps its old accent until reopened.
 
 Optional packages that the configs pick up automatically if installed:
 `adw-gtk3` (better GTK3 match for modern apps), `bibata-cursor-theme` (falls

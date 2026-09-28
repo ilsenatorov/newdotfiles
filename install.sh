@@ -86,7 +86,7 @@ PKGS_DESKTOP=(
 	# clipboard + screenshots
 	cliphist wl-clipboard wl-clip-persist grim slurp swappy
 	# media / hardware keys -- pavucontrol dropped, the quickshell Audio
-	# panel (SUPER+M) replaces its default-sink slider
+	# panel (SUPER+M, a) replaces its default-sink slider
 	mpv playerctl brightnessctl libpulse
 	pipewire pipewire-pulse wireplumber
 	# network + bluetooth -- network-manager-applet dropped, the bar's
@@ -489,7 +489,7 @@ return {
 write_local "${HOME}/.config/dotfiles/local.lua" "$local_lua_content"
 
 # Fresh clone: seed the generated theme files from their committed snapshot so
-# the desktop is themed before the wallpaper step below (or SUPER+W) ever
+# the desktop is themed before the wallpaper step below (or SUPER+M, w) ever
 # runs matugen. Never overwrites a file that already exists -- those are this
 # machine's actual last-set theme, not stale defaults.
 say "generated theme defaults"
@@ -535,10 +535,10 @@ elif [ -d "${HOME}/Pictures/Wallpapers" ] && \
      [ -n "$found" ]; then
 	echo "PICK    $found"
 	"${DOTS}/hypr/scripts/set-wallpaper.sh" "$found" \
-		|| warn "set-wallpaper.sh failed; run it by hand after login (SUPER+W)"
+		|| warn "set-wallpaper.sh failed; run it by hand after login (SUPER+M, w)"
 else
 	warn "no wallpaper found. Put an image or video in ~/Pictures/Wallpapers and"
-	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+W)"
+	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+M, w)"
 	warn "The committed colors.* files are used until then."
 fi
 

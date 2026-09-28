@@ -81,9 +81,11 @@ Item {
     // and, when there is no input box, by the card itself.
     function handleKey(event: var): void {
         const count = root.filtered.length;
+        // Esc is left unaccepted: it falls through to shell.qml's menu
+        // window, which closes the menu -- or, for a page opened from the
+        // SUPER+M hub, steps back to the hub.
         if (event.key === Qt.Key_Escape) {
-            root.closeRequested();
-            event.accepted = true;
+            return;
         } else if (event.key === Qt.Key_Down || (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier))) {
             if (count > 0)
                 list.currentIndex = (list.currentIndex + 1) % count;

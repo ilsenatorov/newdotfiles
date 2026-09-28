@@ -50,7 +50,6 @@ end
 local colors = dofile(os.getenv("HOME") .. "/dotfiles/hypr/colors.lua")
 
 local terminal    = "kitty"
-local fileManager = "kitty ranger -r ~/dotfiles/ranger"
 local dotfiles    = os.getenv("HOME") .. "/dotfiles"
 
 
@@ -245,8 +244,7 @@ local mainMod = "SUPER"
 ---- Launchers and terminal -------------------------------------------------
 hl.bind(mainMod .. " + Return",  hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
 hl.bind(mainMod .. " + End",     hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
-hl.bind(mainMod .. " + Q", hl.dsp.window.close(),     { description = "Close window" })
-hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(fileManager), { description = "File manager" })
+hl.bind(mainMod .. " + X", hl.dsp.window.close(),     { description = "Close window" })
 
 -- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
 -- launcher below covers what it was for.
@@ -258,23 +256,17 @@ hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle launcher"), 
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), {
 	description = "Network menu",
 })
-hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("qs ipc call panel toggle bluetooth"), {
-	description = "Bluetooth menu",
-})
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("qs ipc call panel toggle audio"), {
-	description = "Audio menu",
-})
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
 	description = "Power menu",
 })
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call menu toggle monitor"), {
-	description = "Monitor placement",
+-- The top row (Q..P) is workspaces, so what used to live there -- bluetooth,
+-- audio, wallpaper, ask, resize, reload -- plus monitors and power is one
+-- quickshell menu now (quickshell/panels/Hub.qml): SUPER+M, then a letter.
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
+	description = "Menu (network, bluetooth, audio, displays, wallpaper, ...)",
 })
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
-})
-hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("qs ipc call ask toggle"), {
-	description = "Ask AI a quick question",
 })
 
 ---- Focus and movement -----------------------------------------------------
@@ -356,9 +348,13 @@ hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }
 })
 
 ---- Workspaces -------------------------------------------------------------
-local wsKeys = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }
+-- The letter row, not the number row: on a 38-key board the numbers sit
+-- behind a layer, so SUPER+number was a three-key chord. Workspaces keep
+-- their numeric ids (Q is 1 ... P is 10), so the workspace rules below and
+-- the bar are unchanged.
+local wsKeys = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" }
 for i, key in ipairs(wsKeys) do
-    local ws = i  -- key "0" is workspace 10
+    local ws = i
     hl.bind(mainMod .. " + " .. key,            hl.dsp.focus({ workspace = ws }))
     hl.bind(mainMod .. " + CTRL + " .. key,     hl.dsp.window.move({ workspace = ws, silent = true }))
     hl.bind(mainMod .. " + SHIFT + " .. key,    hl.dsp.window.move({ workspace = ws }))
@@ -382,9 +378,9 @@ hl.bind("Escape", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), {
     submap_universal = true,
     description = "Dismiss notifications",
 })
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload config" })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
+-- Entered from the SUPER+M menu (r); SUPER+R is workspace 4 now.
 hl.define_submap("resize", function()
     hl.bind("left",  hl.dsp.window.resize({ x = -10, y = 0, relative = true }), { repeating = true })
     hl.bind("right", hl.dsp.window.resize({ x = 10, y = 0, relative = true }),  { repeating = true })
@@ -393,9 +389,7 @@ hl.define_submap("resize", function()
 
     hl.bind("Return", hl.dsp.submap("reset"))
     hl.bind("Escape", hl.dsp.submap("reset"))
-    hl.bind(mainMod .. " + R", hl.dsp.submap("reset"))
 end)
-hl.bind(mainMod .. " + R", hl.dsp.submap("resize"), { description = "Resize mode" })
 
 ---- Media and hardware keys (unchanged commands from i3) -------------------
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ +2%"),
@@ -412,8 +406,6 @@ hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"),   { locked = tru
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"), { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
 
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call menu toggle wallpaper"),
-    { description = "Pick wallpaper (regenerates accent)" })
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call menu toggle clipboard"),
     { description = "Clipboard history" })
 

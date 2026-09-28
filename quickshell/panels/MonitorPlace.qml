@@ -7,7 +7,7 @@ import ".."
 import "../ui"
 import "../services"
 
-// SUPER+M. Keyboard-only by design: every action is a key in one of
+// SUPER+M, m. Keyboard-only by design: every action is a key in one of
 // three modes, and the hint line always lists the keys for the current mode.
 //   place   -- arrows/hjkl pick a tile, m/d mirror/disable, Enter applies,
 //              o cycles the output when several are connected
@@ -88,8 +88,10 @@ Item {
     // Keys shared by every mode. Returns true when handled.
     function commonKey(event: var): bool {
         if (event.key === Qt.Key_Escape) {
-            if (root.mode === "place") root.closeRequested();
-            else root.setMode("place");
+            // From "place", fall through to shell.qml (close, or back to
+            // the SUPER+M hub).
+            if (root.mode === "place") return false;
+            root.setMode("place");
         } else if (event.key === Qt.Key_Tab) {
             root.cycleMode(1);
         } else if (event.key === Qt.Key_Backtab) {

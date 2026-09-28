@@ -32,12 +32,12 @@ ShellRoot {
         function status(): string { return state.expanded ? "expanded" : "collapsed" }
     }
 
-    // SUPER+I ask-a-quick-question overlay -- not persisted, like activePanel
+    // SUPER+M i ask-a-quick-question overlay -- not persisted, like activePanel
     // below (transient, resets each open; AskService is what actually
     // remembers conversations across opens/closes -- see services/AskService.qml).
     property bool askOpen: false
 
-    // qs ipc call ask toggle -- bound to SUPER+I in hypr/hyprland.lua. Opening
+    // qs ipc call ask toggle -- opened from the SUPER+M hub (i). Opening
     // always starts a brand-new conversation -- AskService.switchTo lets you
     // get back to an old one (Tab/Shift+Tab inside the overlay) once it's open.
     IpcHandler {
@@ -74,8 +74,8 @@ ShellRoot {
     }
 
     // qs ipc call panel toggle <name> -- for keybinds that used to launch a
-    // GTK/rofi tool directly (SUPER+N network, SUPER+Y bluetooth, SUPER+A
-    // audio -- see hypr/hyprland.lua).
+    // GTK/rofi tool directly (SUPER+N network -- see hypr/hyprland.lua).
+    // Bluetooth/audio are pages of the SUPER+M hub now (menuWin below).
     IpcHandler {
         target: "panel"
 
@@ -96,13 +96,79 @@ ShellRoot {
     }
 
     // Which ported rofi menu is open: "" | "launcher" | "clipboard" |
-    // "wallpaper" | "power" | "exit" | "monitor". Transient like activePanel.
+    // "wallpaper" | "power" | "exit" | "monitor" | "hub", or one of the hub's
+    // own pages ("network" | "bluetooth" | "audio" | "wifiqr"). Transient
+    // like activePanel.
     property string activeMenu: ""
     // Same latch as shownPanel, for the menu window.
     property string shownMenu: ""
     onActiveMenuChanged: if (activeMenu !== "") shownMenu = activeMenu
 
-    // qs ipc call menu toggle <name> -- bound to SUPER+D/V/W and SUPER+SHIFT+S/E/M
+    // Pages under the current one, for Esc to step back through: the SUPER+M
+    // hub pushes itself before opening a page, so every page it reaches
+    // backs out to it instead of closing. Opening a menu by keybind starts
+    // a fresh (empty) stack.
+    property var menuStack: []
+    // Set for one page swap inside an open menu, so menuWin plays the page
+    // transition instead of a fresh open; menuForward picks its direction.
+    property bool menuStep: false
+    property bool menuForward: true
+    // The hub tile last opened, restored when a page backs out to the hub.
+    property int hubIndex: 0
+
+    function openMenu(name: string): void {
+        shell.menuStack = [];
+        shell.menuStep = false;
+        shell.activeMenu = name;
+    }
+    function closeMenu(): void {
+        shell.menuStack = [];
+        shell.activeMenu = "";
+    }
+    function menuPush(name: string): void {
+        shell.menuStack = shell.menuStack.concat([shell.activeMenu]);
+        shell.menuForward = true;
+        shell.menuStep = true;
+        shell.activeMenu = name;
+    }
+    function menuBack(): void {
+        if (shell.menuStack.length === 0) {
+            shell.closeMenu();
+            return;
+        }
+        const prev = shell.menuStack[shell.menuStack.length - 1];
+        shell.menuStack = shell.menuStack.slice(0, -1);
+        shell.menuForward = false;
+        shell.menuStep = true;
+        shell.activeMenu = prev;
+    }
+
+    // What each hub tile does: pages open inside the menu window; the rest
+    // are one-shot actions that close it.
+    function hubSelect(key: string, index: int): void {
+        shell.hubIndex = index;
+        switch (key) {
+        case "ask":
+            shell.closeMenu();
+            shell.askOpen = true;
+            AskService.startNewConversation();
+            break;
+        case "resize":
+            shell.closeMenu();
+            // Lua expression, not a classic dispatch string -- see the
+            // IPC note in hypr/hyprland.lua.
+            Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.submap('resize')"]);
+            break;
+        case "reload":
+            shell.closeMenu();
+            Quickshell.execDetached(["hyprctl", "reload"]);
+            break;
+        default:
+            shell.menuPush(key);
+        }
+    }
+
+    // qs ipc call menu toggle <name> -- bound to SUPER+D/V/M and SUPER+SHIFT+S/E
     // in hypr/hyprland.lua. These six were the last things still shelling out
     // to rofi; see quickshell/ui/Picker.qml. The keybinds use `toggle`, not
     // `open`: every overlay in this file closes on its own keybind the way the
@@ -112,9 +178,17 @@ ShellRoot {
     IpcHandler {
         target: "menu"
 
-        function open(name: string): void { shell.activeMenu = name; }
-        function toggle(name: string): void { shell.activeMenu = shell.activeMenu === name ? "" : name; }
-        function close(): void { shell.activeMenu = ""; }
+        function open(name: string): void { shell.openMenu(name); }
+        // A page reached from the hub counts as the hub being open, so a
+        // second SUPER+M closes the whole menu from any depth.
+        function toggle(name: string): void {
+            const here = shell.activeMenu === name || (shell.activeMenu !== "" && shell.menuStack[0] === name);
+            if (here)
+                shell.closeMenu();
+            else
+                shell.openMenu(name);
+        }
+        function close(): void { shell.closeMenu(); }
     }
 
     // The bar is always on screen now (it wasn't, before this migration --
@@ -362,7 +436,7 @@ ShellRoot {
         }
     }
 
-    // SUPER+I quick-question overlay. Same shape as dashboardWin above:
+    // SUPER+M i quick-question overlay. Same shape as dashboardWin above:
     // centered (no anchors), Overlay layer, OnDemand focus, Escape closes.
     PanelWindow {
         id: askWin
@@ -416,8 +490,11 @@ ShellRoot {
         // The wallpaper carousel is wider than the row-list menus; every
         // other menu keeps the old width. This changes on open, not on
         // keystrokes, which is the case the fixed sizing above guards.
+        // The hub's panel pages get the taller window too: Network's join
+        // form grows the card well past a menu list.
+        readonly property bool tall: ["wallpaper", "network", "bluetooth", "audio", "wifiqr"].includes(shell.shownMenu)
         implicitWidth: (shell.shownMenu === "wallpaper" ? Theme.menuWideW : Theme.menuW) + Theme.inset * 2
-        implicitHeight: (shell.shownMenu === "wallpaper" ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
+        implicitHeight: (menuWin.tall ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
 
         color: "transparent"
         exclusiveZone: 0
@@ -433,7 +510,9 @@ ShellRoot {
             anchors.fill: parent
             focus: shell.activeMenu !== ""
 
-            Keys.onEscapePressed: shell.activeMenu = ""
+            // Pages leave Esc unaccepted so it lands here: back one page if
+            // the hub opened this one, otherwise close.
+            Keys.onEscapePressed: shell.menuBack()
 
             Reveal {
                 id: menuReveal
@@ -444,8 +523,48 @@ ShellRoot {
                     id: menuLoader
                     anchors.fill: parent
                     active: menuReveal.live
+
+                    // A page swap inside the open menu: the new page grows
+                    // in going deeper and settles down from larger going
+                    // back, so moving through the hub reads as one menu
+                    // rather than popups replacing each other.
+                    onLoaded: {
+                        if (!shell.menuStep)
+                            return;
+                        shell.menuStep = false;
+                        pageIn.restart();
+                    }
+
+                    ParallelAnimation {
+                        id: pageIn
+
+                        NumberAnimation {
+                            target: menuLoader
+                            property: "opacity"
+                            from: 0
+                            to: 1
+                            duration: Theme.durFade
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Theme.easeOutQuint
+                        }
+                        NumberAnimation {
+                            target: menuLoader
+                            property: "scale"
+                            from: shell.menuForward ? 0.94 : 1.04
+                            to: 1
+                            duration: Theme.durRow
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Theme.easeOutQuint
+                        }
+                    }
+
                     sourceComponent: {
                         switch (shell.shownMenu) {
+                        case "hub": return hubMenu;
+                        case "network": return networkPage;
+                        case "bluetooth": return bluetoothPage;
+                        case "audio": return audioPage;
+                        case "wifiqr": return wifiSharePage;
                         case "launcher": return launcherMenu;
                         case "clipboard": return clipboardMenu;
                         case "wallpaper": return wallpaperMenu;
@@ -460,10 +579,55 @@ ShellRoot {
         }
     }
 
-    Component { id: launcherMenu;  Launcher     { onCloseRequested: shell.activeMenu = "" } }
-    Component { id: clipboardMenu; Clipboard    { onCloseRequested: shell.activeMenu = "" } }
-    Component { id: wallpaperMenu; Wallpaper    { onCloseRequested: shell.activeMenu = "" } }
-    Component { id: powerMenu;     PowerMenu    { onCloseRequested: shell.activeMenu = "" } }
-    Component { id: exitMenu;      ExitConfirm  { onCloseRequested: shell.activeMenu = "" } }
-    Component { id: monitorMenu;   MonitorPlace { onCloseRequested: shell.activeMenu = "" } }
+    Component { id: launcherMenu;  Launcher     { onCloseRequested: shell.closeMenu() } }
+    Component { id: clipboardMenu; Clipboard    { onCloseRequested: shell.closeMenu() } }
+    Component { id: wallpaperMenu; Wallpaper    { onCloseRequested: shell.closeMenu() } }
+    Component { id: powerMenu;     PowerMenu    { onCloseRequested: shell.closeMenu() } }
+    Component { id: exitMenu;      ExitConfirm  { onCloseRequested: shell.closeMenu() } }
+    Component { id: monitorMenu;   MonitorPlace { onCloseRequested: shell.closeMenu() } }
+
+    // SUPER+M and the bar panels it hosts as its own pages (ui/Sheet.qml).
+    Component {
+        id: hubMenu
+        Hub {
+            // Assigned once, not bound: menuStep drops back to false right
+            // after the page loads, and a binding would snap the cursor home.
+            Component.onCompleted: currentIndex = shell.menuStep ? shell.hubIndex : 0
+            onSelected: key => shell.hubSelect(key, currentIndex)
+            onCloseRequested: shell.closeMenu()
+        }
+    }
+    Component {
+        id: networkPage
+        Sheet {
+            title: "Network"; glyph: "󰖩"; hue: Colors.purple
+            onCloseRequested: shell.closeMenu()
+            Network { onShareRequested: shell.menuPush("wifiqr") }
+        }
+    }
+    Component {
+        id: wifiSharePage
+        Sheet {
+            title: "Share Wi-Fi"; glyph: "󰐲"; hue: Colors.purple
+            trail: ["Menu", "Network"]
+            onCloseRequested: shell.closeMenu()
+            WifiShare {}
+        }
+    }
+    Component {
+        id: bluetoothPage
+        Sheet {
+            title: "Bluetooth"; glyph: "󰂯"; hue: Colors.blue
+            onCloseRequested: shell.closeMenu()
+            Bluetooth {}
+        }
+    }
+    Component {
+        id: audioPage
+        Sheet {
+            title: "Audio"; glyph: "󰕾"; hue: Colors.orange
+            onCloseRequested: shell.closeMenu()
+            AudioPanel {}
+        }
+    }
 }
