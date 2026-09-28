@@ -6,6 +6,7 @@
   "packages": [
     "npm:pi-web-access",
     "npm:pi-subagents",
-    "npm:pi-mcp-adapter"
+    "npm:pi-mcp-adapter",
+    "npm:@juicesharp/rpiv-ask-user-question"
   ]
 }
