@@ -32,11 +32,11 @@ Singleton {
     readonly property int fsValue: Math.round(15 * s)
 
     // The dashboard PanelWindow (SUPER+G) is fixed at cardW+inset*2 x
-    // cardH+inset*2 -- sized for its tallest state (GPU rows + now-playing +
-    // top processes all present) so it never renegotiates layer-shell
+    // cardH+inset*2 -- sized for its tallest state (GPU rows + graph +
+    // now-playing + top processes all present) so it never renegotiates layer-shell
     // geometry while open. The inset is headroom for the drop shadow.
-    readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(420 * s)
-    readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(720 * s)
+    readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(500 * s)
+    readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(980 * s)
 
     // SUPER+M i's ask-a-quick-question overlay. Fixed size like the dashboard,
     // sized to show a full back-and-forth conversation, not just one answer.
@@ -57,9 +57,9 @@ Singleton {
     readonly property int barHeight: Local.barHeight > 0 ? Local.barHeight : Math.round(40 * s)
     readonly property int barMarginTop: Math.round(6 * s)
     readonly property int barMarginSide: Math.round(8 * s)
-    readonly property int barPillPadH: Math.round(16 * s)
+    readonly property int barPillPadH: Math.round(10 * s)
     readonly property int barPillPadV: Math.round(6 * s)
-    readonly property int barPillGap: Math.round(10 * s)
+    readonly property int barPillGap: Math.round(6 * s)
     readonly property int barModulePad: Math.round(6 * s)
     readonly property int fsBar: Local.fsBar > 0 ? Local.fsBar : Math.round(16 * s)
 

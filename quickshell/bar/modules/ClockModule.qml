@@ -16,7 +16,7 @@ Text {
     font.family: Theme.font
     font.pixelSize: Theme.fsBar
     color: Colors.accent
-    text: "  " + Qt.formatDateTime(Time.now, "dddd, dd MMMM HH:mm")
+    text: " " + Qt.formatDateTime(Time.now, "ddd dd MMM HH:mm")
 
     MouseArea {
         anchors.fill: parent

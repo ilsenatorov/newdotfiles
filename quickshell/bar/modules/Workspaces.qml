@@ -52,10 +52,10 @@ Item {
                 id: ws
                 required property var modelData
 
-                width: map.implicitWidth + 12
+                width: map.implicitWidth + 6
                 height: Theme.barHeight - 8
                 anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-                radius: 8
+                radius: 6
                 color: modelData.active ? Colors.surface : "transparent"
 
                 WorkspaceMap {
@@ -100,7 +100,7 @@ Item {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             visible: root.submap !== "" && root.submap !== "global"
-            text: "  " + root.submap
+            text: " " + root.submap
             height: Theme.barHeight - 8
             verticalAlignment: Text.AlignVCenter
             font.family: Theme.font

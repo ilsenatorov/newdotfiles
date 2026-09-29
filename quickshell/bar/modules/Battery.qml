@@ -22,9 +22,9 @@ Text {
     font.pixelSize: Theme.fsBar
 
     text: {
-        if (full) return "  Full";
-        if (charging) return "⚡ " + Math.round(pct) + "%";
-        return icon() + "  " + Math.round(pct) + "%";
+        if (full) return " Full";
+        if (charging) return "⚡ " + String(Math.round(pct)).padStart(3) + "%";
+        return icon() + " " + String(Math.round(pct)).padStart(3) + "%";
     }
 
     color: {

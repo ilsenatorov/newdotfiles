@@ -16,10 +16,10 @@ Text {
     font.pixelSize: Theme.fsBar
 
     text: {
-        if (Net.wired) return "  ";
-        if (Net.wifiConnected) return Net.signalGlyph(Net.signalStrength) + "  " + Net.ssid;
-        if (!Net.wifiHardwareEnabled) return "󰤮 ";
-        return "󰖪 ";
+        if (Net.wired) return "";
+        if (Net.wifiConnected) return Net.signalGlyph(Net.signalStrength);
+        if (!Net.wifiHardwareEnabled) return "󰤮";
+        return "󰖪";
     }
 
     color: Net.connected ? Colors.purple : Theme.orange

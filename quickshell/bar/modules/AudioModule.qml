@@ -15,7 +15,7 @@ Text {
     verticalAlignment: Text.AlignVCenter
     font.family: Theme.font
     font.pixelSize: Theme.fsBar
-    text: Audio.muted ? "  Muted" : Audio.volumeGlyph() + "  " + Math.round(Audio.volume * 100) + "%"
+    text: Audio.muted ? " Muted" : Audio.volumeGlyph() + " " + String(Math.round(Audio.volume * 100)).padStart(3) + "%"
 
     color: {
         if (Audio.muted) return Theme.dim;

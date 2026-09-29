@@ -23,7 +23,7 @@ Text {
     property string layout: ""
     property bool capsOn: false
 
-    text: "  " + shortName(layout) + (root.capsOn ? " ⇪" : "")
+    text: " " + shortName(layout) + (root.capsOn ? " ⇪" : "")
     height: Theme.barHeight
     verticalAlignment: Text.AlignVCenter
     font.family: Theme.font

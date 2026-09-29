@@ -26,6 +26,21 @@ Singleton {
     property real netUp: 0            // bytes/sec
     property real netDown: 0
 
+    // Rolling one-minute samples, shared by the dashboard graph. GPU uses -1
+    // until a supported NVIDIA device has reported a value.
+    readonly property int historySize: 31
+    property var cpuHistory: []
+    property var ramHistory: []
+    property var gpuHistory: []
+    property int historyVersion: 0
+
+    function pushHistory(): void {
+        root.cpuHistory = root.cpuHistory.slice(-root.historySize + 1).concat([root.cpu]);
+        root.ramHistory = root.ramHistory.slice(-root.historySize + 1).concat([root.ram]);
+        root.gpuHistory = root.gpuHistory.slice(-root.historySize + 1).concat([root.gpuAvailable ? root.gpuUtil : -1]);
+        root.historyVersion++;
+    }
+
     // NVIDIA only (nvidia-smi) -- this box is an Optimus laptop with an
     // Intel iGPU alongside the NVIDIA card, and there is no free/no-root way
     // to read Intel GPU utilization without intel_gpu_top, which isn't
@@ -81,6 +96,15 @@ Singleton {
         if (b >= 1024 * 1024) return Math.round(b / (1024 * 1024)) + "M";
         if (b >= 1024) return Math.round(b / 1024) + "K";
         return Math.round(b) + "B";
+    }
+
+    // Bar-sized byte rate, never wider than 4 chars ("0.0K".."999K", "1.2M"):
+    // switches unit at 1000 rather than 1024 so it never reaches 4 digits.
+    function fmtRate(b: real): string {
+        let v = b / 1024;
+        let i = 0;
+        while (v >= 999.5 && i < 2) { v /= 1024; i++; }
+        return (v < 9.95 ? v.toFixed(1) : Math.round(v)) + "KMG"[i];
     }
 
     // hwmon indices shuffle between boots (coretemp is hwmon7 today), so find it
@@ -358,6 +382,7 @@ Singleton {
             uptimeView.reload();
             loadView.reload();
             root.sampleMisc();
+            root.pushHistory();
             if (!routeProc.running) routeProc.running = true;
             if (Local.svcGpu && root.gpuAvailable) gpuProc.running = true;
         }

@@ -18,7 +18,7 @@ Text {
     text: {
         if (!Bt.available) return "󰂲";
         if (!Bt.powered) return "󰂲";
-        if (Bt.anyConnected) return "󰂱  " + Bt.primaryConnectedName;
+        if (Bt.anyConnected) return "󰂱 (" + Bt.connectedDevices.length + ")";
         return "󰂯";
     }
 

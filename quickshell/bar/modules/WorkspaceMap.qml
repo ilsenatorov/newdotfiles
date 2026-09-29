@@ -82,7 +82,7 @@ Item {
     readonly property int pad: detailed ? 6 : 2
     readonly property int gap: detailed ? 5 : 1
 
-    implicitHeight: Math.round((Theme.barHeight - 8) * 0.58)
+    implicitHeight: Math.round((Theme.barHeight - 8) * 0.52)
     implicitWidth: area ? Math.round(implicitHeight * area.w / area.h) : implicitHeight
     opacity: active || highlighted || detailed ? 1 : 0.75
 

@@ -141,6 +141,12 @@ Item {
                 }
             }
 
+            HistoryGraph {
+                width: parent.width
+                visible: root.ready
+                opacity: visible ? 1 : 0
+            }
+
             Rectangle {
                 width: parent.width
                 height: 1
@@ -165,26 +171,12 @@ Item {
                     label: "WX"; value: Weather.text
                 }
                 Stat {
-                    width: parent.colW; index: 7; shown: root.ready
-                    label: "LOAD"; value: SysMon.load1.toFixed(2)
-                    // 12 threads here, so one core saturated is ~1.0.
-                    valueColor: SysMon.load1 > 12 ? Theme.red : (SysMon.load1 > 6 ? Theme.yellow : Theme.fg)
-                }
-                Stat {
                     width: parent.colW; index: 8; shown: root.ready
                     label: "NET"; value: "▲ " + SysMon.fmtBytes(SysMon.netUp) + "  ▼ " + SysMon.fmtBytes(SysMon.netDown)
                 }
                 Stat {
                     width: parent.colW; index: 9; shown: root.ready
                     label: "FREE"; value: SysMon.fmtBytes(SysMon.diskFreeBytes)
-                }
-                Stat {
-                    width: parent.colW; index: 10; shown: root.ready
-                    label: "CLD"; value: ClaudeUsage.text
-                    // Dimmed rather than hidden when the OAuth token has expired:
-                    // the numbers are still the last true ones, just not fresh.
-                    dimmed: ClaudeUsage.stale
-                    valueColor: ClaudeUsage.fiveHour > 90 ? Theme.red : (ClaudeUsage.fiveHour > 70 ? Theme.yellow : Theme.fg)
                 }
                 Stat {
                     width: parent.colW; index: 11; shown: root.ready
