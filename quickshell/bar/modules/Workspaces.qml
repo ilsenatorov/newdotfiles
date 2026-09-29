@@ -23,69 +23,10 @@ Item {
     // "global" -- that is what the indicator's visible guard checks.
     property string submap: ""
 
-    // Workspaces 1..slotCount always get a pill (SUPER+Q..P in
-    // hypr/hyprland.lua), even while empty -- Hyprland only reports a
-    // workspace once it exists, so the missing ones are drawn from
-    // placeholders. Stable pill positions keep the row matching the keys.
-    readonly property int slotCount: 10
-
-    // workspace id -> monitor name/"desc:..." from `hyprctl -j workspacerules`,
-    // i.e. where an empty slot would open. Refreshed by rulesProc.
-    property var slotRules: ({})
-
-    readonly property var monitor: Hyprland.monitors.values.find(m => m.name === root.screen.name) ?? null
-
-    // Where an empty slot would open: its rule's monitor if that is
-    // connected, else the first monitor (Hyprland's fallback is the focused
-    // one; the first is stable, so the slot doesn't jump between bars).
-    function slotOwner(id: int): var {
-        const monitors = Hyprland.monitors.values;
-        const rule = slotRules[id];
-        const target = rule ? monitors.find(m => m.name === rule || ("desc:" + m.description).startsWith(rule)) : null;
-        return target ?? monitors.slice().sort((a, b) => a.id - b.id)[0] ?? null;
-    }
-
     // Special workspaces have negative ids; only numbered ones get a pill.
-    readonly property var sortedWorkspaces: {
-        const all = Hyprland.workspaces.values.filter(w => w.id > 0);
-        const out = all.filter(w => w.monitor && w.monitor.name === root.screen.name);
-        for (let id = 1; id <= slotCount; id++) {
-            if (all.some(w => w.id === id)) continue;
-            const owner = slotOwner(id);
-            if (!owner || owner.name !== root.screen.name) continue;
-            // Just the fields the pill and WorkspaceMap read.
-            out.push({
-                id: id, name: String(id), placeholder: true,
-                active: false, urgent: false,
-                monitor: root.monitor, toplevels: { values: [] },
-            });
-        }
-        return out.sort((a, b) => a.id - b.id);
-    }
-
-    Process {
-        id: rulesProc
-        command: ["hyprctl", "-j", "workspacerules"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const rules = {};
-                try {
-                    for (const r of JSON.parse(text))
-                        if (/^\d+$/.test(r.workspaceString) && r.monitor)
-                            rules[r.workspaceString] = r.monitor;
-                } catch (e) {}
-                root.slotRules = rules;
-            }
-        }
-    }
-
-    // hypr/hyprland.lua re-pins workspaces 500ms after a monitor change, so
-    // read the rules again once that has run.
-    Timer {
-        id: rulesRefresh
-        interval: 900
-        onTriggered: rulesProc.running = true
-    }
+    readonly property var sortedWorkspaces: Hyprland.workspaces.values
+        .filter(w => w.id > 0 && w.monitor && w.monitor.name === root.screen.name)
+        .sort((a, b) => a.id - b.id)
 
     implicitWidth: row.implicitWidth
     implicitHeight: Theme.barHeight
@@ -102,8 +43,6 @@ Item {
                 id: ws
                 required property var modelData
 
-                // No number: the minimap is the pill. The hover preview's
-                // header names the workspace.
                 width: map.implicitWidth + 12
                 height: Theme.barHeight - 8
                 anchors.verticalCenter: parent ? parent.verticalCenter : undefined
@@ -116,6 +55,22 @@ Item {
                     workspace: ws.modelData
                     active: ws.modelData.active
                     highlighted: hover.containsMouse
+                }
+
+                // Number laid over the minimap, faint enough that the
+                // windows still read through it. The outline keeps it
+                // legible on the solid focused-window cell.
+                Text {
+                    anchors.centerIn: map
+                    text: ws.modelData.name
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fsBar
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: Qt.rgba(Theme.windowShadow.r, Theme.windowShadow.g, Theme.windowShadow.b, 0.6)
+                    color: ws.modelData.urgent ? Theme.red
+                        : ws.modelData.active || hover.containsMouse ? Colors.accent : Theme.fg
+                    opacity: ws.modelData.active || hover.containsMouse ? 0.8 : 0.55
                 }
 
                 MouseArea {
@@ -315,7 +270,6 @@ Item {
     Component.onCompleted: {
         Hyprland.refreshMonitors();
         Hyprland.refreshToplevels();
-        rulesProc.running = true;
     }
 
     Connections {
@@ -323,10 +277,8 @@ Item {
         function onRawEvent(event) {
             if (event.name === "submap") root.submap = event.data;
             else if (root.layoutEvents.includes(event.name)) refreshToplevels.restart();
-            else if (["monitoraddedv2", "monitorremovedv2", "configreloaded"].includes(event.name)) {
+            else if (["monitoraddedv2", "monitorremovedv2", "configreloaded"].includes(event.name))
                 Hyprland.refreshMonitors();
-                rulesRefresh.restart();
-            }
         }
     }
 }

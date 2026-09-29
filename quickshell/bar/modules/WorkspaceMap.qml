@@ -10,7 +10,7 @@ import "../../services"
 // strip on top, like the group bar. Each cell is coloured and labelled per
 // app from services/AppStyle.qml.
 //
-// Two sizes: the compact one sits in the bar pill next to the number (size
+// Two sizes: the compact one sits in the bar pill under the number (size
 // it with implicitHeight; width follows the monitor's aspect), `detailed`
 // is the hover preview's big map with app icons and window titles.
 Item {
@@ -84,15 +84,14 @@ Item {
 
     implicitHeight: Math.round((Theme.barHeight - 8) * 0.58)
     implicitWidth: area ? Math.round(implicitHeight * area.w / area.h) : implicitHeight
-    // Empty slots recede further than occupied inactive ones.
-    opacity: active || highlighted || detailed ? 1 : cells.length > 0 ? 0.75 : 0.45
+    opacity: active || highlighted || detailed ? 1 : 0.75
 
     function tint(c: color, a: real): color {
         return Qt.rgba(c.r, c.g, c.b, a);
     }
 
-    // Screen outline. In the bar it also carries what the number's colour
-    // used to: urgent red, active/hovered accent.
+    // Screen outline. In the bar it is also lit like the number: urgent
+    // red, active/hovered accent.
     Rectangle {
         readonly property bool lit: !root.detailed && (root.active || root.highlighted)
         readonly property bool urgent: !root.detailed && root.workspace && root.workspace.urgent

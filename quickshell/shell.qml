@@ -36,6 +36,21 @@ ShellRoot {
     // below (transient, resets each open; AskService is what actually
     // remembers conversations across opens/closes -- see services/AskService.qml).
     property bool askOpen: false
+    // Set when the hub opened Ask, so Esc steps back to the hub like the
+    // hub's own pages do. Ask is its own window, not a menu page, so it
+    // can't ride menuStack.
+    property bool askFromHub: false
+    onAskOpenChanged: if (!askOpen) askFromHub = false
+
+    function askBack(): void {
+        const back = shell.askFromHub;
+        shell.askOpen = false;
+        if (!back) return;
+        shell.menuStack = [];
+        shell.menuForward = false;
+        shell.menuStep = true;
+        shell.activeMenu = "hub";
+    }
 
     // qs ipc call ask toggle -- opened from the SUPER+M hub (i). Opening
     // always starts a brand-new conversation -- AskService.switchTo lets you
@@ -151,6 +166,7 @@ ShellRoot {
         case "ask":
             shell.closeMenu();
             shell.askOpen = true;
+            shell.askFromHub = true;
             AskService.startNewConversation();
             break;
         case "resize":
@@ -459,7 +475,7 @@ ShellRoot {
             anchors.fill: parent
             focus: shell.askOpen
 
-            Keys.onEscapePressed: shell.askOpen = false
+            Keys.onEscapePressed: shell.askBack()
 
             Reveal {
                 id: askReveal
