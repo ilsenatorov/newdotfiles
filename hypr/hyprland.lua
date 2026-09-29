@@ -354,8 +354,9 @@ hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }
 ---- Workspaces -------------------------------------------------------------
 -- The letter row, not the number row: on a 38-key board the numbers sit
 -- behind a layer, so SUPER+number was a three-key chord. Workspaces keep
--- their numeric ids (Q is 1 ... P is 10), so the workspace rules below and
--- the bar are unchanged.
+-- their numeric ids (Q is 1 ... P is 10), so the workspace rules below are
+-- unchanged; the bar pills show the letter (wsKeys in
+-- quickshell/bar/modules/Workspaces.qml -- keep the two in sync).
 local wsKeys = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" }
 for i, key in ipairs(wsKeys) do
     local ws = i

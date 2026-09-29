@@ -28,6 +28,15 @@ Item {
         .filter(w => w.id > 0 && w.monitor && w.monitor.name === root.screen.name)
         .sort((a, b) => a.id - b.id)
 
+    // Workspace id -> the SUPER+<key> that focuses it -- must match wsKeys
+    // in hypr/hyprland.lua (Q is 1 ... P is 10). Ids past the row fall back
+    // to the number.
+    readonly property var wsKeys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"]
+
+    function keyLabel(ws: var): string {
+        return ws.id >= 1 && ws.id <= wsKeys.length ? wsKeys[ws.id - 1] : ws.name;
+    }
+
     implicitWidth: row.implicitWidth
     implicitHeight: Theme.barHeight
 
@@ -57,12 +66,12 @@ Item {
                     highlighted: hover.containsMouse
                 }
 
-                // Number laid over the minimap, faint enough that the
+                // Keybind letter laid over the minimap, faint enough that the
                 // windows still read through it. The outline keeps it
                 // legible on the solid focused-window cell.
                 Text {
                     anchors.centerIn: map
-                    text: ws.modelData.name
+                    text: root.keyLabel(ws.modelData)
                     font.family: Theme.font
                     font.pixelSize: Theme.fsBar
                     font.bold: true
@@ -218,7 +227,7 @@ Item {
                     spacing: 8
 
                     Text {
-                        text: "Workspace " + (preview.workspace ? preview.workspace.name : "")
+                        text: "Workspace " + (preview.workspace ? root.keyLabel(preview.workspace) : "")
                         font.family: Theme.font
                         font.pixelSize: Theme.fsLabel
                         font.bold: true
