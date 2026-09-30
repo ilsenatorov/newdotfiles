@@ -34,8 +34,8 @@ if [ ! -f "$wall" ]; then
 fi
 
 command -v mpvpaper >/dev/null || {
-    notify-send -u critical "Wallpaper" "mpvpaper is not installed" 2>/dev/null || true
-    exit 1
+    notify-send "Wallpaper" "mpvpaper not installed -- skipping wallpaper daemon" 2>/dev/null || true
+    exit 0
 }
 
 # mpv options, in mpvpaper's -o form (no leading dashes needed):
