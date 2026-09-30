@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 
 import "services"
 import "dashboard"
@@ -259,9 +260,9 @@ ShellRoot {
         }
     }
 
-    // The dropdown itself: one popup window, content swapped by name. No
-    // click-outside-to-dismiss yet -- close via the bar module that opened
-    // it, or `qs ipc call panel close`.
+    // The dropdown itself: one popup window, content swapped by name. Modal
+    // like every overlay here (see its HyprlandFocusGrab): a click outside
+    // the card closes it.
     PanelWindow {
         id: panelWin
         visible: panelReveal.live
@@ -296,6 +297,17 @@ ShellRoot {
         // Empty while closing, so a click during the exit motion goes to
         // whatever is underneath instead of the panel on its way out.
         mask: Region { item: panelReveal.shown && panelLoader.item ? panelLoader.item.card : null }
+
+        // Modal while open: Hyprland routes all pointer and keyboard input to
+        // this window only, and a click anywhere else (other windows, the
+        // bar, other monitors, the transparent area outside the card) just
+        // clears the grab -- which closes the overlay -- instead of reaching
+        // what's underneath.
+        HyprlandFocusGrab {
+            windows: [panelWin]
+            active: shell.activePanel !== ""
+            onCleared: shell.activePanel = ""
+        }
 
         // Grabs keyboard focus the instant a panel opens (SUPER+N/Y/M all
         // route here via shell.togglePanel), so the network/bluetooth panels
@@ -428,6 +440,13 @@ ShellRoot {
 
         mask: Region { item: dashReveal.shown ? (dashLoader.item ?? null) : null }
 
+        // Modal while open, same as panelWin's grab.
+        HyprlandFocusGrab {
+            windows: [dashboardWin]
+            active: state.expanded
+            onCleared: state.expanded = false
+        }
+
         // Same FocusScope + Loader + forceActiveFocus pattern as panelWin
         // above -- Escape closes it, no click needed first.
         FocusScope {
@@ -469,6 +488,13 @@ ShellRoot {
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
         mask: Region { item: askReveal.shown ? (askLoader.item ?? null) : null }
+
+        // Modal while open, same as panelWin's grab.
+        HyprlandFocusGrab {
+            windows: [askWin]
+            active: shell.askOpen
+            onCleared: shell.askOpen = false
+        }
 
         FocusScope {
             id: askFocus
@@ -520,6 +546,13 @@ ShellRoot {
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
         mask: Region { item: menuReveal.shown ? (menuLoader.item ?? null) : null }
+
+        // Modal while open, same as panelWin's grab.
+        HyprlandFocusGrab {
+            windows: [menuWin]
+            active: shell.activeMenu !== ""
+            onCleared: shell.closeMenu()
+        }
 
         FocusScope {
             id: menuFocus
