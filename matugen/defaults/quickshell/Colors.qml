@@ -7,15 +7,33 @@ import Quickshell
 
 Singleton {
     readonly property color accent: "#acc7ff"
-    readonly property color accentAlt: "#cabff8"
-    readonly property color accentDim: "#004591"
+    readonly property color accentAlt: "#ddbce0"
+    readonly property color accentDim: "#294677"
     readonly property color urgent: "#ffb4ab"
     readonly property color red: "#ffb2b9"
     readonly property color orange: "#ffb597"
-    readonly property color green: "#00e295"
-    readonly property color cyan: "#00daf4"
+    readonly property color green: "#91d5ad"
+    readonly property color cyan: "#82d3e2"
     readonly property color blue: "#abc7ff"
     readonly property color purple: "#cbbeff"
     // Wallpaper-tinted dark surface -- for hovered/selected backgrounds only.
-    readonly property color surface: "#262a33"
+    readonly property color surface: "#282a2f"
+
+    // Fixed desktop base from matugen/base.json -- never moves with the
+    // wallpaper. Prefixed so they cannot collide with the harmonized hues
+    // above; Theme.qml gives them their role names.
+    readonly property color baseBg: "#141C21"
+    readonly property color baseFg: "#93A1A1"
+    readonly property color baseDim: "#6D8895"
+    readonly property color baseBorder: "#3C4449"
+    readonly property color baseShadow: "#0A0F12"
+    readonly property color baseRed: "#EC7875"
+    readonly property color baseRedBright: "#EC407A"
+    readonly property color baseGreen: "#61C766"
+    readonly property color baseYellow: "#FDD835"
+    readonly property color baseBlue: "#42A5F5"
+    readonly property color baseMagenta: "#BA68C8"
+    readonly property color baseCyan: "#4DD0E1"
+    readonly property color baseCyanBright: "#00B19F"
+    readonly property color baseOrange: "#E57C46"
 }

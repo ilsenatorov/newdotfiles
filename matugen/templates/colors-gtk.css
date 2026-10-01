@@ -6,3 +6,8 @@
 @define-color accent_alt      {{colors.tertiary.dark.hex}};
 @define-color accent_on       {{colors.on_primary.dark.hex}};
 @define-color surface_tinted  {{colors.surface_container_high.dark.hex}};
+
+/* Fixed desktop base, from matugen/base.json. */
+@define-color base_bg         {{base.bg}};
+@define-color base_bg_alt     {{base.bg_alt}};
+@define-color base_fg         {{base.fg}};

@@ -1,17 +1,15 @@
--- Minimal colorscheme wired to the matugen accent, so nvim never drifts from
+-- Minimal colorscheme wired to the matugen output, so nvim never drifts from
 -- the rest of the desktop (kitty/colors.conf, quickshell/Colors.qml, ...).
--- Background/foreground are the same hand-written values every other config
--- uses (README "Theming"): #141C21 / #93A1A1 -- only the accent is generated.
+-- Every colour comes from nvim/colors.lua: the accent from the wallpaper, the
+-- base/foreground/semantic colours from matugen/base.json (README "Theming").
 
 local M = {}
 
-local base = "#141C21"
-local fg = "#93A1A1"
-local fg_bright = "#CDD6D6"
-local dim = "#3C4449"
-local muted = "#617878"
-
 function M.apply(colors)
+	local base, fg, fg_bright = colors.bg, colors.fg, colors.fg_bright
+	local dim, muted = colors.border, colors.muted
+	local green, yellow = colors.green, colors.yellow
+
 	vim.cmd("hi clear")
 	if vim.fn.exists("syntax_on") == 1 then
 		vim.cmd("syntax reset")
@@ -29,13 +27,13 @@ function M.apply(colors)
 	hi("SignColumn", { bg = base })
 	hi("LineNr", { fg = dim })
 	hi("CursorLineNr", { fg = colors.accent, bold = true })
-	hi("CursorLine", { bg = "#1E262B" })
+	hi("CursorLine", { bg = colors.bg_alt })
 	hi("Visual", { bg = colors.accent_dim })
 	hi("Search", { bg = colors.accent_dim, fg = fg_bright })
 	hi("IncSearch", { bg = colors.accent, fg = base })
-	hi("Pmenu", { fg = fg, bg = "#1E262B" })
+	hi("Pmenu", { fg = fg, bg = colors.bg_alt })
 	hi("PmenuSel", { bg = colors.accent_dim, fg = fg_bright })
-	hi("StatusLine", { fg = fg, bg = "#1E262B" })
+	hi("StatusLine", { fg = fg, bg = colors.bg_alt })
 	hi("VertSplit", { fg = dim })
 	hi("WinSeparator", { fg = dim })
 	hi("Comment", { fg = muted, italic = true })
@@ -48,10 +46,10 @@ function M.apply(colors)
 	hi("Statement", { fg = colors.accent_alt })
 	hi("Conditional", { fg = colors.accent_alt })
 	hi("Repeat", { fg = colors.accent_alt })
-	hi("String", { fg = "#61C766" })
-	hi("Number", { fg = "#FDD835" })
-	hi("Boolean", { fg = "#FDD835" })
-	hi("Constant", { fg = "#FDD835" })
+	hi("String", { fg = green })
+	hi("Number", { fg = yellow })
+	hi("Boolean", { fg = yellow })
+	hi("Constant", { fg = yellow })
 	hi("Type", { fg = colors.accent, italic = true })
 	hi("Special", { fg = colors.accent_alt })
 	hi("Error", { fg = colors.urgent })
@@ -59,16 +57,16 @@ function M.apply(colors)
 
 	-- diagnostics
 	hi("DiagnosticError", { fg = colors.urgent })
-	hi("DiagnosticWarn", { fg = "#FDD835" })
+	hi("DiagnosticWarn", { fg = yellow })
 	hi("DiagnosticInfo", { fg = colors.accent })
 	hi("DiagnosticHint", { fg = muted })
 
 	-- diff / git
-	hi("DiffAdd", { fg = "#61C766" })
-	hi("DiffChange", { fg = "#FDD835" })
+	hi("DiffAdd", { fg = green })
+	hi("DiffChange", { fg = yellow })
 	hi("DiffDelete", { fg = colors.urgent })
-	hi("GitSignsAdd", { fg = "#61C766" })
-	hi("GitSignsChange", { fg = "#FDD835" })
+	hi("GitSignsAdd", { fg = green })
+	hi("GitSignsChange", { fg = yellow })
 	hi("GitSignsDelete", { fg = colors.urgent })
 end
 
