@@ -21,8 +21,8 @@ TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS")
 CFG=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/qs-usage.XXXXXX")
 chmod 600 "$CFG"
 trap 'rm -f "$CFG"' EXIT INT TERM
-printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" > "$CFG"
+printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" >"$CFG"
 
 curl -sS --max-time 10 -K "$CFG" \
-    -H 'Content-Type: application/json' \
-    https://api.anthropic.com/api/oauth/usage 2>/dev/null || exit 0
+	-H 'Content-Type: application/json' \
+	https://api.anthropic.com/api/oauth/usage 2>/dev/null || exit 0

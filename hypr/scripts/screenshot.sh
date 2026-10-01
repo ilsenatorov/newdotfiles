@@ -22,60 +22,60 @@ NAME="${DIR}/screenshot-$(date +%Y%m%d-%H%M%S).png"
 copy() { wl-copy -t image/png; }
 
 need() {
-    command -v "$1" >/dev/null && return 0
-    notify-send "Screenshot: $1 not installed" "pacman -S $2"
-    exit 1
+	command -v "$1" >/dev/null && return 0
+	notify-send "Screenshot: $1 not installed" "pacman -S $2"
+	exit 1
 }
 
 case "${1:-full}" in
-    full)
-        mkdir -p "$DIR"
-        grim "$NAME"
-        copy < "$NAME"
-        notify-send -i "$NAME" "Screenshot saved" "$NAME"
-        ;;
-    region)
-        mkdir -p "$DIR"
-        # slurp exits non-zero when the selection is cancelled with Escape
-        geom=$(slurp) || exit 0
-        grim -g "$geom" "$NAME"
-        copy < "$NAME"
-        notify-send -i "$NAME" "Screenshot saved" "$NAME"
-        ;;
-    window|active)
-        need hyprshot hyprshot
-        mkdir -p "$DIR"
-        # hyprshot exits 1 even on success (it writes the file, then its cleanup
-        # path returns nonzero), so `set -e` would abort here. Judge the result
-        # by whether the file landed, not by the exit status.
-        #
-        # -z freezes the screen while picking so hover menus stay put; `active`
-        # needs a second --mode naming what to grab, per `hyprshot --help`.
-        if [ "$1" = "active" ]; then
-            hyprshot -m active -m window -o "$DIR" -f "$(basename "$NAME")" || true
-        else
-            hyprshot -z -m window -o "$DIR" -f "$(basename "$NAME")" || true
-        fi
+	full)
+		mkdir -p "$DIR"
+		grim "$NAME"
+		copy <"$NAME"
+		notify-send -i "$NAME" "Screenshot saved" "$NAME"
+		;;
+	region)
+		mkdir -p "$DIR"
+		# slurp exits non-zero when the selection is cancelled with Escape
+		geom=$(slurp) || exit 0
+		grim -g "$geom" "$NAME"
+		copy <"$NAME"
+		notify-send -i "$NAME" "Screenshot saved" "$NAME"
+		;;
+	window | active)
+		need hyprshot hyprshot
+		mkdir -p "$DIR"
+		# hyprshot exits 1 even on success (it writes the file, then its cleanup
+		# path returns nonzero), so `set -e` would abort here. Judge the result
+		# by whether the file landed, not by the exit status.
+		#
+		# -z freezes the screen while picking so hover menus stay put; `active`
+		# needs a second --mode naming what to grab, per `hyprshot --help`.
+		if [ "$1" = "active" ]; then
+			hyprshot -m active -m window -o "$DIR" -f "$(basename "$NAME")" || true
+		else
+			hyprshot -z -m window -o "$DIR" -f "$(basename "$NAME")" || true
+		fi
 
-        if [ ! -s "$NAME" ]; then
-            notify-send -u critical "Screenshot failed" "hyprshot wrote nothing to $NAME"
-            exit 1
-        fi
-        # hyprshot handles the clipboard and its own notification
-        ;;
-    clip)
-        geom=$(slurp) || exit 0
-        grim -g "$geom" - | copy
-        notify-send "Screenshot copied" "Clipboard only -- nothing written to disk"
-        ;;
-    edit)
-        need swappy swappy
-        geom=$(slurp) || exit 0
-        mkdir -p "$DIR"
-        grim -g "$geom" - | swappy -f - -o "$NAME"
-        ;;
-    *)
-        echo "usage: $0 [full|region|window|active|clip|edit]" >&2
-        exit 1
-        ;;
+		if [ ! -s "$NAME" ]; then
+			notify-send -u critical "Screenshot failed" "hyprshot wrote nothing to $NAME"
+			exit 1
+		fi
+		# hyprshot handles the clipboard and its own notification
+		;;
+	clip)
+		geom=$(slurp) || exit 0
+		grim -g "$geom" - | copy
+		notify-send "Screenshot copied" "Clipboard only -- nothing written to disk"
+		;;
+	edit)
+		need swappy swappy
+		geom=$(slurp) || exit 0
+		mkdir -p "$DIR"
+		grim -g "$geom" - | swappy -f - -o "$NAME"
+		;;
+	*)
+		echo "usage: $0 [full|region|window|active|clip|edit]" >&2
+		exit 1
+		;;
 esac

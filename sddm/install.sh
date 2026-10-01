@@ -12,7 +12,10 @@ DST=/usr/share/sddm/themes/$NAME
 # is playing on the desktop). Override for this run with:
 #   WALLPAPER=/path/to.mp4 sudo -E ./install.sh
 
-[ "$(id -u)" -eq 0 ] || { echo "run with sudo" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || {
+	echo "run with sudo" >&2
+	exit 1
+}
 
 # Runtime deps. Main.qml pulls in QtSvg (Assets/*.svg), QtMultimedia and
 # QtQuick.VirtualKeyboard, none of which ship with plain sddm.

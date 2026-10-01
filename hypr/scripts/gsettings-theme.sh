@@ -15,14 +15,15 @@ command -v gsettings >/dev/null 2>&1 || exit 0
 
 # first theme in the list that is actually installed wins
 pick() {
-    for name in "$@"; do
-        if [ -d "/usr/share/$SUBDIR/$name" ] \
-           || [ -d "$HOME/.local/share/$SUBDIR/$name" ] \
-           || [ -d "$HOME/.icons/$name" ]; then
-            echo "$name"; return
-        fi
-    done
-    echo "$1"   # nothing found: fall back to the first candidate
+	for name in "$@"; do
+		if [ -d "/usr/share/$SUBDIR/$name" ] ||
+			[ -d "$HOME/.local/share/$SUBDIR/$name" ] ||
+			[ -d "$HOME/.icons/$name" ]; then
+			echo "$name"
+			return
+		fi
+	done
+	echo "$1" # nothing found: fall back to the first candidate
 }
 
 SUBDIR=themes
@@ -37,23 +38,23 @@ ICON_THEME=$(pick Papirus-Dark Papirus Adwaita)
 CURSOR_THEME=$(pick Bibata-Modern-Ice Bibata-Modern-Classic Adwaita)
 
 set -- \
-    color-scheme          "prefer-dark" \
-    gtk-theme             "$GTK_THEME" \
-    icon-theme            "$ICON_THEME" \
-    cursor-theme          "$CURSOR_THEME" \
-    cursor-size           "24" \
-    font-name             "Cantarell 11" \
-    monospace-font-name   "MesloLGS NF 11" \
-    font-antialiasing     "grayscale" \
-    font-hinting          "slight"
+	color-scheme "prefer-dark" \
+	gtk-theme "$GTK_THEME" \
+	icon-theme "$ICON_THEME" \
+	cursor-theme "$CURSOR_THEME" \
+	cursor-size "24" \
+	font-name "Cantarell 11" \
+	monospace-font-name "MesloLGS NF 11" \
+	font-antialiasing "grayscale" \
+	font-hinting "slight"
 
 while [ "$#" -gt 0 ]; do
-    gsettings set org.gnome.desktop.interface "$1" "$2" 2>/dev/null || true
-    shift 2
+	gsettings set org.gnome.desktop.interface "$1" "$2" 2>/dev/null || true
+	shift 2
 done
 
 # Apply to the running compositor too, so the cursor changes without a relogin.
 # (hl.env in hyprland.lua only affects clients started after it.)
 if command -v hyprctl >/dev/null 2>&1; then
-    hyprctl setcursor "$CURSOR_THEME" 24 >/dev/null 2>&1 || true
+	hyprctl setcursor "$CURSOR_THEME" 24 >/dev/null 2>&1 || true
 fi

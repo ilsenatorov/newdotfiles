@@ -11,7 +11,7 @@ function M.buffer()
 	local input = table.concat(lines, "\n") .. "\n"
 	local qmlformat = vim.fn.executable("/usr/lib/qt6/bin/qmlformat") == 1
 		and "/usr/lib/qt6/bin/qmlformat" or "qmlformat"
-	local command = ft == "sh" and { "shfmt", "-i", "1", "-ci" } or { qmlformat }
+	local command = ft == "sh" and { "shfmt", "-i", "0", "-ci" } or { qmlformat }
 	if vim.fn.executable(command[1]) ~= 1 then
 		vim.notify(command[1] .. " is not installed", vim.log.levels.ERROR)
 		return

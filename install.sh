@@ -19,18 +19,29 @@
 set -euo pipefail
 
 DOTS="${HOME}/dotfiles"
-NO_PACKAGES=0; NO_AUR=0; WITH_SDDM=0; MINIMAL=0; RECONFIGURE=0; LIST_PACKAGES=0
+NO_PACKAGES=0
+NO_AUR=0
+WITH_SDDM=0
+MINIMAL=0
+RECONFIGURE=0
+LIST_PACKAGES=0
 
 for arg in "$@"; do
 	case "$arg" in
-		--no-packages)   NO_PACKAGES=1 ;;
-		--no-aur)        NO_AUR=1 ;;
-		--sddm)          WITH_SDDM=1 ;;
-		--minimal)       MINIMAL=1 ;;
-		--reconfigure)   RECONFIGURE=1 ;;
+		--no-packages) NO_PACKAGES=1 ;;
+		--no-aur) NO_AUR=1 ;;
+		--sddm) WITH_SDDM=1 ;;
+		--minimal) MINIMAL=1 ;;
+		--reconfigure) RECONFIGURE=1 ;;
 		--list-packages) LIST_PACKAGES=1 ;;
-		-h|--help)     sed -n '2,13p' "$0" | sed 's/^# \?//'; exit 0 ;;
-		*)             echo "unknown option: $arg" >&2; exit 1 ;;
+		-h | --help)
+			sed -n '2,13p' "$0" | sed 's/^# \?//'
+			exit 0
+			;;
+		*)
+			echo "unknown option: $arg" >&2
+			exit 1
+			;;
 	esac
 done
 
@@ -40,7 +51,8 @@ stamp="$(date +%Y%m%d-%H%M%S)"
 # for every per-machine file this script generates: local.conf, local.lua,
 # ~/.zshrc.local. Mirrors 20-va.conf's "detect once, never overwrite" contract.
 write_local() {
-	dst="$1"; content="$2"
+	dst="$1"
+	content="$2"
 	if [ -f "$dst" ]; then
 		if [ "$RECONFIGURE" -eq 1 ]; then
 			bak="${dst}.bak-${stamp}"
@@ -51,13 +63,16 @@ write_local() {
 			return 0
 		fi
 	fi
-	printf '%s' "$content" > "$dst"
+	printf '%s' "$content" >"$dst"
 	echo "WROTE   $dst"
 }
 
-say()  { printf '\n\033[1;36m==>\033[0m %s\n' "$1"; }
+say() { printf '\n\033[1;36m==>\033[0m %s\n' "$1"; }
 warn() { printf '\033[1;33mWARN\033[0m %s\n' "$1" >&2; }
-die()  { printf '\033[1;31mERROR\033[0m %s\n' "$1" >&2; exit 1; }
+die() {
+	printf '\033[1;31mERROR\033[0m %s\n' "$1" >&2
+	exit 1
+}
 
 # ---------------------------------------------------------------- sanity ----
 [ "$(id -u)" -ne 0 ] || die "run as your normal user, not root (it sudos where needed)"
@@ -107,17 +122,17 @@ PKGS_RANGER=(
 	w3m highlight ffmpegthumbnailer mediainfo perl-image-exiftool
 	atool 7zip unrar odt2txt transmission-cli elinks lynx
 )
-PKGS_SDDM=( sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative )
+PKGS_SDDM=(sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative)
 # Terminal/dev tooling that .zshrc, git/config and nvim/ assume is present.
-# shellcheck/shfmt/luacheck are only needed to run check.sh; dropped by
-# --minimal along with the ranger preview tools.
-PKGS_CLI=( neovim eza bat fd zoxide ripgrep git-delta lazygit )
-PKGS_LINT=( shellcheck shfmt luacheck )
+# The linters (shellcheck, shfmt, luacheck) are only needed to run check.sh;
+# dropped by --minimal along with the ranger preview tools.
+PKGS_CLI=(neovim eza bat fd zoxide ripgrep git-delta lazygit)
+PKGS_LINT=(shellcheck shfmt luacheck)
 
 # AUR. mpvpaper is the wallpaper daemon (stills and video); adw-gtk3 is optional
 # polish the GTK config picks up on its own if present.
-AUR_REQUIRED=( mpvpaper )
-AUR_OPTIONAL=( adw-gtk3 )
+AUR_REQUIRED=(mpvpaper)
+AUR_OPTIONAL=(adw-gtk3)
 
 if [ "$LIST_PACKAGES" -eq 1 ]; then
 	printf '%s\n' \
@@ -128,9 +143,9 @@ if [ "$LIST_PACKAGES" -eq 1 ]; then
 fi
 
 if [ "$NO_PACKAGES" -eq 0 ]; then
-	pkgs=( "${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}" )
-	[ "$MINIMAL" -eq 1 ] || pkgs+=( "${PKGS_RANGER[@]}" "${PKGS_LINT[@]}" )
-	[ "$WITH_SDDM" -eq 0 ] || pkgs+=( "${PKGS_SDDM[@]}" )
+	pkgs=("${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}")
+	[ "$MINIMAL" -eq 1 ] || pkgs+=("${PKGS_RANGER[@]}" "${PKGS_LINT[@]}")
+	[ "$WITH_SDDM" -eq 0 ] || pkgs+=("${PKGS_SDDM[@]}")
 
 	say "installing ${#pkgs[@]} repo packages"
 	sudo pacman -S --needed --noconfirm "${pkgs[@]}"
@@ -138,12 +153,15 @@ if [ "$NO_PACKAGES" -eq 0 ]; then
 	if [ "$NO_AUR" -eq 0 ]; then
 		helper=""
 		for h in yay paru trizen pacaur; do
-			command -v "$h" >/dev/null && { helper="$h"; break; }
+			command -v "$h" >/dev/null && {
+				helper="$h"
+				break
+			}
 		done
 		if [ -n "$helper" ]; then
 			say "installing AUR packages with $helper"
-			"$helper" -S --needed --noconfirm "${AUR_REQUIRED[@]}" "${AUR_OPTIONAL[@]}" \
-				|| warn "AUR install failed; mpvpaper is required for the wallpaper"
+			"$helper" -S --needed --noconfirm "${AUR_REQUIRED[@]}" "${AUR_OPTIONAL[@]}" ||
+				warn "AUR install failed; mpvpaper is required for the wallpaper"
 		else
 			warn "no AUR helper found (yay/paru/trizen/pacaur)."
 			warn "install manually, or the wallpaper daemon will not start:"
@@ -186,7 +204,8 @@ fi
 # name/email survive the move; never overwritten after that except with
 # --reconfigure -- same contract as local.conf/local.lua/~/.zshrc.local.
 say "per-machine git identity (~/.config/git/config.local)"
-git_name=""; git_email=""
+git_name=""
+git_email=""
 if [ -n "$gitconfig_bak" ] && [ -f "$gitconfig_bak" ]; then
 	git_name=$(git config -f "$gitconfig_bak" user.name 2>/dev/null || true)
 	git_email=$(git config -f "$gitconfig_bak" user.email 2>/dev/null || true)
@@ -256,8 +275,8 @@ if [ ! -d "${HOME}/.oh-my-zsh" ]; then
 	# egress or a $HOME oh-my-zsh can't write to; the rest of the install
 	# (links, theme, per-machine config) is still worth completing.
 	RUNZSH=no KEEP_ZSHRC=yes sh -c \
-		"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-		|| warn "oh-my-zsh install failed (no network? re-run install.sh once it's reachable)"
+		"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" ||
+		warn "oh-my-zsh install failed (no network? re-run install.sh once it's reachable)"
 else
 	echo "OK      oh-my-zsh"
 fi
@@ -271,7 +290,7 @@ clone_plugin() {
 	fi
 }
 if [ -d "${HOME}/.oh-my-zsh" ]; then
-	clone_plugin zsh-autosuggestions     https://github.com/zsh-users/zsh-autosuggestions
+	clone_plugin zsh-autosuggestions https://github.com/zsh-users/zsh-autosuggestions
 	clone_plugin zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
 else
 	warn "no ~/.oh-my-zsh; skipping zsh-autosuggestions/zsh-syntax-highlighting clone"
@@ -286,8 +305,8 @@ zshrc_local_content="# Per-machine zsh tail, sourced from the end of ~/dotfiles/
 
 export CLAUDE_OBSIDIAN_VAULT=\"\$HOME/Documents/MyKnowledgeVault\"
 "
-if lspci -mm 2>/dev/null | grep -Eqi 'VGA compatible controller|3D controller' && \
-   lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' | grep -qi nvidia; then
+if lspci -mm 2>/dev/null | grep -Eqi 'VGA compatible controller|3D controller' &&
+	lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' | grep -qi nvidia; then
 	zshrc_local_content="${zshrc_local_content}
 # VS Code: native Wayland backend segfaults on this NVIDIA setup; force XWayland
 alias code=\"code --ozone-platform=x11\"
@@ -309,7 +328,7 @@ fi
 say "session environment"
 mkdir -p "${HOME}/.config/environment.d"
 if [ ! -f "${HOME}/.config/environment.d/10-locale.conf" ]; then
-	cat > "${HOME}/.config/environment.d/10-locale.conf" <<'EOF'
+	cat >"${HOME}/.config/environment.d/10-locale.conf" <<'EOF'
 # Force English UI messages for the whole systemd user session
 LANG=en_US.UTF-8
 LANGUAGE=en_US:en
@@ -336,7 +355,9 @@ if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
 		# drives the display, so VAAPI via iHD is correct even with an NVIDIA
 		# dGPU alongside it for offload -- and forcing LIBVA_DRIVER_NAME=iHD
 		# keeps VAAPI off that dGPU entirely.
-		driver=iHD; hwdec=auto; interop=auto
+		driver=iHD
+		hwdec=auto
+		interop=auto
 	elif echo "$gpus" | grep -qi nvidia; then
 		# NVIDIA and no Intel (this box): NVIDIA's bundled nvidia_drv_video.so
 		# VAAPI shim SIGFPEs on vaInitialize, so route mpv straight through
@@ -344,11 +365,17 @@ if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
 		# is deliberately left unset -- there's no known-good VAAPI driver here
 		# to steer other apps to (nvidia-vaapi-driver would need to be
 		# installed separately; not attempted by this script).
-		driver=""; hwdec=nvdec; interop=cuda
+		driver=""
+		hwdec=nvdec
+		interop=cuda
 	elif echo "$gpus" | grep -Eqi 'amd|ati|radeon'; then
-		driver=radeonsi; hwdec=auto; interop=auto
+		driver=radeonsi
+		hwdec=auto
+		interop=auto
 	else
-		driver=""; hwdec=auto; interop=auto
+		driver=""
+		hwdec=auto
+		interop=auto
 	fi
 
 	{
@@ -359,7 +386,7 @@ if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
 		[ -n "$driver" ] && echo "LIBVA_DRIVER_NAME=${driver}"
 		echo "MPV_HWDEC=${hwdec}"
 		echo "MPV_HWDEC_INTEROP=${interop}"
-	} > "${HOME}/.config/environment.d/20-va.conf"
+	} >"${HOME}/.config/environment.d/20-va.conf"
 	echo "WROTE   ~/.config/environment.d/20-va.conf (hwdec=${hwdec} interop=${interop}${driver:+ driver=${driver}})"
 else
 	echo "OK      ~/.config/environment.d/20-va.conf"
@@ -387,18 +414,28 @@ weak=0
 [ "$ncores" -le 2 ] 2>/dev/null && weak=1
 
 gpus_lc="$(lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' || true)"
-has_nvidia=0; echo "$gpus_lc" | grep -qi nvidia && has_nvidia=1
-has_battery=0; [ -d /sys/class/power_supply ] && \
-	ls /sys/class/power_supply 2>/dev/null | grep -qi '^BAT' && has_battery=1
+has_nvidia=0
+echo "$gpus_lc" | grep -qi nvidia && has_nvidia=1
+has_battery=0
+for b in /sys/class/power_supply/BAT*; do
+	[ -e "$b" ] && has_battery=1 && break
+done
 
-ui_scale=1.0; svc_weather=1; svc_claude=1; interval_fast=2000; interval_slow=10000
+ui_scale=1.0
+svc_weather=1
+svc_claude=1
+interval_fast=2000
+interval_slow=10000
 bar_center="gpu,sys,battery"
 if [ "$weak" -eq 1 ]; then
-	ui_scale=0.8; svc_weather=0; svc_claude=0
-	interval_fast=4000; interval_slow=20000
+	ui_scale=0.8
+	svc_weather=0
+	svc_claude=0
+	interval_fast=4000
+	interval_slow=20000
 fi
-[ "$has_nvidia" -eq 1 ] || bar_center=$(echo "$bar_center" | sed 's/gpu,\?//')
-[ "$has_battery" -eq 1 ] || bar_center=$(echo "$bar_center" | sed 's/,\?battery//')
+[ "$has_nvidia" -eq 1 ] || bar_center=${bar_center/gpu,/}
+[ "$has_battery" -eq 1 ] || bar_center=${bar_center/,battery/}
 
 local_conf_content="# Per-machine overrides -- read by shell scripts and quickshell/Local.qml.
 # See hypr/hyprland.lua's per-machine block and hypr/local.lua (if present)
@@ -442,8 +479,8 @@ write_local "${HOME}/.config/dotfiles/local.conf" "$local_conf_content"
 # the DRM connector list. jq (a PKGS_DESKTOP package) is required for the
 # hyprctl path -- monitors -j nests other "name" keys (workspaces, etc.) that
 # a plain grep would also match.
-if command -v hyprctl >/dev/null && command -v jq >/dev/null && \
-   outs=$(hyprctl monitors -j 2>/dev/null) && [ -n "$outs" ]; then
+if command -v hyprctl >/dev/null && command -v jq >/dev/null &&
+	outs=$(hyprctl monitors -j 2>/dev/null) && [ -n "$outs" ]; then
 	conns=$(echo "$outs" | jq -r '.[].name' 2>/dev/null)
 else
 	conns=$(for f in /sys/class/drm/*/status; do
@@ -510,8 +547,8 @@ done < <(find "${DOTS}/matugen/defaults" -type f -print0)
 # hyprland.lua deliberately does not exec it.
 if [ -n "$(systemctl --user list-unit-files --no-legend hyprpolkitagent.service 2>/dev/null)" ]; then
 	say "enabling hyprpolkitagent user unit"
-	systemctl --user enable hyprpolkitagent.service >/dev/null 2>&1 \
-		|| warn "could not enable hyprpolkitagent.service"
+	systemctl --user enable hyprpolkitagent.service >/dev/null 2>&1 ||
+		warn "could not enable hyprpolkitagent.service"
 fi
 
 # ---------------------------------------------------------- wallpaper ----
@@ -521,21 +558,21 @@ fi
 # the desktop comes up themed either way.
 say "wallpaper and accent colour"
 wall=""
-[ -f "${DOTS}/hypr/wallpaper.conf" ] && \
+[ -f "${DOTS}/hypr/wallpaper.conf" ] &&
 	wall=$(sed -n 's/^WALLPAPER=//p' "${DOTS}/hypr/wallpaper.conf" | tail -1)
-[ -z "$wall" ] && [ -f "${HOME}/.config/dotfiles/local.conf" ] && \
+[ -z "$wall" ] && [ -f "${HOME}/.config/dotfiles/local.conf" ] &&
 	wall=$(sed -n 's/^WALLPAPER=//p' "${HOME}/.config/dotfiles/local.conf" | tail -1)
 
 if [ -n "$wall" ] && [ -f "$wall" ]; then
 	echo "OK      $wall"
-elif [ -d "${HOME}/Pictures/Wallpapers" ] && \
-     found=$(find "${HOME}/Pictures/Wallpapers" -type f \
+elif [ -d "${HOME}/Pictures/Wallpapers" ] &&
+	found=$(find "${HOME}/Pictures/Wallpapers" -type f \
 		\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \
-		   -o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' \) | sort | head -1) && \
-     [ -n "$found" ]; then
+		-o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' \) | sort | head -1) &&
+	[ -n "$found" ]; then
 	echo "PICK    $found"
-	"${DOTS}/hypr/scripts/set-wallpaper.sh" "$found" \
-		|| warn "set-wallpaper.sh failed; run it by hand after login (SUPER+M, w)"
+	"${DOTS}/hypr/scripts/set-wallpaper.sh" "$found" ||
+		warn "set-wallpaper.sh failed; run it by hand after login (SUPER+M, w)"
 else
 	warn "no wallpaper found. Put an image or video in ~/Pictures/Wallpapers and"
 	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+M, w)"

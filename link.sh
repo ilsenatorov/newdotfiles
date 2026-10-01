@@ -18,7 +18,12 @@ skip="sddm graphify-out"
 # never leaves a machine with no config at all.
 restore_backup() {
 	target="$1"
-	newest=$(ls -1dt "${target}".bak-* 2>/dev/null | head -1)
+	# .bak-YYYYmmdd-HHMMSS sorts lexically in time order and globs expand
+	# sorted, so the last match is the newest.
+	newest=""
+	for b in "${target}".bak-*; do
+		[ -e "$b" ] && newest="$b"
+	done
 	if [ -n "$newest" ]; then
 		echo "RESTORE $(basename "$target") <- $(basename "$newest")"
 		mv "$newest" "$target"
@@ -58,7 +63,10 @@ for i in */; do
 	bas=$(basename "$i")
 
 	case " $skip " in
-		*" $bas "*) echo "SKIP    $bas"; continue ;;
+		*" $bas "*)
+			echo "SKIP    $bas"
+			continue
+			;;
 	esac
 	src="$HOME/dotfiles/$bas"
 	dst="$HOME/.config/$bas"
