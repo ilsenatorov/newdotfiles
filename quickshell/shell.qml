@@ -641,7 +641,7 @@ ShellRoot {
         Hub {
             // Assigned once, not bound: menuStep drops back to false right
             // after the page loads, and a binding would snap the cursor home.
-            Component.onCompleted: currentIndex = shell.menuStep ? shell.hubIndex : 0
+            Component.onCompleted: currentIndex = shell.menuStep ? shell.hubIndex : homeIndex
             onSelected: key => shell.hubSelect(key, currentIndex)
             onCloseRequested: shell.closeMenu()
         }

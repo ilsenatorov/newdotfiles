@@ -22,9 +22,11 @@ Item {
     readonly property int tileW: Math.round(148 * Theme.s)
     readonly property int tileH: Math.round(92 * Theme.s)
     readonly property int gap: Math.round(8 * Theme.s)
-    // shell.qml hands back the tile a page was opened from, so Esc out of
-    // a page lands the cursor where it left.
-    property int currentIndex: 0
+    // Where a fresh SUPER+M puts the cursor: the middle of the 3x3 grid, not
+    // its top-left corner. shell.qml instead hands back the tile a page was
+    // opened from, so Esc out of a page lands the cursor where it left.
+    readonly property int homeIndex: Math.floor(items.length / 2)
+    property int currentIndex: homeIndex
 
     readonly property var items: [
         { key: "network",   label: "Network",   glyph: "󰖩", hint: "n" },
