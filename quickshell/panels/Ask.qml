@@ -3,7 +3,7 @@ import ".."
 import "../ui"
 import "../services"
 
-// SUPER+M, i: quick-question overlay. Purely a view: all state and process
+// SUPER+D, i: quick-question overlay. Purely a view: all state and process
 // management live in AskService (services/AskService.qml) as a singleton, so
 // an in-flight question or a background conversation survives this Item
 // being destroyed when the overlay closes (shell.qml's Loader tears it down

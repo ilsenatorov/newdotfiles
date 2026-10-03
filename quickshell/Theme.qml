@@ -38,7 +38,7 @@ Singleton {
     readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(500 * s)
     readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(980 * s)
 
-    // SUPER+M i's ask-a-quick-question overlay. Fixed size like the dashboard,
+    // SUPER+D i's ask-a-quick-question overlay. Fixed size like the dashboard,
     // sized to show a full back-and-forth conversation, not just one answer.
     readonly property int askW: Math.round(760 * s)
     readonly property int askH: Math.round(640 * s)
@@ -88,12 +88,12 @@ Singleton {
     readonly property int menuMaxH: Math.round(520 * s)
     readonly property int menuRowH: Math.round(38 * s)
     readonly property int menuIconSize: Math.round(26 * s)
-    // One tile in the SUPER+M m monitor diagram (Left/Right/Above/Below
+    // One tile in the SUPER+D m monitor diagram (Left/Right/Above/Below
     // around the anchor). Wide and short, so a tile reads as a screen.
     readonly property int menuTileW: Math.round(104 * s)
     readonly property int menuTileH: Math.round(58 * s)
 
-    // SUPER+M w's wallpaper carousel is the one menu that is not a list of
+    // SUPER+D w's wallpaper carousel is the one menu that is not a list of
     // rows: it shows a 16:9 slide with its neighbours peeking in at the
     // edges, which does not fit menuW. The menu window widens for it (see
     // shell.qml) -- on open only, never mid-keystroke, so the "don't
@@ -111,6 +111,20 @@ Singleton {
     // ---- panels -----------------------------------------------------------
     readonly property int panelW: Math.round(340 * s)
     readonly property int panelGap: Math.round(8 * s)
+
+    // ---- media ------------------------------------------------------------
+    // Cover art in panels/MediaPanel.qml, and how much of the bar the
+    // now-playing title may take before it elides.
+    readonly property int mediaArt: Math.round(96 * s)
+    readonly property int mediaTitleMaxW: Math.round(240 * s)
+
+    // ---- OSD --------------------------------------------------------------
+    // The volume/brightness/layout pill (ui/Osd.qml): bottom-centre, clear of
+    // the bar, gone osdTimeout after the last change.
+    readonly property int osdW: Math.round(300 * s)
+    readonly property int osdH: Math.round(52 * s)
+    readonly property int osdBottom: Math.round(80 * s)
+    readonly property int osdTimeout: 1200
 
     // ---- per-module bar colors, ported 1:1 from waybar/style.css ---------
     // Fixed semantics: matugen never touches these, same values the bar and

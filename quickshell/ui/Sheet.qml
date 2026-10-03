@@ -2,7 +2,7 @@ import QtQuick
 import ".."
 
 // A bar panel's content (Network, Bluetooth, Audio, Share Wi-Fi) hosted as a
-// page of the SUPER+M hub instead of hanging from the bar. Same card width
+// page of the SUPER+D hub instead of hanging from the bar. Same card width
 // and body column as ui/Panel.qml, so the content lays out exactly as it
 // does in its droplet -- only the frame and the header differ.
 //

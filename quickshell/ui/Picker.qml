@@ -40,13 +40,29 @@ Item {
     // shell out for their model (clipboard, wallpaper) override it so a
     // missing tool reads as an explanation instead of an empty card.
     property string emptyText: "No matches"
+    // Replaces filter() below when set: function(items, query) -> items. The
+    // SUPER+D search uses it for ranking and its `=`/`?` prefix modes.
+    property var filterFn: null
+    // Query to start with (applied once, on creation) -- how the search
+    // gets its text back when Esc returns to it from a page it opened.
+    property string initialQuery: ""
+    property int initialIndex: 0
+    property alias currentIndex: list.currentIndex
+    // >= 0: hang the card this far from the window's top instead of
+    // centring it, so the input box stays put while the results grow and
+    // shrink under it (the SUPER+D search, lined up with the hub's pill).
+    property real topPin: -1
+    // Room the card may use: the window minus shadow headroom (and the pin).
+    readonly property real cardRoom: root.topPin >= 0 ? root.height - root.topPin - Theme.inset : root.height - Theme.inset * 2
 
     // ---- out ----
     signal accepted(var item)
     signal deleteRequested(var item)
     signal closeRequested
+    // The user typed (not emitted for initialQuery).
+    signal queryEdited(string text)
 
-    readonly property var filtered: root.filter(root.items, input.text)
+    readonly property var filtered: root.filterFn ? root.filterFn(root.items, input.text) : root.filter(root.items, input.text)
 
     // True for the opening moment only -- the window a delegate has to be
     // created in to play the row cascade. Long enough to cover items that
@@ -71,6 +87,12 @@ Item {
         return list.filter(it => (String(it.label ?? "").toLowerCase().includes(q) || String(it.sublabel ?? "").toLowerCase().includes(q)));
     }
 
+    // Replace the query from outside (shell.qml's `menu search` IPC when the
+    // search is already open). Counts as typing: the cursor goes to the top.
+    function setQuery(text: string): void {
+        input.text = text;
+    }
+
     function acceptCurrent(): void {
         const item = list.currentIndex >= 0 ? root.filtered[list.currentIndex] : null;
         if (item)
@@ -83,8 +105,14 @@ Item {
         const count = root.filtered.length;
         // Esc is left unaccepted: it falls through to shell.qml's menu
         // window, which closes the menu -- or, for a page opened from the
-        // SUPER+M hub, steps back to the hub.
+        // SUPER+D hub, steps back to the hub.
         if (event.key === Qt.Key_Escape) {
+            // A typed query is the innermost layer: Esc clears it first,
+            // and only an empty box lets Esc close / step back.
+            if (root.searchable && input.text !== "") {
+                input.text = "";
+                event.accepted = true;
+            }
             return;
         } else if (event.key === Qt.Key_Down || (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier))) {
             if (count > 0)
@@ -105,8 +133,20 @@ Item {
     }
 
     // Typing re-filters, so the old selection index means nothing -- go back
-    // to the top hit, which is the row Enter should take.
-    onFilteredChanged: list.currentIndex = root.filtered.length > 0 ? 0 : -1
+    // to the top hit, which is the row Enter should take. Only on a query
+    // change, though: when the items themselves update (a live status line,
+    // a toggle flipped in place) the cursor stays where it was.
+    function queryChanged(): void {
+        list.currentIndex = root.filtered.length > 0 ? 0 : -1;
+        if (!root.applyingInitial)
+            root.queryEdited(input.text);
+    }
+    onFilteredChanged: {
+        const n = root.filtered.length;
+        if (list.currentIndex >= n) list.currentIndex = n - 1;
+        else if (list.currentIndex < 0 && n > 0) list.currentIndex = 0;
+    }
+    property bool applyingInitial: false
 
     // The window is fixed at the widest/tallest a menu can be (see shell.qml)
     // so that typing never makes the layer-shell surface renegotiate its
@@ -124,11 +164,14 @@ Item {
     Item {
         id: card
 
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: root.topPin >= 0 ? undefined : parent.verticalCenter
+        anchors.top: root.topPin >= 0 ? parent.top : undefined
+        anchors.topMargin: Math.max(0, root.topPin)
         width: root.cardWidth
         // Bounded by the window (Theme.inset is shadow headroom), so a long
         // list scrolls instead of overflowing the layer-shell surface.
-        height: Math.min(col.implicitHeight + Theme.pad, root.height - Theme.inset * 2)
+        height: Math.min(col.implicitHeight + Theme.pad, root.cardRoom)
 
         // Swallow clicks on the card so the dismiss handler above only fires
         // for the empty space around it.
@@ -182,6 +225,7 @@ Item {
                     clip: true
 
                     Keys.onPressed: event => root.handleKey(event)
+                    onTextChanged: root.queryChanged()
                 }
             }
 
@@ -205,7 +249,7 @@ Item {
                 // Snapped down to a whole number of rows, so a capped list
                 // ends on a row boundary instead of slicing one in half --
                 // rofi did the same by counting `lines: 15` rather than pixels.
-                readonly property int avail: root.height - Theme.inset * 2 - (root.searchable ? inputBox.height + col.spacing : 0) - Theme.pad
+                readonly property int avail: root.cardRoom - (root.searchable ? inputBox.height + col.spacing : 0) - Theme.pad
                 height: Math.min(contentHeight, Math.max(1, Math.floor(avail / Theme.menuRowH)) * Theme.menuRowH)
                 visible: root.filtered.length > 0
                 clip: true
@@ -299,8 +343,11 @@ Item {
                         }
 
                         Image {
-                            visible: root.showIcons
-                            width: root.showIcons ? Theme.menuIconSize : 0
+                            id: rowIcon
+                            // Rows without an icon (glyph rows mixed into
+                            // the launcher's app list) take no icon slot.
+                            visible: root.showIcons && !!row.modelData.icon
+                            width: rowIcon.visible ? Theme.menuIconSize : 0
                             height: Theme.menuIconSize
                             anchors.verticalCenter: parent.verticalCenter
                             fillMode: Image.PreserveAspectFit
@@ -308,11 +355,11 @@ Item {
                             // iconPath(name, check) returns "" for a missing
                             // icon instead of warning, so a .desktop naming an
                             // icon this theme lacks degrades quietly.
-                            source: root.showIcons ? Quickshell.iconPath(row.modelData.icon ?? "", true) : ""
+                            source: rowIcon.visible ? Quickshell.iconPath(row.modelData.icon, true) : ""
                         }
 
                         Text {
-                            width: parent.width - (root.showIcons ? Theme.menuIconSize + 8 : 0) - (glyph.visible ? glyph.width + 8 : 0)
+                            width: parent.width - (rowIcon.visible ? Theme.menuIconSize + 8 : 0) - (glyph.visible ? glyph.width + 8 : 0)
                             anchors.verticalCenter: parent.verticalCenter
                             text: row.modelData.sublabel ? row.modelData.label + "   " + row.modelData.sublabel : row.modelData.label
                             elide: Text.ElideRight
@@ -356,6 +403,17 @@ Item {
     // chain before this item exists, so `focus: true` alone loses the race --
     // the same kick panels/Ask.qml and panels/Network.qml already need.
     Component.onCompleted: {
+        // Read both first: setting the text moves the cursor, and a caller
+        // that binds initialIndex to where the cursor is would see it reset.
+        const q = root.initialQuery;
+        const idx = root.initialIndex;
+        if (q !== "") {
+            root.applyingInitial = true;
+            input.text = q;
+            root.applyingInitial = false;
+        }
+        if (idx > 0)
+            list.currentIndex = Math.min(idx, root.filtered.length - 1);
         if (root.searchable)
             input.forceActiveFocus();
         else

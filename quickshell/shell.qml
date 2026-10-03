@@ -33,7 +33,7 @@ ShellRoot {
         function status(): string { return state.expanded ? "expanded" : "collapsed" }
     }
 
-    // SUPER+M i ask-a-quick-question overlay -- not persisted, like activePanel
+    // SUPER+D i ask-a-quick-question overlay -- not persisted, like activePanel
     // below (transient, resets each open; AskService is what actually
     // remembers conversations across opens/closes -- see services/AskService.qml).
     property bool askOpen: false
@@ -53,7 +53,7 @@ ShellRoot {
         shell.activeMenu = "hub";
     }
 
-    // qs ipc call ask toggle -- opened from the SUPER+M hub (i). Opening
+    // qs ipc call ask toggle -- opened from the SUPER+D hub (i). Opening
     // always starts a brand-new conversation -- AskService.switchTo lets you
     // get back to an old one (Tab/Shift+Tab inside the overlay) once it's open.
     IpcHandler {
@@ -67,7 +67,7 @@ ShellRoot {
     }
 
     // Which bar dropdown (if any) is open: "" | "calendar" | "network" |
-    // "bluetooth" | "audio". Not persisted across reload -- these are
+    // "bluetooth" | "audio" | "media" | "notifications". Not persisted across reload -- these are
     // transient, unlike the dashboard corner.
     property string activePanel: ""
     // The last non-empty activePanel: what the Loader shows, so a closing
@@ -91,7 +91,7 @@ ShellRoot {
 
     // qs ipc call panel toggle <name> -- for keybinds that used to launch a
     // GTK/rofi tool directly (SUPER+N network -- see hypr/hyprland.lua).
-    // Bluetooth/audio are pages of the SUPER+M hub now (menuWin below).
+    // Bluetooth/audio are pages of the SUPER+D hub now (menuWin below).
     IpcHandler {
         target: "panel"
 
@@ -100,7 +100,7 @@ ShellRoot {
     }
 
     // qs ipc call audio cycleSink -- bound to SUPER+SHIFT+M in hypr/hyprland.lua,
-    // for switching output without opening the panel at all (SUPER+M does that,
+    // for switching output without opening the panel at all (SUPER+D does that,
     // and is where the full list with arrow-key picking lives).
     IpcHandler {
         target: "audio"
@@ -112,15 +112,16 @@ ShellRoot {
     }
 
     // Which ported rofi menu is open: "" | "launcher" | "clipboard" |
-    // "wallpaper" | "power" | "exit" | "monitor" | "hub", or one of the hub's
-    // own pages ("network" | "bluetooth" | "audio" | "wifiqr"). Transient
+    // "wallpaper" | "power" | "exit" | "monitor" | "keybinds" | "hub", or one
+    // of the hub's own pages ("network" | "bluetooth" | "audio" | "wifiqr" |
+    // "media" | "quick" | "notifications"). Transient
     // like activePanel.
     property string activeMenu: ""
     // Same latch as shownPanel, for the menu window.
     property string shownMenu: ""
     onActiveMenuChanged: if (activeMenu !== "") shownMenu = activeMenu
 
-    // Pages under the current one, for Esc to step back through: the SUPER+M
+    // Pages under the current one, for Esc to step back through: the SUPER+D
     // hub pushes itself before opening a page, so every page it reaches
     // backs out to it instead of closing. Opening a menu by keybind starts
     // a fresh (empty) stack.
@@ -131,8 +132,18 @@ ShellRoot {
     property bool menuForward: true
     // The hub tile last opened, restored when a page backs out to the hub.
     property int hubIndex: 0
+    // The SUPER+D search's query and cursor, restored when a page it opened
+    // backs out to it. Cleared whenever the search is entered fresh.
+    property string paletteQuery: ""
+    property int paletteIndex: 0
+    // Hub's card top in the menu window (both are "tall"), for the search to
+    // line its input up with the hub's search pill. -1 until the hub has
+    // been shown once; the search then just pins near the top.
+    property real hubCardTop: -1
 
     function openMenu(name: string): void {
+        shell.paletteQuery = "";
+        shell.paletteIndex = 0;
         shell.menuStack = [];
         shell.menuStep = false;
         shell.activeMenu = name;
@@ -142,6 +153,10 @@ ShellRoot {
         shell.activeMenu = "";
     }
     function menuPush(name: string): void {
+        if (name === "launcher") {
+            shell.paletteQuery = "";
+            shell.paletteIndex = 0;
+        }
         shell.menuStack = shell.menuStack.concat([shell.activeMenu]);
         shell.menuForward = true;
         shell.menuStep = true;
@@ -180,6 +195,10 @@ ShellRoot {
             shell.closeMenu();
             Quickshell.execDetached(["hyprctl", "reload"]);
             break;
+        case "dashboard":
+            shell.closeMenu();
+            state.expanded = true;
+            break;
         default:
             shell.menuPush(key);
         }
@@ -197,7 +216,7 @@ ShellRoot {
 
         function open(name: string): void { shell.openMenu(name); }
         // A page reached from the hub counts as the hub being open, so a
-        // second SUPER+M closes the whole menu from any depth.
+        // second SUPER+D closes the whole menu from any depth.
         function toggle(name: string): void {
             const here = shell.activeMenu === name || (shell.activeMenu !== "" && shell.menuStack[0] === name);
             if (here)
@@ -205,8 +224,27 @@ ShellRoot {
             else
                 shell.openMenu(name);
         }
+        // Opens the SUPER+D search with `query` already typed, e.g.
+        // `qs ipc call menu search "=2^10"`.
+        function search(query: string): void {
+            // Already showing: the Loader won't rebuild it, so set it live.
+            if (shell.activeMenu === "launcher" && menuLoader.item) {
+                menuLoader.item.setQuery(query);
+                return;
+            }
+            shell.menuStack = [];
+            shell.menuStep = false;
+            shell.paletteQuery = query;
+            shell.paletteIndex = 0;
+            shell.activeMenu = "launcher";
+        }
         function close(): void { shell.closeMenu(); }
     }
+
+    // Singletons are created on first use. These own IpcHandlers (and
+    // NightLight reapplies its saved temperature on load), so they have to
+    // exist from startup, not from whenever a page first mentions them.
+    readonly property var eagerServices: [NightLight, Brightness, Recorder, Caffeine, Media]
 
     // The bar is always on screen now (it wasn't, before this migration --
     // only the dashboard corner was), so there is always something to poll
@@ -248,6 +286,13 @@ ShellRoot {
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.namespace: "quickshell-bar"
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+            // Caffeine (services/Caffeine.qml). An inhibitor has to hang off a
+            // mapped surface; the bar always is. One screen's bar is enough.
+            IdleInhibitor {
+                window: barWin
+                enabled: Caffeine.enabled && shell.primaryBar === bar
+            }
 
             Bar {
                 id: bar
@@ -354,6 +399,8 @@ ShellRoot {
                         case "wifiqr": return wifiSharePanel;
                         case "bluetooth": return bluetoothPanel;
                         case "audio": return audioPanelC;
+                        case "media": return mediaPanelC;
+                        case "notifications": return notificationsPanelC;
                         default: return null;
                         }
                     }
@@ -381,6 +428,47 @@ ShellRoot {
     Component {
         id: audioPanelC
         Panel { title: "Audio"; AudioPanel {} }
+    }
+    Component {
+        id: mediaPanelC
+        Panel { title: "Now playing"; MediaPanel {} }
+    }
+    Component {
+        id: notificationsPanelC
+        Panel { title: "Notifications"; NotificationCenter {} }
+    }
+
+    // Volume / mic / brightness / layout pill (ui/Osd.qml). Bottom-centre on
+    // the focused monitor, Overlay layer so it shows over fullscreen video,
+    // and an empty input mask: it never takes a click or focus.
+    PanelWindow {
+        id: osdWin
+        visible: osdReveal.live
+        screen: Quickshell.screens.find(s => Hyprland.focusedMonitor && s.name === Hyprland.focusedMonitor.name) ?? null
+
+        anchors.bottom: true
+        margins.bottom: Theme.osdBottom
+        implicitWidth: Theme.osdW + Theme.inset * 2
+        implicitHeight: Theme.osdH + Theme.inset * 2
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-osd"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        mask: Region {}
+
+        Reveal {
+            id: osdReveal
+            anchors.fill: parent
+            shown: osd.shown
+
+            Osd {
+                id: osd
+                anchors.fill: parent
+            }
+        }
     }
 
     // Notification overlay -- replaces mako. Single instance on the primary
@@ -471,7 +559,7 @@ ShellRoot {
         }
     }
 
-    // SUPER+M i quick-question overlay. Same shape as dashboardWin above:
+    // SUPER+D i quick-question overlay. Same shape as dashboardWin above:
     // centered (no anchors), Overlay layer, OnDemand focus, Escape closes.
     PanelWindow {
         id: askWin
@@ -534,7 +622,7 @@ ShellRoot {
         // keystrokes, which is the case the fixed sizing above guards.
         // The hub's panel pages get the taller window too: Network's join
         // form grows the card well past a menu list.
-        readonly property bool tall: ["wallpaper", "network", "bluetooth", "audio", "wifiqr"].includes(shell.shownMenu)
+        readonly property bool tall: ["hub", "launcher", "wallpaper", "network", "bluetooth", "audio", "wifiqr", "media", "quick", "notifications"].includes(shell.shownMenu)
         implicitWidth: (shell.shownMenu === "wallpaper" ? Theme.menuWideW : Theme.menuW) + Theme.inset * 2
         implicitHeight: (menuWin.tall ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
 
@@ -620,6 +708,10 @@ ShellRoot {
                         case "power": return powerMenu;
                         case "exit": return exitMenu;
                         case "monitor": return monitorMenu;
+                        case "keybinds": return keybindsMenu;
+                        case "media": return mediaPage;
+                        case "quick": return quickPage;
+                        case "notifications": return notificationsPage;
                         default: return null;
                         }
                     }
@@ -628,20 +720,33 @@ ShellRoot {
         }
     }
 
-    Component { id: launcherMenu;  Launcher     { onCloseRequested: shell.closeMenu() } }
+    Component {
+        id: launcherMenu
+        Launcher {
+            topPin: shell.hubCardTop >= 0 ? shell.hubCardTop : Theme.inset * 4
+            initialQuery: shell.paletteQuery
+            initialIndex: shell.paletteIndex
+            onQueryEdited: text => shell.paletteQuery = text
+            onCurrentIndexChanged: shell.paletteIndex = currentIndex
+            onOpenPage: key => shell.hubSelect(key, shell.hubIndex)
+            onCloseRequested: shell.closeMenu()
+        }
+    }
     Component { id: clipboardMenu; Clipboard    { onCloseRequested: shell.closeMenu() } }
     Component { id: wallpaperMenu; Wallpaper    { onCloseRequested: shell.closeMenu() } }
     Component { id: powerMenu;     PowerMenu    { onCloseRequested: shell.closeMenu() } }
     Component { id: exitMenu;      ExitConfirm  { onCloseRequested: shell.closeMenu() } }
     Component { id: monitorMenu;   MonitorPlace { onCloseRequested: shell.closeMenu() } }
+    Component { id: keybindsMenu;  Keybinds     { onCloseRequested: shell.closeMenu() } }
 
-    // SUPER+M and the bar panels it hosts as its own pages (ui/Sheet.qml).
+    // SUPER+D and the bar panels it hosts as its own pages (ui/Sheet.qml).
     Component {
         id: hubMenu
         Hub {
             // Assigned once, not bound: menuStep drops back to false right
             // after the page loads, and a binding would snap the cursor home.
-            Component.onCompleted: currentIndex = shell.menuStep ? shell.hubIndex : 0
+            Component.onCompleted: if (shell.menuStep) currentIndex = shell.hubIndex
+            onCardTopChanged: if (cardTop > 0) shell.hubCardTop = cardTop
             onSelected: key => shell.hubSelect(key, currentIndex)
             onCloseRequested: shell.closeMenu()
         }
@@ -677,6 +782,30 @@ ShellRoot {
             title: "Audio"; glyph: "󰕾"; hue: Colors.orange
             onCloseRequested: shell.closeMenu()
             AudioPanel {}
+        }
+    }
+    Component {
+        id: mediaPage
+        Sheet {
+            title: "Now playing"; glyph: "󰝚"; hue: Theme.green
+            onCloseRequested: shell.closeMenu()
+            MediaPanel {}
+        }
+    }
+    Component {
+        id: quickPage
+        Sheet {
+            title: "Quick settings"; glyph: "󰒓"; hue: Theme.yellow
+            onCloseRequested: shell.closeMenu()
+            QuickSettings { onCloseRequested: shell.closeMenu() }
+        }
+    }
+    Component {
+        id: notificationsPage
+        Sheet {
+            title: "Notifications"; glyph: "󰂚"; hue: Colors.accent
+            onCloseRequested: shell.closeMenu()
+            NotificationCenter {}
         }
     }
 }

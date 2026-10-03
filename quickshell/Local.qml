@@ -30,8 +30,8 @@ Singleton {
     // its registry. A key absent from the file keeps its default below; a key
     // present but empty hides that section's pill entirely.
     readonly property var barLeft: list("BAR_LEFT", ["workspaces", "clock"])
-    readonly property var barCenter: list("BAR_CENTER", ["gpu", "sys", "battery"])
-    readonly property var barRight: list("BAR_RIGHT", ["network", "bluetooth", "audio", "language"])
+    readonly property var barCenter: list("BAR_CENTER", ["gpu", "sys", "battery", "media"])
+    readonly property var barRight: list("BAR_RIGHT", ["network", "bluetooth", "audio", "notifications", "status", "language"])
 
     readonly property string hddDevice: values["HDD_DEVICE"] || ""
 

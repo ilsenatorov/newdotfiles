@@ -121,6 +121,13 @@ hl.layer_rule({
     -- quickshell/ui/Reveal.qml animates this surface itself.
     no_anim      = true,
 })
+hl.layer_rule({
+    match        = { namespace = "quickshell-osd" },
+    blur         = true,
+    ignore_alpha = 0.2,
+    -- quickshell/ui/Reveal.qml animates this surface itself.
+    no_anim      = true,
+})
 
 hl.config({
     general = {
@@ -247,42 +254,38 @@ hl.bind(mainMod .. " + End",     hl.dsp.exec_cmd(terminal),   { description = "T
 hl.bind(mainMod .. " + X", hl.dsp.window.close(),     { description = "Close window" })
 
 -- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
--- launcher below covers what it was for.
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle launcher"), {
-	description = "App launcher",
+-- launcher covers what it was for.
+--
+-- The top row (Q..P) is workspaces, so what used to live there -- bluetooth,
+-- audio, wallpaper, ask, resize, reload -- plus monitors, media, power and
+-- the app launcher is one quickshell menu (quickshell/panels/Hub.qml):
+-- SUPER+D, then a letter; `d` again searches apps, settings and actions
+-- (quickshell/panels/Launcher.qml), 1-9, 0 launch the most-used apps.
+-- `qs ipc call menu toggle launcher` still opens the search directly.
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
+	description = "Menu (d search apps, 1-9/0 recent, letters open pages)",
 })
 -- Network/bluetooth/audio now open the quickshell panels instead of
 -- launching a separate rofi/GTK tool -- see quickshell/panels/.
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call panel toggle network"), {
-	description = "Network menu",
-})
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
-	description = "Power menu",
-})
--- The top row (Q..P) is workspaces, so what used to live there -- bluetooth,
--- audio, wallpaper, ask, resize, reload -- plus monitors and power is one
--- quickshell menu now (quickshell/panels/Hub.qml): SUPER+M, then a letter.
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
-	description = "Menu (network, bluetooth, audio, displays, wallpaper, ...)",
-})
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
 })
--- Also on the SUPER+M hub (c); the Lua API has no reload dispatcher.
+-- Also on the SUPER+D hub (c); the Lua API has no reload dispatcher.
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprctl reload"), {
 	description = "Reload Hyprland config",
 })
 
 ---- Focus and movement -----------------------------------------------------
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
+hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }), { description = "Focus left" })
+hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }), { description = "Focus down" })
+hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }), { description = "Focus up" })
+hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }), { description = "Focus right" })
 
-hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }))
-hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.move({ direction = "down" }))
-hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.move({ direction = "up" }))
-hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" }))
+hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }), { description = "Move window left" })
+hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.move({ direction = "down" }), { description = "Move window down" })
+hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.move({ direction = "up" }), { description = "Move window up" })
+hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" }),
+	{ description = "Move window right" })
 
 ---- Layout -----------------------------------------------------------------
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(),                { description = "Fullscreen" })
@@ -360,22 +363,26 @@ hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }
 local wsKeys = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" }
 for i, key in ipairs(wsKeys) do
     local ws = i
-    hl.bind(mainMod .. " + " .. key,            hl.dsp.focus({ workspace = ws }))
-    hl.bind(mainMod .. " + CTRL + " .. key,     hl.dsp.window.move({ workspace = ws, silent = true }))
-    hl.bind(mainMod .. " + SHIFT + " .. key,    hl.dsp.window.move({ workspace = ws }))
+    hl.bind(mainMod .. " + " .. key,            hl.dsp.focus({ workspace = ws }),
+        { description = "Workspace " .. ws })
+    hl.bind(mainMod .. " + CTRL + " .. key,     hl.dsp.window.move({ workspace = ws, silent = true }),
+        { description = "Send window to workspace " .. ws .. " (stay)" })
+    hl.bind(mainMod .. " + SHIFT + " .. key,    hl.dsp.window.move({ workspace = ws }),
+        { description = "Move window to workspace " .. ws })
 end
 
 hl.bind(mainMod .. " + B",         hl.dsp.focus({ workspace = "previous" }), { description = "Back and forth" })
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.window.move({ workspace = "previous" }))
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.window.move({ workspace = "previous" }),
+    { description = "Move window to previous workspace" })
 
-hl.bind(mainMod .. " + Tab",         hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + Tab",         hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
+hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.focus({ workspace = "e-1" }), { description = "Previous workspace" })
 
-hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
+hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { description = "Previous workspace" })
 
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true, description = "Drag window" })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Resize window" })
 
 ---- Session ----------------------------------------------------------------
 hl.bind("Escape", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), {
@@ -385,31 +392,44 @@ hl.bind("Escape", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), {
 })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
--- Entered from the SUPER+M menu (r); SUPER+R is workspace 4 now.
+-- Entered from the SUPER+D menu (r); SUPER+R is workspace 4 now.
 hl.define_submap("resize", function()
-    hl.bind("left",  hl.dsp.window.resize({ x = -10, y = 0, relative = true }), { repeating = true })
-    hl.bind("right", hl.dsp.window.resize({ x = 10, y = 0, relative = true }),  { repeating = true })
-    hl.bind("up",    hl.dsp.window.resize({ x = 0, y = -10, relative = true }), { repeating = true })
-    hl.bind("down",  hl.dsp.window.resize({ x = 0, y = 10, relative = true }),  { repeating = true })
+    hl.bind("left",  hl.dsp.window.resize({ x = -10, y = 0, relative = true }),
+        { repeating = true, description = "Narrower" })
+    hl.bind("right", hl.dsp.window.resize({ x = 10, y = 0, relative = true }),
+        { repeating = true, description = "Wider" })
+    hl.bind("up",    hl.dsp.window.resize({ x = 0, y = -10, relative = true }),
+        { repeating = true, description = "Shorter" })
+    hl.bind("down",  hl.dsp.window.resize({ x = 0, y = 10, relative = true }),
+        { repeating = true, description = "Taller" })
 
-    hl.bind("Return", hl.dsp.submap("reset"))
-    hl.bind("Escape", hl.dsp.submap("reset"))
+    hl.bind("Return", hl.dsp.submap("reset"), { description = "Leave resize mode" })
+    hl.bind("Escape", hl.dsp.submap("reset"), { description = "Leave resize mode" })
 end)
 
 ---- Media and hardware keys (unchanged commands from i3) -------------------
+-- Volume stays on pactl: quickshell's OSD (ui/Osd.qml) watches Pipewire, so
+-- it shows for these without being in the loop.
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ +2%"),
-	{ locked = true, repeating = true })
+	{ locked = true, repeating = true, description = "Volume up" })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -2%"),
-	{ locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"), { locked = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("pactl set-source-mute @DEFAULT_SOURCE@ toggle"), { locked = true })
+	{ locked = true, repeating = true, description = "Volume down" })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"),
+	{ locked = true, description = "Mute" })
+hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("pactl set-source-mute @DEFAULT_SOURCE@ toggle"),
+	{ locked = true, description = "Mute microphone" })
 
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"),       { locked = true })
-hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play / pause" })
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"),       { locked = true, description = "Next track" })
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"),   { locked = true, description = "Previous track" })
 
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
+-- Through quickshell rather than brightnessctl directly: sysfs sends no event
+-- on a backlight change, so the shell has to make the change to show the OSD
+-- (quickshell/services/Brightness.qml).
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("qs ipc call brightness up"),
+	{ locked = true, repeating = true, description = "Brightness up" })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc call brightness down"),
+	{ locked = true, repeating = true, description = "Brightness down" })
 
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call menu toggle clipboard"),
     { description = "Clipboard history" })
@@ -424,6 +444,14 @@ hl.bind("CTRL + Print",             hl.dsp.exec_cmd(shot .. "edit"), {
 })
 hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(shot .. "clip"), {
 	description = "Screenshot: region -> clipboard only",
+})
+-- Screen recording (quickshell/services/Recorder.qml, wf-recorder). The same
+-- bind stops it; so does clicking the red timer in the bar.
+hl.bind(mainMod .. " + ALT + Print", hl.dsp.exec_cmd("qs ipc call recorder toggle region"), {
+	description = "Record region (again to stop)",
+})
+hl.bind(mainMod .. " + ALT + SHIFT + Print", hl.dsp.exec_cmd("qs ipc call recorder toggle screen"), {
+	description = "Record screen (again to stop)",
 })
 
 

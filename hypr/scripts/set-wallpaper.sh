@@ -6,7 +6,7 @@
 #   set-wallpaper.sh --list          -> print the wallpapers, one per line
 #   set-wallpaper.sh --palette <rel> -> print a thumbnail path + its palette
 #
-# Picking one interactively is quickshell's job now (SUPER+M, w ->
+# Picking one interactively is quickshell's job now (SUPER+D, w ->
 # quickshell/panels/Wallpaper.qml); this script no longer prompts. --list is
 # what that picker reads, so the set of wallpaper extensions below stays in
 # one place instead of being duplicated in QML. --palette is what draws the

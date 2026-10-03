@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Backend for the SUPER+M i quick-question overlay (panels/Ask.qml). Living
+// Backend for the SUPER+D i quick-question overlay (panels/Ask.qml). Living
 // here as a singleton -- not inside the Ask popup itself -- is what lets a
 // question keep going after the popup is closed: shell.qml destroys the Ask
 // Item (and everything owned by it) the moment the overlay closes, so a
@@ -83,7 +83,7 @@ Singleton {
         }
     }
 
-    // Called when the overlay is freshly opened (SUPER+M, i) -- always starts a
+    // Called when the overlay is freshly opened (SUPER+D, i) -- always starts a
     // blank conversation, never resumes wherever it was left last time.
     function startNewConversation(): void {
         root.currentIndex = -1;

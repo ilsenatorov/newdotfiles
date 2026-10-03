@@ -12,7 +12,7 @@
 #   monitor-place.sh --dry-run above  # print the hl.monitor calls, change nothing
 #   monitor-place.sh --query          # JSON: anchor + each output's placement
 #
-# Picking interactively is quickshell's job now (SUPER+M, m ->
+# Picking interactively is quickshell's job now (SUPER+D, m ->
 # quickshell/panels/MonitorPlace.qml). --query is what that panel reads so it
 # can draw the tiles without re-deriving any of the geometry below; it still
 # resolves only to a (placement, output) pair and hands it straight back.

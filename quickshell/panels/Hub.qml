@@ -4,19 +4,25 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+M. One menu for everything that used to have its own SUPER+<letter>
+// SUPER+D. One menu for everything that used to have its own SUPER+<letter>
 // before the top row went to workspaces (see hypr/hyprland.lua): a grid of
-// tiles, each with a live one-line status. Pages open in the same window
-// (shell.qml's menuWin) and Esc steps back here, so it reads as one menu
-// rather than a launcher for other popups.
+// tiles, each with a live one-line status, your most-used apps under it, and
+// a search (d) over apps, pages, toggles and power (panels/Launcher.qml).
+// Pages open in the same window (shell.qml's menuWin) and Esc steps back
+// here, so it reads as one menu rather than a launcher for other popups.
 //
-// Keys: the tile's letter opens it directly; arrows/hjkl move, ↵/Space open.
-// The letters avoid h/j/k/l so navigation and mnemonics never collide.
+// Keys: the tile's letter opens it directly; d searches; 1-9, 0 launch the
+// apps grid; arrows/hjkl move, ↵/Space open. The letters avoid h/j/k/l so
+// navigation and mnemonics never collide.
 Item {
     id: root
 
     signal selected(string key)
     signal closeRequested
+
+    // Where the card's top edge sits in the window -- the search pins its
+    // input there, so `d` reads as the pill turning into the search box.
+    readonly property real cardTop: card.y
 
     readonly property int cols: 3
     readonly property int tileW: Math.round(148 * Theme.s)
@@ -24,12 +30,20 @@ Item {
     readonly property int gap: Math.round(8 * Theme.s)
     // shell.qml hands back the tile a page was opened from, so Esc out of
     // a page lands the cursor where it left.
-    property int currentIndex: 0
+    property int currentIndex: homeIndex
+    // Where the cursor starts on a fresh open: the grid's middle tile
+    // (upper-middle when the row count is even).
+    readonly property int homeIndex: Math.floor((Math.ceil(items.length / cols) - 1) / 2) * cols + Math.floor(cols / 2)
+    readonly property int appCols: 5
+    readonly property int appMax: 10
 
     readonly property var items: [
         { key: "network",   label: "Network",   glyph: "󰖩", hint: "n" },
         { key: "bluetooth", label: "Bluetooth", glyph: "󰂯", hint: "b" },
         { key: "audio",     label: "Audio",     glyph: "󰕾", hint: "a" },
+        { key: "media",     label: "Media",     glyph: "󰝚", hint: "s" },
+        { key: "notifications", label: "Notifications", glyph: "󰂚", hint: "o" },
+        { key: "quick",     label: "Quick",     glyph: "󰒓", hint: "q" },
         { key: "monitor",   label: "Displays",  glyph: "󰍹", hint: "m" },
         { key: "wallpaper", label: "Wallpaper", glyph: "󰸉", hint: "w" },
         { key: "ask",       label: "Ask",       glyph: "󰚩", hint: "i" },
@@ -45,6 +59,9 @@ Item {
         case "network": return Colors.purple;
         case "bluetooth": return Colors.blue;
         case "audio": return Colors.orange;
+        case "media": return Theme.green;
+        case "notifications": return Colors.accent;
+        case "quick": return Theme.yellow;
         case "monitor": return Colors.cyan;
         case "wallpaper": return Colors.accent;
         case "ask": return Colors.accentAlt;
@@ -55,29 +72,29 @@ Item {
         return Colors.accent;
     }
 
+    // Shared with the search palette -- see services/HubStatus.qml.
     function statusFor(key: string): string {
-        switch (key) {
-        case "network":
-            if (Net.wired) return "Ethernet";
-            if (Net.wifiConnected) return Net.ssid;
-            return Net.wifiEnabled ? "Disconnected" : "Wi-Fi off";
-        case "bluetooth":
-            if (!Bt.available) return "Unavailable";
-            if (!Bt.powered) return "Off";
-            return Bt.anyConnected ? Bt.primaryConnectedName : "On";
-        case "audio":
-            return Audio.muted ? "Muted" : Math.round(Audio.volume * 100) + "%  " + Audio.sinkName;
-        case "monitor": {
-            const n = Quickshell.screens.length;
-            return n + (n === 1 ? " display" : " displays");
-        }
-        case "wallpaper": return "Pick & recolor";
-        case "ask": return "Quick question";
-        case "resize": return "Arrows, then Esc";
-        case "reload": return "Hyprland config";
-        case "power": return "Lock, sleep, off";
-        }
-        return "";
+        return HubStatus.statusFor(key);
+    }
+
+    // The ten apps launched most from the search, most-used first. Hub pages
+    // and toggles are counted too ("palette:..." ids) but aren't apps.
+    readonly property var recent: {
+        const apps = DesktopEntries.applications ? DesktopEntries.applications.values : [];
+        const byId = {};
+        for (const a of apps)
+            if (!a.noDisplay) byId[a.id] = a;
+        return Object.keys(LauncherUsage.entries)
+            .filter(id => !id.startsWith("palette:") && byId[id])
+            .sort((a, b) => (LauncherUsage.countFor(b) - LauncherUsage.countFor(a)) || (LauncherUsage.lastFor(b) - LauncherUsage.lastFor(a)))
+            .slice(0, root.appMax)
+            .map(id => byId[id]);
+    }
+
+    function launch(entry: var): void {
+        LauncherUsage.record(entry.id);
+        entry.execute();
+        root.closeRequested();
     }
 
     function move(delta: int): void {
@@ -94,8 +111,30 @@ Item {
         else if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) root.selected(root.items[root.currentIndex].key);
         else {
             // Esc and anything unbound fall through to shell.qml.
+            if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))
+                return;
+            // ? isn't a tile (the grid is full) -- it opens the keybind list.
+            if (event.text === "?") {
+                root.selected("keybinds");
+                event.accepted = true;
+                return;
+            }
+            // d: the search -- so launching a program is SUPER+D, d, type.
+            if (event.text.toLowerCase() === "d") {
+                root.selected("launcher");
+                event.accepted = true;
+                return;
+            }
+            // 1-9 then 0, in keyboard order.
+            const digit = /^[0-9]$/.test(event.text) ? (Number(event.text) + 9) % 10 : -1;
+            if (digit >= 0) {
+                if (digit < root.recent.length)
+                    root.launch(root.recent[digit]);
+                event.accepted = true;
+                return;
+            }
             const hit = root.items.find(it => it.hint === event.text.toLowerCase());
-            if (!hit || (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)))
+            if (!hit)
                 return;
             root.currentIndex = root.items.indexOf(hit);
             root.selected(hit.key);
@@ -142,26 +181,50 @@ Item {
             anchors.centerIn: parent
             spacing: 12
 
-            Item {
+            // Looks like the search box it opens, so the way in is visible.
+            Rectangle {
                 width: grid.width
-                height: title.implicitHeight
+                height: searchLabel.implicitHeight + 16
+                radius: Theme.radius / 2
+                color: searchArea.containsMouse ? Colors.surface : Theme.surface
+                border.width: 1
+                border.color: Theme.rule
 
                 Text {
-                    id: title
-                    text: "󰍜  Menu"
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                    font.bold: true
-                }
-
-                Text {
-                    anchors.right: parent.right
+                    id: searchLabel
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "letter or ↵ open   esc close"
+                    text: "󰍉  Search apps, settings, actions"
                     color: Theme.dim
                     font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel - 2
+                    font.pixelSize: Theme.fsValue
+                }
+
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.round(20 * Theme.s)
+                    height: width
+                    radius: 5
+                    color: Theme.track
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "d"
+                        color: Colors.accent
+                        font.family: Theme.font
+                        font.pixelSize: Theme.fsLabel - 2
+                    }
+                }
+
+                MouseArea {
+                    id: searchArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.selected("launcher")
                 }
             }
 
@@ -296,6 +359,99 @@ Item {
                         }
                     }
                 }
+            }
+
+            // Most-used apps, 1-9 then 0, two rows of five. Hidden until
+            // something has been launched from the search at least once.
+            Grid {
+                visible: root.recent.length > 0
+                columns: root.appCols
+                spacing: root.gap
+
+                Repeater {
+                    model: root.recent
+
+                    Rectangle {
+                        id: app
+
+                        required property var modelData
+                        required property int index
+
+                        width: (grid.width - root.gap * (root.appCols - 1)) / root.appCols
+                        height: Math.round(64 * Theme.s)
+                        radius: Theme.radius * 0.75
+                        color: appArea.containsMouse ? Colors.surface : "transparent"
+                        border.width: 1
+                        border.color: Theme.divider
+
+                        // Apps whose .desktop names an icon this theme
+                        // lacks get a generic glyph instead of a hole.
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 8
+                            visible: appIcon.status !== Image.Ready
+                            text: "󰀻"
+                            color: Theme.dim
+                            font.family: Theme.font
+                            font.pixelSize: Math.round(24 * Theme.s)
+                        }
+
+                        Image {
+                            id: appIcon
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 8
+                            width: Math.round(28 * Theme.s)
+                            height: width
+                            sourceSize.width: width * 2
+                            sourceSize.height: height * 2
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            source: Quickshell.iconPath(app.modelData.icon ?? "", true)
+                        }
+
+                        Text {
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 6
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: parent.width - 8
+                            horizontalAlignment: Text.AlignHCenter
+                            text: app.modelData.name
+                            elide: Text.ElideRight
+                            color: Theme.dim
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fsLabel - 3
+                        }
+
+                        Text {
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 5
+                            text: String((app.index + 1) % 10)
+                            color: Theme.dim
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fsLabel - 3
+                        }
+
+                        MouseArea {
+                            id: appArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.launch(app.modelData)
+                        }
+                    }
+                }
+            }
+
+            Text {
+                width: grid.width
+                horizontalAlignment: Text.AlignHCenter
+                text: "letter open · d search" + (root.recent.length > 0 ? " · 1–" + root.recent.length % 10 + " apps" : "") + " · ? keys · esc close"
+                color: Theme.dim
+                font.family: Theme.font
+                font.pixelSize: Theme.fsLabel - 2
             }
         }
     }

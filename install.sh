@@ -83,10 +83,10 @@ PKGS_DESKTOP=(
 	kitty zsh starship ranger
 	# theming
 	matugen
-	# clipboard + screenshots
-	cliphist wl-clipboard wl-clip-persist grim slurp swappy
+	# clipboard + screenshots + screen recording
+	cliphist wl-clipboard wl-clip-persist grim slurp swappy wf-recorder
 	# media / hardware keys -- pavucontrol dropped, the quickshell Audio
-	# panel (SUPER+M, a) replaces its default-sink slider
+	# panel (SUPER+D, a) replaces its default-sink slider
 	mpv playerctl brightnessctl libpulse
 	pipewire pipewire-pulse wireplumber
 	# network + bluetooth -- network-manager-applet dropped, the bar's
@@ -392,7 +392,7 @@ has_battery=0; [ -d /sys/class/power_supply ] && \
 	ls /sys/class/power_supply 2>/dev/null | grep -qi '^BAT' && has_battery=1
 
 ui_scale=1.0; svc_weather=1; svc_claude=1; interval_fast=2000; interval_slow=10000
-bar_center="gpu,sys,battery"
+bar_center="gpu,sys,battery,media"
 if [ "$weak" -eq 1 ]; then
 	ui_scale=0.8; svc_weather=0; svc_claude=0
 	interval_fast=4000; interval_slow=20000
@@ -420,7 +420,7 @@ FONT=
 # Comma-separated; a module not listed is dropped. Empty = that pill hidden.
 BAR_LEFT=workspaces,clock
 BAR_CENTER=${bar_center}
-BAR_RIGHT=network,bluetooth,audio,language
+BAR_RIGHT=network,bluetooth,audio,notifications,status,language
 
 # --- services -------------------------------------------------------------
 # Expensive pollers. 0 disables the poller outright, not just the widget.
@@ -489,7 +489,7 @@ return {
 write_local "${HOME}/.config/dotfiles/local.lua" "$local_lua_content"
 
 # Fresh clone: seed the generated theme files from their committed snapshot so
-# the desktop is themed before the wallpaper step below (or SUPER+M, w) ever
+# the desktop is themed before the wallpaper step below (or SUPER+D, w) ever
 # runs matugen. Never overwrites a file that already exists -- those are this
 # machine's actual last-set theme, not stale defaults.
 say "generated theme defaults"
@@ -535,10 +535,10 @@ elif [ -d "${HOME}/Pictures/Wallpapers" ] && \
      [ -n "$found" ]; then
 	echo "PICK    $found"
 	"${DOTS}/hypr/scripts/set-wallpaper.sh" "$found" \
-		|| warn "set-wallpaper.sh failed; run it by hand after login (SUPER+M, w)"
+		|| warn "set-wallpaper.sh failed; run it by hand after login (SUPER+D, w)"
 else
 	warn "no wallpaper found. Put an image or video in ~/Pictures/Wallpapers and"
-	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+M, w)"
+	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+D, w)"
 	warn "The committed colors.* files are used until then."
 fi
 

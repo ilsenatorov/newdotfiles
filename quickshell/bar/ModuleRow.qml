@@ -28,10 +28,16 @@ Row {
     Repeater {
         id: rep
         model: root.names
+        // A module can hide itself (media with no player, status with
+        // nothing to report) by declaring `shown`; the whole entry goes then,
+        // its divider too, so the pill never shows a dangling Sep. Not
+        // `visible`: that reads false for any child of a hidden Row, so the
+        // entry could never come back.
         delegate: Row {
             spacing: root.spacing
+            visible: loader.item && loader.item.shown !== undefined ? loader.item.shown : true
             Sep { visible: index > 0 }
-            Loader { sourceComponent: root.registry[modelData] }
+            Loader { id: loader; sourceComponent: root.registry[modelData] }
         }
     }
 }

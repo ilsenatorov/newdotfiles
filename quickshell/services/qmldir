@@ -11,3 +11,11 @@ singleton SysMon 1.0 SysMon.qml
 singleton Time 1.0 Time.qml
 singleton Weather 1.0 Weather.qml
 singleton AppStyle 1.0 AppStyle.qml
+singleton Brightness 1.0 Brightness.qml
+singleton Caffeine 1.0 Caffeine.qml
+singleton Lyrics 1.0 Lyrics.qml
+singleton NightLight 1.0 NightLight.qml
+singleton Recorder 1.0 Recorder.qml
+singleton HubStatus 1.0 HubStatus.qml
+singleton KeybindList 1.0 KeybindList.qml
+singleton Power 1.0 Power.qml

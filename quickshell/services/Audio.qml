@@ -18,6 +18,7 @@ Singleton {
     readonly property real volume: sink && sink.audio ? sink.audio.volume : 0
     readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
     readonly property string sinkName: sink ? root.nodeLabel(sink) : ""
+    readonly property bool micMuted: source && source.audio ? source.audio.muted : false
 
     // Every real output device, in a stable order (Pipewire.nodes.values is
     // add-order, which shuffles as devices appear). `isStream` filters out
@@ -53,6 +54,10 @@ Singleton {
 
     function toggleMute(): void {
         if (sink && sink.audio) sink.audio.muted = !sink.audio.muted;
+    }
+
+    function toggleMicMute(): void {
+        if (source && source.audio) source.audio.muted = !source.audio.muted;
     }
 
     // Writing preferredDefaultAudioSink is what `wpctl set-default` does:

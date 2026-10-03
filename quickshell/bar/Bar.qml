@@ -20,7 +20,7 @@ Item {
     implicitHeight: Theme.barHeight
 
     // name -> component. Workspaces needs `screen` and embeds the submap
-    // indicator; Network/Bluetooth/Audio forward clicked -> panelRequested.
+    // indicator; Network/Bluetooth/Audio/Media/Notif forward clicked -> panelRequested.
     // Everything else is parameterless.
     Component { id: workspacesC; Workspaces { screen: root.screen } }
     Component { id: clockC; ClockModule { onCalendarRequested: root.panelRequested("calendar") } }
@@ -31,11 +31,15 @@ Item {
     Component { id: bluetoothC; Bluetooth { onClicked: root.panelRequested("bluetooth") } }
     Component { id: audioC; AudioModule { onClicked: root.panelRequested("audio") } }
     Component { id: languageC; Language {} }
+    Component { id: mediaC; MediaModule { onClicked: root.panelRequested("media") } }
+    Component { id: notificationsC; NotifModule { onClicked: root.panelRequested("notifications") } }
+    Component { id: statusC; StatusModule {} }
 
     readonly property var registry: ({
         workspaces: workspacesC, clock: clockC,
         gpu: gpuC, sys: sysC, battery: batteryC,
         network: networkC, bluetooth: bluetoothC, audio: audioC, language: languageC,
+        media: mediaC, notifications: notificationsC, status: statusC,
     })
 
     // Distance from the screen's right edge to the centre of the module that
