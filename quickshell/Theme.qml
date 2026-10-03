@@ -32,11 +32,11 @@ Singleton {
     readonly property int fsValue: Math.round(15 * s)
 
     // The dashboard PanelWindow (SUPER+G) is fixed at cardW+inset*2 x
-    // cardH+inset*2 -- sized for its tallest state (GPU rows + graph +
-    // now-playing + top processes all present) so it never renegotiates layer-shell
-    // geometry while open. The inset is headroom for the drop shadow.
-    readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(500 * s)
-    readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(980 * s)
+    // cardH+inset*2 -- a four-column tile grid sized for its fullest state
+    // (GPU, weather and Claude tiles all present) so it never renegotiates
+    // layer-shell geometry while open. The inset is headroom for the drop shadow.
+    readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(1040 * s)
+    readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(860 * s)
 
     // SUPER+D i's ask-a-quick-question overlay. Fixed size like the dashboard,
     // sized to show a full back-and-forth conversation, not just one answer.
@@ -163,6 +163,12 @@ Singleton {
     // Fixed semantics -- matugen never regenerates these, same values as waybar.
     readonly property color red: "#EC7875"
     readonly property color yellow: "#FDD835"
+
+    // Severity for a reading: `base` below warn, yellow from warn, red from
+    // crit. One helper so every gauge on the dashboard agrees on thresholds.
+    function level(v: real, warn: real, crit: real, base: color): color {
+        return v >= crit ? red : (v >= warn ? yellow : base);
+    }
 
     // hyprland.lua's easeOutQuint bezier, in the 6-real form easing.bezierCurve wants.
     readonly property var easeOutQuint: [0.23, 1.0, 0.32, 1.0, 1.0, 1.0]

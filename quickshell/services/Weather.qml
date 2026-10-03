@@ -19,12 +19,17 @@ Singleton {
     property bool isDay: true
     property bool valid: false
 
+    // Next 24 hours, for the dashboard's forecast chart:
+    // [{t (ms epoch), temp (C), pop (precipitation probability 0..100), code, day}].
+    property var hourly: []
+
     // WMO weather codes, collapsed to the handful of buckets worth drawing.
-    readonly property var bucket: {
-        const c = root.code;
+    readonly property var bucket: bucketFor(root.code, root.isDay)
+
+    function bucketFor(c: int, day: bool): var {
         if (c < 0) return { icon: "", label: "--" };
-        if (c === 0) return { icon: root.isDay ? "" : "", label: "CLEAR" };
-        if (c <= 2) return { icon: root.isDay ? "" : "", label: "PARTLY" };
+        if (c === 0) return { icon: day ? "" : "", label: "CLEAR" };
+        if (c <= 2) return { icon: day ? "" : "", label: "PARTLY" };
         if (c === 3) return { icon: "", label: "OVERCAST" };
         if (c <= 48) return { icon: "", label: "FOG" };
         if (c <= 57) return { icon: "", label: "DRIZZLE" };
@@ -45,7 +50,9 @@ Singleton {
             "https://api.open-meteo.com/v1/forecast"
                 + "?latitude=" + root.latitude
                 + "&longitude=" + root.longitude
-                + "&current=temperature_2m,weather_code,is_day&timezone=auto"]
+                + "&current=temperature_2m,weather_code,is_day"
+                + "&hourly=temperature_2m,precipitation_probability,weather_code,is_day"
+                + "&forecast_hours=24&timeformat=unixtime&timezone=auto"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -56,6 +63,17 @@ Singleton {
                     root.code = c.weather_code;
                     root.isDay = c.is_day === 1;
                     root.valid = true;
+
+                    const h = JSON.parse(text).hourly;
+                    if (h !== undefined && h.time !== undefined) {
+                        root.hourly = h.time.map((t, i) => ({
+                            t: t * 1000,
+                            temp: h.temperature_2m[i],
+                            pop: h.precipitation_probability[i] ?? 0,
+                            code: h.weather_code[i],
+                            day: h.is_day[i] === 1
+                        }));
+                    }
                 } catch (e) {
                     // Offline or a bad payload: keep whatever we last had.
                 }

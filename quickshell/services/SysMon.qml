@@ -15,6 +15,7 @@ Singleton {
     property real ram: 0
     property real ramUsedBytes: 0
     property real ramTotalBytes: 0
+    property real ramCacheBytes: 0    // reclaimable page cache, part of "available"
     property real tempC: 0
     property real disk: 0
     property real diskFreeBytes: 0
@@ -23,21 +24,35 @@ Singleton {
     property real swapTotalBytes: 0
     property real uptimeSeconds: 0
     property real load1: 0
+    property real load5: 0
+    property real load15: 0
+    property int cores: 1
     property real netUp: 0            // bytes/sec
     property real netDown: 0
 
-    // Rolling one-minute samples, shared by the dashboard graph. GPU uses -1
-    // until a supported NVIDIA device has reported a value.
-    readonly property int historySize: 31
+    // Rolling samples, shared by the dashboard graphs. Each sample carries its
+    // own timestamp (historyTimes, ms) because the poll interval changes with
+    // `fast` -- the graphs plot by time, so 10s samples taken while the
+    // dashboard was closed never get drawn as if they were 2s apart. GPU uses
+    // -1 until a supported NVIDIA device has reported a value.
+    readonly property int historySize: 61
+    readonly property int historyWindowMs: 120000
+    property var historyTimes: []
     property var cpuHistory: []
     property var ramHistory: []
     property var gpuHistory: []
+    property var netDownHistory: []   // bytes/sec
+    property var netUpHistory: []
     property int historyVersion: 0
 
     function pushHistory(): void {
-        root.cpuHistory = root.cpuHistory.slice(-root.historySize + 1).concat([root.cpu]);
-        root.ramHistory = root.ramHistory.slice(-root.historySize + 1).concat([root.ram]);
-        root.gpuHistory = root.gpuHistory.slice(-root.historySize + 1).concat([root.gpuAvailable ? root.gpuUtil : -1]);
+        const keep = a => a.slice(-root.historySize + 1);
+        root.historyTimes = keep(root.historyTimes).concat([Date.now()]);
+        root.cpuHistory = keep(root.cpuHistory).concat([root.cpu]);
+        root.ramHistory = keep(root.ramHistory).concat([root.ram]);
+        root.gpuHistory = keep(root.gpuHistory).concat([root.gpuAvailable ? root.gpuUtil : -1]);
+        root.netDownHistory = keep(root.netDownHistory).concat([root.netDown]);
+        root.netUpHistory = keep(root.netUpHistory).concat([root.netUp]);
         root.historyVersion++;
     }
 
@@ -51,6 +66,10 @@ Singleton {
     property real gpuTempC: 0
     property real gpuVramUsedBytes: 0
     property real gpuVramTotalBytes: 0
+    // Optional nvidia-smi fields: -1 when the card reports [N/A].
+    property real gpuPowerW: -1
+    property real gpuPowerLimitW: -1
+    property real gpuFanFrac: -1
 
     // Expanded -> 2s, collapsed -> 10s. Collapsed there is nothing to look at,
     // but staying warm means expanding never animates from stale values.
@@ -59,7 +78,14 @@ Singleton {
     // Only sampled while the SUPER+G dashboard overlay is actually open --
     // ps is cheap but there's no reason to run it in the background.
     property bool procsActive: false
-    property var topProcesses: []
+    property var topProcesses: []     // [{name, cpu (% of one core), rssBytes}]
+
+    // NVMe drive temperatures (C), from every hwmon named "nvme". Sampled
+    // alongside the processes, i.e. only while the dashboard is open.
+    property var nvmeTemps: []
+
+    // Local, real filesystems: [{target, size, used}] in bytes. `/` first.
+    property var mounts: []
 
     // Static machine identity for the dashboard's fastfetch-style header --
     // sampled once at startup, never changes without a reboot/shell change.
@@ -169,13 +195,24 @@ Singleton {
 
     Process {
         id: psProc
-        command: ["sh", "-c", "ps -eo comm,%cpu --sort=-%cpu --no-headers | head -5"]
+        command: ["sh", "-c", "ps -eo comm,%cpu,rss --sort=-%cpu --no-headers | head -6"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.topProcesses = text.trim().split("\n").map(line => {
-                    const m = /^(.*\S)\s+([\d.]+)$/.exec(line.trim());
-                    return m ? { name: m[1], cpu: parseFloat(m[2]) } : null;
+                    const m = /^(.*\S)\s+([\d.]+)\s+(\d+)$/.exec(line.trim());
+                    return m ? { name: m[1], cpu: parseFloat(m[2]), rssBytes: Number(m[3]) * 1024 } : null;
                 }).filter(r => r !== null);
+            }
+        }
+    }
+
+    Process {
+        id: nvmeProc
+        command: ["sh", "-c", "for h in /sys/class/hwmon/hwmon*; do [ \"$(cat $h/name 2>/dev/null)\" = nvme ] && cat $h/temp1_input 2>/dev/null; done"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.nvmeTemps = text.trim().split("\n").map(Number)
+                    .filter(v => !isNaN(v) && v > 0).map(v => v / 1000);
             }
         }
     }
@@ -185,7 +222,10 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         interval: 2000
-        onTriggered: psProc.running = true
+        onTriggered: {
+            psProc.running = true;
+            nvmeProc.running = true;
+        }
     }
 
     FileView {
@@ -232,14 +272,27 @@ Singleton {
 
     Process {
         id: diskProc
-        command: ["sh", "-c", "df -P / | awk 'NR==2 { gsub(/%/, \"\", $5); print $5, $4 }'"]
+        // Every local real filesystem, not just / -- the HDD shows up on its
+        // own once mounted. Columns: size used avail mountpoint.
+        command: ["sh", "-c", "df -P -B1 -l -x tmpfs -x devtmpfs -x efivarfs -x squashfs -x overlay 2>/dev/null"
+                  + " | awk 'NR>1 && $6 !~ /^\\/boot/ { print $2, $3, $4, $6 }'"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const f = text.trim().split(/\s+/);
-                const pct = parseFloat(f[0]);
-                const availKb = parseFloat(f[1]);
-                if (!isNaN(pct)) root.disk = pct / 100;
-                if (!isNaN(availKb)) root.diskFreeBytes = availKb * 1024;
+                const out = [];
+                for (const line of text.trim().split("\n")) {
+                    const m = /^(\d+) (\d+) (\d+) (.+)$/.exec(line);
+                    if (!m || Number(m[1]) <= 0) continue;
+                    const d = { target: m[4], size: Number(m[1]), used: Number(m[2]), avail: Number(m[3]) };
+                    if (d.target === "/") {
+                        // df's Use% is used/(used+avail), excluding root-reserved blocks.
+                        root.disk = d.used / (d.used + d.avail);
+                        root.diskFreeBytes = d.avail;
+                        out.unshift(d);
+                    } else {
+                        out.push(d);
+                    }
+                }
+                root.mounts = out;
             }
         }
     }
@@ -266,17 +319,22 @@ Singleton {
 
     Process {
         id: gpuProc
-        command: ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu",
+        command: ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit,fan.speed",
                   "--format=csv,noheader,nounits"]
         stdout: StdioCollector {
             onStreamFinished: {
-                // "12, 512, 2048, 47" -- util%, vram used/total in MiB, temp C.
+                // "12, 512, 2048, 47, 26.8, 250.0, 41" -- util%, vram used/total
+                // in MiB, temp C, power draw/limit W, fan %. The last three are
+                // [N/A] on some cards (laptops, passively cooled) -> -1.
                 const f = text.trim().split("\n")[0].split(",").map(s => parseFloat(s.trim()));
-                if (f.length < 4 || f.some(isNaN)) return;
+                if (f.length < 4 || f.slice(0, 4).some(isNaN)) return;
                 root.gpuUtil = f[0] / 100;
                 root.gpuVramUsedBytes = f[1] * 1024 * 1024;
                 root.gpuVramTotalBytes = f[2] * 1024 * 1024;
                 root.gpuTempC = f[3];
+                root.gpuPowerW = isNaN(f[4]) ? -1 : f[4];
+                root.gpuPowerLimitW = isNaN(f[5]) ? -1 : f[5];
+                root.gpuFanFrac = isNaN(f[6]) ? -1 : f[6] / 100;
             }
         }
     }
@@ -284,7 +342,9 @@ Singleton {
     function sampleCpu(): void {
         // First line of /proc/stat: cpu user nice system idle iowait irq softirq steal ...
         // These are cumulative jiffies since boot, so usage is the delta between samples.
-        const line = statView.text().split("\n")[0];
+        const lines = statView.text().split("\n");
+        root.cores = Math.max(1, lines.filter(l => /^cpu\d/.test(l)).length);
+        const line = lines[0];
         if (!line.startsWith("cpu ")) return;
 
         const f = line.trim().split(/\s+/).slice(1).map(Number);
@@ -313,6 +373,12 @@ Singleton {
             root.ram = 1 - Number(avail[1]) / Number(total[1]);
             root.ramTotalBytes = Number(total[1]) * 1024;
             root.ramUsedBytes = root.ramTotalBytes - Number(avail[1]) * 1024;
+
+            // Cache the kernel would hand back under pressure; shown as its own
+            // segment so "used" vs "just cached" is visible at a glance.
+            const kb = k => { const m = new RegExp("^" + k + ":\\s+(\\d+)", "m").exec(t); return m ? Number(m[1]) : 0; };
+            const cache = (kb("Buffers") + kb("Cached") + kb("SReclaimable") - kb("Shmem")) * 1024;
+            root.ramCacheBytes = Math.max(0, Math.min(cache, root.ramTotalBytes - root.ramUsedBytes));
         }
 
         const st = /SwapTotal:\s+(\d+)/.exec(t);
@@ -327,8 +393,10 @@ Singleton {
         const up = parseFloat(uptimeView.text().split(/\s+/)[0]);
         if (!isNaN(up)) root.uptimeSeconds = up;
 
-        const l = parseFloat(loadView.text().split(/\s+/)[0]);
-        if (!isNaN(l)) root.load1 = l;
+        const l = loadView.text().split(/\s+/).map(parseFloat);
+        if (!isNaN(l[0])) root.load1 = l[0];
+        if (!isNaN(l[1])) root.load5 = l[1];
+        if (!isNaN(l[2])) root.load15 = l[2];
     }
 
     function sampleNet(): void {
