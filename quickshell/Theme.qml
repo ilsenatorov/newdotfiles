@@ -99,7 +99,7 @@ Singleton {
     // shell.qml) -- on open only, never mid-keystroke, so the "don't
     // renegotiate layer-shell geometry while typing" rule still holds.
     readonly property int menuWideW: Math.round(1200 * s)
-    readonly property int menuWideH: Math.round(620 * s)
+    readonly property int menuWideH: Math.round(700 * s)  // fits the hub with two app rows
     readonly property int wallSlideW: Math.round(760 * s)
     readonly property int wallSlideH: Math.round(428 * s)
     // How far apart two slides sit. Well under a slide's width, so the
