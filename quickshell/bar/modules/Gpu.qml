@@ -2,11 +2,12 @@ import QtQuick
 import "../.."
 import "../../services"
 
-// NVIDIA GPU utilization, mirrors Sys.qml's layout. Hidden
+// NVIDIA GPU utilization, mirrors Sys.qml's layout. Hidden (via `shown`)
 // entirely when SysMon.gpuAvailable is false (no nvidia-smi, or no NVIDIA
 // device -- see SysMon.qml).
 Row {
-    visible: SysMon.gpuAvailable
+    // Read by bar/ModuleRow.qml to hide the whole entry, divider included.
+    readonly property bool shown: SysMon.gpuAvailable
     spacing: Theme.barPillGap
 
     Text {

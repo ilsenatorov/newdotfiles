@@ -15,7 +15,8 @@ Text {
     readonly property bool critical: laptop && pct <= 15
     readonly property bool warning: laptop && pct <= 30
 
-    visible: laptop
+    // Read by bar/ModuleRow.qml to hide the whole entry, divider included.
+    readonly property bool shown: laptop
     height: Theme.barHeight
     verticalAlignment: Text.AlignVCenter
     font.family: Theme.font
