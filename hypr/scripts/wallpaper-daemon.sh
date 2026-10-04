@@ -82,7 +82,10 @@ pkill -x mpvpaper 2>/dev/null || true
 pkill -x hyprpaper 2>/dev/null || true # legacy: no longer started, may linger
 sleep 0.3
 
-setsid uwsm app -- mpvpaper -f -p -o "$OPTS" ALL "$wall" >/dev/null 2>&1 </dev/null &
+# TimeoutStopSec: mpvpaper sometimes ignores SIGTERM, and the scope's default
+# 90s stop timeout then holds Hyprland (and every terminal) alive through
+# shutdown/reboot. It's only the wallpaper -- SIGKILL after 2s is fine.
+setsid uwsm app -p TimeoutStopSec=2 -- mpvpaper -f -p -o "$OPTS" ALL "$wall" >/dev/null 2>&1 </dev/null &
 disown 2>/dev/null || true
 
 # confirm it came up; mpvpaper exits silently on an unreadable file
