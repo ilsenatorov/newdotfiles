@@ -46,12 +46,30 @@ Singleton {
 
         // Whole-file rewrite through sh, the same way AskService appends its
         // history -- FileView here is read-only and watching.
-        writer.command = ["sh", "-c", 'mkdir -p "$(dirname "$2")" && printf "%s" "$1" > "$2"', "write", JSON.stringify(next), root.path];
+        root.write(JSON.stringify(next));
+    }
+
+    // A launch recorded while the previous write is still running is held
+    // (as the serialized map, not re-read later: the first write's file-change
+    // reload can roll `entries` back meanwhile) and written once it exits.
+    property string pendingJson: ""
+
+    function write(json: string): void {
+        if (writer.running) {
+            root.pendingJson = json;
+            return;
+        }
+        writer.command = ["sh", "-c", 'mkdir -p "$(dirname "$2")" && printf "%s" "$1" > "$2"', "write", json, root.path];
         writer.running = true;
     }
 
     Process {
         id: writer
+        onExited: {
+            const json = root.pendingJson;
+            root.pendingJson = "";
+            if (json !== "") root.write(json);
+        }
     }
 
     FileView {

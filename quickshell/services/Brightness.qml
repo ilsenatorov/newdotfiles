@@ -26,8 +26,16 @@ Singleton {
     function up(): void { root.run("5%+"); }
     function down(): void { root.run("5%-"); }
 
+    // A held key repeats faster than brightnessctl returns; a step that
+    // lands mid-run is queued (latest wins) instead of silently dropped.
+    property string pendingStep: ""
+
     function run(step: string): void {
         if (!root.available) return;
+        if (setProc.running) {
+            root.pendingStep = step;
+            return;
+        }
         setProc.command = ["brightnessctl", "-c", "backlight", "-m", "set", step];
         setProc.running = true;
     }
@@ -53,6 +61,11 @@ Singleton {
     Process {
         id: setProc
         stdout: StdioCollector { onStreamFinished: root.parse(text, true) }
+        onExited: {
+            const step = root.pendingStep;
+            root.pendingStep = "";
+            if (step !== "") root.run(step);
+        }
     }
 
     IpcHandler {

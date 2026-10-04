@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import "../.."
@@ -9,7 +8,7 @@ import "../../ui"
 // Workspace pills for this bar's monitor, read from Quickshell.Hyprland.
 // ext-workspace-v1 (Quickshell.WindowManager) was used before, but its
 // per-output groups never picked up the external monitor, so that bar stayed
-// empty. Dispatching still shells out to hyprctl in Lua form: this Hyprland
+// empty. Dispatches go over Hyprland's socket in Lua form: this Hyprland
 // config is Lua and its IPC evaluates dispatch arguments as Lua. The active
 // submap indicator lives here so it shares the workspaces pill.
 Item {
@@ -122,13 +121,10 @@ Item {
         }
     }
 
+    // Straight over the socket: a shared hyprctl Process dropped every
+    // wheel step that arrived while the previous one was still running.
     function dispatch(call: string): void {
-        dispatchProc.command = ["hyprctl", "dispatch", call];
-        dispatchProc.running = true;
-    }
-
-    Process {
-        id: dispatchProc
+        Hyprland.dispatch(call);
     }
 
     // ---- hover preview --------------------------------------------------
