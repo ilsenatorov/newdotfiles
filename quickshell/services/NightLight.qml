@@ -57,6 +57,9 @@ Singleton {
     Process { id: writer }
 
     // Is hyprsunset there to talk to? It prints the current temperature.
+    // hyprsunset and the shell start together, so an early probe can beat
+    // it: retry for ~10s before settling on "not available".
+    property int probeTries: 0
     Process {
         id: probe
         running: true
@@ -65,9 +68,16 @@ Singleton {
             onStreamFinished: {
                 const k = parseInt(text.trim());
                 root.available = !isNaN(k) && k > 0;
-                root.restore();
+                if (!root.available && ++root.probeTries < 10) probeRetry.start();
+                else root.restore();
             }
         }
+    }
+
+    Timer {
+        id: probeRetry
+        interval: 1000
+        onTriggered: probe.running = true
     }
 
     FileView {
