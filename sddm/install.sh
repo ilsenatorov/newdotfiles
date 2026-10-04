@@ -33,10 +33,13 @@ cp -r "$REPO/theme/." "$DST/"
 # unprivileged "sddm" user which cannot traverse a 0700 /home/<user> -- so it has
 # to be copied inside $DST. sync-wallpaper.sh does that, and also pushes the
 # current matugen accent into Themes/main.conf.
+# Fallbacks stay static too: an animated background is what crashes the
+# greeter on NVIDIA (see sync-wallpaper.sh). First a still frame of the
+# shipped gif, then no image at all (BackgroundColor shows through).
 if ! "$REPO/sync-wallpaper.sh" ${WALLPAPER:+"$WALLPAPER"}; then
-	echo "WARNING: wallpaper sync failed; falling back to pixel_sakura.gif" >&2
-	sed -i 's|^Background=.*|Background="Backgrounds/pixel_sakura.gif"|' \
-		"$DST/Themes/main.conf"
+	echo "WARNING: wallpaper sync failed; using a still of pixel_sakura.gif" >&2
+	"$REPO/sync-wallpaper.sh" "$DST/Backgrounds/pixel_sakura.gif" ||
+		sed -i 's|^Background=.*|Background=""|' "$DST/Themes/main.conf"
 fi
 
 # Font is resolved by family name ("Noto Serif Display" in main.conf), so it has

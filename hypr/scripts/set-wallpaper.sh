@@ -196,7 +196,7 @@ hyprctl reload >/dev/null 2>&1 || true
 
 # ---- 5. login screen -----------------------------------------------------
 # Keep SDDM on the same wallpaper and accent, so boot -> login -> desktop is one
-# look -- including video wallpapers, which the astronaut theme plays natively.
+# look. Video wallpapers become a still frame there (sync-wallpaper.sh explains).
 # The theme lives in /usr/share, hence sudo -- and only the passwordless case,
 # because a wallpaper change must not block on a password prompt with no
 # terminal to show it in. Without passwordless sudo, run it by hand:
