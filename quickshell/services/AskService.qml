@@ -212,14 +212,10 @@ Singleton {
         }
     }
 
+    // Detached, one kitty per call: a shared Process ignored every request
+    // while an earlier terminal was still open.
     function openInTerminal(sessionId: string): void {
-        termProc.command = ["kitty", "-e", "sh", "-c",
-            'exec pi --session-id "$1" --tools read,grep,find,ls', "term", sessionId];
-        termProc.running = true;
-    }
-
-    Process {
-        id: termProc
-        workingDirectory: root.dotfilesDir
+        Quickshell.execDetached(["kitty", "--directory", root.dotfilesDir, "-e", "sh", "-c",
+            'exec pi --session-id "$1" --tools read,grep,find,ls', "term", sessionId]);
     }
 }
