@@ -1,3 +1,7 @@
+# Keep $PATH entries unique: nested shells (kitty -> zsh -> nvim :terminal)
+# re-run the prepends below and would otherwise stack duplicates.
+typeset -U path PATH
+
 ZSH="${ZSH:-$HOME/.oh-my-zsh}"
 export ZSH
 # No ZSH_THEME: starship is initialised at the bottom of this file and replaces
@@ -39,12 +43,20 @@ setopt HIST_IGNORE_ALL_DUPS HIST_REDUCE_BLANKS HIST_VERIFY SHARE_HISTORY \
 # `cd` learns to jump on a partial match with no new command to remember.
 command -v zoxide >/dev/null && eval "$(zoxide init zsh --cmd cd)"
 
-# fzf in the desktop palette (quickshell/Theme.qml). bat/delta/eza are themed
-# below via BAT_THEME / delta's config in git/config, not here.
-export FZF_DEFAULT_OPTS="--color=bg+:#1E262B,bg:-1,spinner:#4DD0E1,hl:#EC7875 \
---color=fg:#93A1A1,header:#EC7875,info:#FDD835,pointer:#4DD0E1 \
---color=marker:#61C766,fg+:#CDD6D6,prompt:#FDD835,hl+:#EC7875 \
---color=border:#3C4449 --border=rounded --height=40% --layout=reverse"
+# fzf in the desktop palette, read from matugen/base.json -- the one place the
+# fixed colours are written down. Pure zsh ($(<file) and =~ are builtins), so
+# no jq process per shell; base.json is one "name": "#hex" pair per line.
+# bat/delta/eza are themed below via BAT_THEME / delta's config in git/config.
+typeset -A _base
+for _l in "${(@f)$(<$HOME/dotfiles/matugen/base.json)}"; do
+	[[ $_l =~ '"([a-z_]+)": "(#[0-9A-Fa-f]+)"' ]] && _base[$match[1]]=$match[2]
+done
+export FZF_DEFAULT_OPTS="--color=bg+:$_base[bg_alt],bg:-1,spinner:$_base[cyan] \
+--color=hl:$_base[red],fg:$_base[fg],header:$_base[red],info:$_base[yellow] \
+--color=pointer:$_base[cyan],marker:$_base[green],fg+:$_base[fg_bright] \
+--color=prompt:$_base[yellow],hl+:$_base[red],border:$_base[border] \
+--border=rounded --height=40% --layout=reverse"
+unset _base _l
 if command -v fd >/dev/null; then
 	export FZF_DEFAULT_COMMAND="fd --type f --hidden --exclude .git"
 	export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -69,7 +81,6 @@ if command -v bat >/dev/null; then
 	export BAT_THEME=ansi
 	export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 fi
-command -v rg >/dev/null && alias grep='rg'
 
 alias ranger='ranger -r ~/dotfiles/ranger'
 alias r='ranger -r ~/dotfiles/ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
@@ -104,11 +115,12 @@ _starship_transient_accept_line() {
 }
 zle -N accept-line _starship_transient_accept_line
 
+# User binaries (pi and friends). Before the local tail so it can still
+# prepend something that wins over these.
+export PATH="$HOME/.local/bin:$PATH"
+
 # Per-machine tail: CLAUDE_OBSIDIAN_VAULT, the NVIDIA VS Code workaround,
 # `. ~/.local/bin/env`, anything else that is true on this box but not the
 # other two. Lives outside the repo -- install.sh seeds it once, never
 # overwrites it, and never tracks it.
 [ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
-
-# Pi
-export PATH="$HOME/.local/bin:$PATH"

@@ -13,7 +13,7 @@ import ".."
 // the class and a stable colour from the matugen palette.
 Singleton {
     readonly property var table: [
-        { match: /^(kitty|alacritty|foot|wezterm|ghostty|konsole|.*terminal.*)$/i, glyph: "", color: "#93A1A1" },
+        { match: /^(kitty|alacritty|foot|wezterm|ghostty|konsole|.*terminal.*)$/i, glyph: "", color: Theme.fg },
         { match: /firefox|librewolf|zen/i, glyph: "", color: "#FF7139" },
         { match: /brave/i, glyph: "", color: "#FB542B" },
         { match: /chrom/i, glyph: "", color: "#4285F4" },
@@ -31,9 +31,9 @@ Singleton {
         { match: /mpv|vlc|celluloid|totem/i, glyph: "", color: "#B96BE0" },
         { match: /thunderbird|geary|evolution|mail/i, glyph: "", color: "#4F9CF9" },
         { match: /libreoffice|soffice/i, glyph: "", color: "#18A303" },
-        { match: /pavucontrol|easyeffects|helvum/i, glyph: "", color: "#61C766" },
+        { match: /pavucontrol|easyeffects|helvum/i, glyph: "", color: Theme.green },
         { match: /zoom|teams|meet/i, glyph: "", color: "#2D8CFF" },
-        { match: /settings|nwg-look|qt[56]ct|blueman/i, glyph: "", color: "#6D8895" },
+        { match: /settings|nwg-look|qt[56]ct|blueman/i, glyph: "", color: Theme.dim },
     ]
 
     function style(cls: string): var {

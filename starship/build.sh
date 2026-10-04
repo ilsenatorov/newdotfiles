@@ -12,7 +12,7 @@
 # already-open shells pick the result up with no restart.
 set -eu
 
-dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 out="${dir}/starship.toml"
 
 {
@@ -23,6 +23,6 @@ out="${dir}/starship.toml"
 	cat "${dir}/starship.base.toml"
 	printf '\n'
 	cat "${dir}/colors.toml"
-} > "${out}.tmp"
+} >"${out}.tmp"
 
 mv -f "${out}.tmp" "$out"

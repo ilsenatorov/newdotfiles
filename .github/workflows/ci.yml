@@ -9,13 +9,33 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - uses: actions/checkout@v4
+      # Tooling before checkout: without git in the container, actions/checkout
+      # falls back to a REST tarball with no .git, leaving gitleaks no history.
       - name: install tooling
         run: |
           pacman-key --init && pacman-key --populate archlinux
-          pacman -Sy --noconfirm shellcheck shfmt lua luacheck qt6-declarative git
+          # -Syu, not -Sy: a partial upgrade can leave libs mismatched.
+          # quickshell is here so qmllint can resolve `import Quickshell`.
+          pacman -Syu --noconfirm shellcheck shfmt lua luacheck qt6-declarative \
+            quickshell gitleaks git
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans every commit, not just the tip
+      - name: seed generated theme files
+        # Same as install.sh's "generated theme defaults" step: Colors.qml and
+        # friends are gitignored, and the QML imports them.
+        run: |
+          cd matugen/defaults
+          find . -type f | while read -r f; do
+            [ -e "../../$f" ] || { mkdir -p "../../$(dirname "$f")"; cp "$f" "../../$f"; }
+          done
       - name: check.sh
-        run: ./check.sh
+        run: |
+          # The container runs as root over a checkout owned by the runner
+          # user; without this, git (and gitleaks, which shells out to it)
+          # refuses the repo as "dubious ownership".
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          ./check.sh
 
   smoke:
     runs-on: ubuntu-latest
@@ -30,7 +50,7 @@ jobs:
           pacman-key --init && pacman-key --populate archlinux
           useradd -m runner
           echo 'runner ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-          pacman -Sy --noconfirm sudo git
+          pacman -Syu --noconfirm sudo git
       - name: place the repo at ~runner/dotfiles
         # install.sh hard-requires this exact path (see its sanity check).
         run: |

@@ -7,4 +7,14 @@ return {
     accent_dim = "#{{colors.primary_container.dark.hex_stripped}}",
     urgent     = "#{{colors.error.dark.hex_stripped}}",
     surface    = "#{{colors.surface_container_high.dark.hex_stripped}}",
+
+    -- Fixed desktop base, from matugen/base.json.
+    bg         = "{{base.bg}}",
+    bg_alt     = "{{base.bg_alt}}",
+    fg         = "{{base.fg}}",
+    fg_bright  = "{{base.fg_bright}}",
+    border     = "{{base.border}}",
+    muted      = "{{base.muted}}",
+    green      = "{{base.green}}",
+    yellow     = "{{base.yellow}}",
 }

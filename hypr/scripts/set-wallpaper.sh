@@ -35,13 +35,17 @@ SCHEME="scheme-vibrant"
 # there is no TTY to ask on; "saturation" keeps the accent punchy.
 PREFER="saturation"
 
-die() { notify-send -u critical "Wallpaper" "$1" 2>/dev/null || true; echo "$1" >&2; exit 1; }
+die() {
+	notify-send -u critical "Wallpaper" "$1" 2>/dev/null || true
+	echo "$1" >&2
+	exit 1
+}
 
 is_video() {
-    case "${1,,}" in
-        *.mp4|*.mkv|*.webm|*.mov|*.avi|*.m4v|*.gif) return 0 ;;
-        *) return 1 ;;
-    esac
+	case "${1,,}" in
+		*.mp4 | *.mkv | *.webm | *.mov | *.avi | *.m4v | *.gif) return 0 ;;
+		*) return 1 ;;
+	esac
 }
 
 # A stable filename for anything cached about one wallpaper. The absolute
@@ -58,22 +62,22 @@ cache_key() { printf '%s' "$1" | sha1sum | cut -d' ' -f1; }
 # Prints the path; returns non-zero (silently) if there is no getting one,
 # so --palette can skip a wallpaper instead of dying on the whole listing.
 still_frame() {
-    local wall="$1" out
-    if ! is_video "$wall"; then
-        printf '%s\n' "$wall"
-        return 0
-    fi
-    command -v ffmpeg >/dev/null || return 1
-    out="${FRAMEDIR}/$(cache_key "$wall").png"
-    mkdir -p "$FRAMEDIR"
-    if [ ! -s "$out" ] || [ "$wall" -nt "$out" ]; then
-        ffmpeg -y -loglevel error -ss 3 -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$out" \
-            </dev/null >/dev/null 2>&1 \
-            || ffmpeg -y -loglevel error -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$out" \
-                </dev/null >/dev/null 2>&1 \
-            || return 1
-    fi
-    printf '%s\n' "$out"
+	local wall="$1" out
+	if ! is_video "$wall"; then
+		printf '%s\n' "$wall"
+		return 0
+	fi
+	command -v ffmpeg >/dev/null || return 1
+	out="${FRAMEDIR}/$(cache_key "$wall").png"
+	mkdir -p "$FRAMEDIR"
+	if [ ! -s "$out" ] || [ "$wall" -nt "$out" ]; then
+		ffmpeg -y -loglevel error -ss 3 -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$out" \
+			</dev/null >/dev/null 2>&1 ||
+			ffmpeg -y -loglevel error -i "$wall" -frames:v 1 -vf 'scale=1280:-1' "$out" \
+				</dev/null >/dev/null 2>&1 ||
+			return 1
+	fi
+	printf '%s\n' "$out"
 }
 
 # The colourbar under a slide, as the picker wants it: line 1 is a thumbnail
@@ -86,27 +90,30 @@ still_frame() {
 palette_keys=(primary tertiary rainbow_red rainbow_orange rainbow_green rainbow_cyan rainbow_blue rainbow_purple)
 
 print_palette() {
-    local wall="$1" cache src json filter
-    cache="${PALDIR}/$(cache_key "$wall")"
-    if [ -s "$cache" ] && [ ! "$wall" -nt "$cache" ]; then
-        cat "$cache"
-        return 0
-    fi
-    src=$(still_frame "$wall") || return 1
-    json=$(matugen -c "${DOTS}/matugen/config.toml" --dry-run -q -j hex \
-        image "$src" -t "$SCHEME" --prefer "$PREFER" 2>/dev/null) || return 1
-    # .dark.color, not .hex: that is the json shape, while the templates use
-    # their own {{...hex}} spelling for the same value.
-    filter=$(printf '.colors.%s.dark.color, ' "${palette_keys[@]}")
-    mkdir -p "$PALDIR"
-    {
-        printf '%s\n' "$src"
-        printf '%s' "$json" | jq -er "${filter%, }"
-    } > "${cache}.tmp" || { rm -f "${cache}.tmp"; return 1; }
-    # Renamed into place so a killed run cannot leave a half-written palette
-    # that the next open would happily read back.
-    mv -f "${cache}.tmp" "$cache"
-    cat "$cache"
+	local wall="$1" cache src json filter
+	cache="${PALDIR}/$(cache_key "$wall")"
+	if [ -s "$cache" ] && [ ! "$wall" -nt "$cache" ]; then
+		cat "$cache"
+		return 0
+	fi
+	src=$(still_frame "$wall") || return 1
+	json=$(matugen -c "${DOTS}/matugen/config.toml" --dry-run -q -j hex \
+		image "$src" -t "$SCHEME" --prefer "$PREFER" 2>/dev/null) || return 1
+	# .dark.color, not .hex: that is the json shape, while the templates use
+	# their own {{...hex}} spelling for the same value.
+	filter=$(printf '.colors.%s.dark.color, ' "${palette_keys[@]}")
+	mkdir -p "$PALDIR"
+	{
+		printf '%s\n' "$src"
+		printf '%s' "$json" | jq -er "${filter%, }"
+	} >"${cache}.tmp" || {
+		rm -f "${cache}.tmp"
+		return 1
+	}
+	# Renamed into place so a killed run cannot leave a half-written palette
+	# that the next open would happily read back.
+	mv -f "${cache}.tmp" "$cache"
+	cat "$cache"
 }
 
 # Recursive on purpose, and each entry is printed RELATIVE to WALLDIR: find
@@ -115,39 +122,39 @@ print_palette() {
 # path rebuilt from it would not exist. A relative path is unique per file and
 # maps straight back by concatenation.
 list_wallpapers() {
-    [ -d "$WALLDIR" ] || die "No wallpaper directory at $WALLDIR"
-    local files=()
-    mapfile -t files < <(find "$WALLDIR" -type f \
-        \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \
-           -o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' -o -iname '*.mov' \
-           -o -iname '*.m4v' -o -iname '*.gif' \) \
-        | sort)
-    [ "${#files[@]}" -gt 0 ] || die "No wallpapers in $WALLDIR"
-    printf '%s\n' "${files[@]#"${WALLDIR}"/}"
+	[ -d "$WALLDIR" ] || die "No wallpaper directory at $WALLDIR"
+	local files=()
+	mapfile -t files < <(find "$WALLDIR" -type f \
+		\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \
+		-o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' -o -iname '*.mov' \
+		-o -iname '*.m4v' -o -iname '*.gif' \) |
+		sort)
+	[ "${#files[@]}" -gt 0 ] || die "No wallpapers in $WALLDIR"
+	printf '%s\n' "${files[@]#"${WALLDIR}"/}"
 }
 
 case "${1:-}" in
-    --list)
-        list_wallpapers
-        exit 0
-        ;;
-    --palette)
-        [ -n "${2:-}" ] || die "--palette needs a path relative to $WALLDIR"
-        print_palette "${WALLDIR}/${2}" || exit 1
-        exit 0
-        ;;
-    --set)
-        [ -n "${2:-}" ] || die "--set needs a path relative to $WALLDIR"
-        wall="${WALLDIR}/${2}"
-        ;;
-    "")
-        # No interactive fallback any more -- failing loudly beats silently
-        # doing nothing if something still calls this the old way.
-        die "Usage: set-wallpaper.sh <file> | --set <rel> | --list | --palette <rel>"
-        ;;
-    *)
-        wall="$1"
-        ;;
+	--list)
+		list_wallpapers
+		exit 0
+		;;
+	--palette)
+		[ -n "${2:-}" ] || die "--palette needs a path relative to $WALLDIR"
+		print_palette "${WALLDIR}/${2}" || exit 1
+		exit 0
+		;;
+	--set)
+		[ -n "${2:-}" ] || die "--set needs a path relative to $WALLDIR"
+		wall="${WALLDIR}/${2}"
+		;;
+	"")
+		# No interactive fallback any more -- failing loudly beats silently
+		# doing nothing if something still calls this the old way.
+		die "Usage: set-wallpaper.sh <file> | --set <rel> | --list | --palette <rel>"
+		;;
+	*)
+		wall="$1"
+		;;
 esac
 
 [ -f "$wall" ] || die "Not a file: $wall"
@@ -156,16 +163,16 @@ esac
 # matugen only reads images; still_frame() is what makes a video wallpaper
 # theme exactly like a still does, and the picker draws its thumbnail from
 # the same cached frame.
-src=$(still_frame "$wall") \
-    || die "could not get a still frame from $(basename "$wall") (ffmpeg missing?)"
+src=$(still_frame "$wall") ||
+	die "could not get a still frame from $(basename "$wall") (ffmpeg missing?)"
 
 # ---- 2. colours ----------------------------------------------------------
 matugen -c "${DOTS}/matugen/config.toml" image "$src" \
-    -t "$SCHEME" --prefer "$PREFER" >/dev/null \
-    || die "matugen failed on $(basename "$wall")"
+	-t "$SCHEME" --prefer "$PREFER" >/dev/null ||
+	die "matugen failed on $(basename "$wall")"
 
 # ---- 3. wallpaper --------------------------------------------------------
-cat > "$STATE" <<STATEFILE
+cat >"$STATE" <<STATEFILE
 # Written by hypr/scripts/set-wallpaper.sh -- edit that, not this.
 # Read by hypr/scripts/wallpaper-daemon.sh (mpvpaper) and sddm/sync-wallpaper.sh.
 WALLPAPER=${wall}
@@ -195,12 +202,12 @@ hyprctl reload >/dev/null 2>&1 || true
 # terminal to show it in. Without passwordless sudo, run it by hand:
 #   sudo ~/dotfiles/sddm/sync-wallpaper.sh
 if [ -f /usr/share/sddm/themes/sddm-astronaut-theme/Themes/main.conf ]; then
-    if sudo -n true 2>/dev/null; then
-        sudo -n "${DOTS}/sddm/sync-wallpaper.sh" "$wall" >/dev/null 2>&1 \
-            || echo "sddm sync failed (non-fatal)" >&2
-    else
-        echo "sddm not synced: needs 'sudo ${DOTS}/sddm/sync-wallpaper.sh'" >&2
-    fi
+	if sudo -n true 2>/dev/null; then
+		sudo -n "${DOTS}/sddm/sync-wallpaper.sh" "$wall" >/dev/null 2>&1 ||
+			echo "sddm sync failed (non-fatal)" >&2
+	else
+		echo "sddm not synced: needs 'sudo ${DOTS}/sddm/sync-wallpaper.sh'" >&2
+	fi
 fi
 
 accent=$(grep -oE '#[0-9a-fA-F]{6}' "${DOTS}/quickshell/Colors.qml" | head -1)

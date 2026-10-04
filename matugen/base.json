@@ -1,0 +1,26 @@
+{
+  "base": {
+    "bg": "#141C21",
+    "bg_alt": "#1E262B",
+    "fg": "#93A1A1",
+    "fg_bright": "#CDD6D6",
+    "dim": "#6D8895",
+    "muted": "#617878",
+    "border": "#3C4449",
+    "shadow": "#0A0F12",
+
+    "red": "#EC7875",
+    "red_bright": "#EC407A",
+    "green": "#61C766",
+    "green_bright": "#8BD48F",
+    "yellow": "#FDD835",
+    "yellow_bright": "#FFE082",
+    "blue": "#42A5F5",
+    "blue_bright": "#64B5F6",
+    "magenta": "#BA68C8",
+    "magenta_bright": "#CE93D8",
+    "cyan": "#4DD0E1",
+    "cyan_bright": "#00B19F",
+    "orange": "#E57C46"
+  }
+}

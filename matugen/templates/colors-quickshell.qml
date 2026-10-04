@@ -18,4 +18,22 @@ Singleton {
     readonly property color purple: "{{colors.rainbow_purple.dark.hex}}"
     // Wallpaper-tinted dark surface -- for hovered/selected backgrounds only.
     readonly property color surface: "{{colors.surface_container_high.dark.hex}}"
+
+    // Fixed desktop base from matugen/base.json -- never moves with the
+    // wallpaper. Prefixed so they cannot collide with the harmonized hues
+    // above; Theme.qml gives them their role names.
+    readonly property color baseBg: "{{base.bg}}"
+    readonly property color baseFg: "{{base.fg}}"
+    readonly property color baseDim: "{{base.dim}}"
+    readonly property color baseBorder: "{{base.border}}"
+    readonly property color baseShadow: "{{base.shadow}}"
+    readonly property color baseRed: "{{base.red}}"
+    readonly property color baseRedBright: "{{base.red_bright}}"
+    readonly property color baseGreen: "{{base.green}}"
+    readonly property color baseYellow: "{{base.yellow}}"
+    readonly property color baseBlue: "{{base.blue}}"
+    readonly property color baseMagenta: "{{base.magenta}}"
+    readonly property color baseCyan: "{{base.cyan}}"
+    readonly property color baseCyanBright: "{{base.cyan_bright}}"
+    readonly property color baseOrange: "{{base.orange}}"
 }

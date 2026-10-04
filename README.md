@@ -231,8 +231,13 @@ below). A committed snapshot in `matugen/defaults/` seeds all of them on a
 fresh clone, before `set-wallpaper.sh` ever runs, so the desktop always comes
 up themed.
 
-Backgrounds and foregrounds stay hand-written (`#141C21` / `#93A1A1`) so only
-the accent moves with the wallpaper.
+Backgrounds, foregrounds and the fixed ANSI/semantic colours are written down
+exactly once, in `matugen/base.json`, and never move with the wallpaper -- only
+the accent does. matugen imports that file (`import_json_files`), so every
+template emits `{{base.<name>}}` next to the accent and no config carries a
+literal hex of its own. The two consumers outside matugen read it directly:
+`.zshrc` (fzf colours, parsed with zsh builtins) and `sddm/sync-wallpaper.sh`
+(via `jq`). Change a base colour there, then re-run `set-wallpaper.sh`.
 
 * The shell prompt is the one config that is **built** rather than imported,
   because starship's TOML has no include directive.

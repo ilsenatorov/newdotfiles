@@ -3,8 +3,18 @@
 -- editor must never drift onto a different accent than the rest of the desktop.
 return {
     accent     = "#acc7ff",
-    accent_alt = "#cabff8",
-    accent_dim = "#004590",
+    accent_alt = "#ddbce0",
+    accent_dim = "#294677",
     urgent     = "#ffb4ab",
-    surface    = "#262a33",
+    surface    = "#282a2f",
+
+    -- Fixed desktop base, from matugen/base.json.
+    bg         = "#141C21",
+    bg_alt     = "#1E262B",
+    fg         = "#93A1A1",
+    fg_bright  = "#CDD6D6",
+    border     = "#3C4449",
+    muted      = "#617878",
+    green      = "#61C766",
+    yellow     = "#FDD835",
 }

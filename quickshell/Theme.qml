@@ -3,9 +3,10 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Hand-written half of the palette and all geometry. Mirrors rofi/styles/base.rasi
-// and hyprlock.conf -- radius 12, #141C21 base, #93A1A1 text, MesloLGS NF
-// everywhere, no bold. Colors.qml holds the matugen-generated other half.
+// Colour roles and all geometry. Mirrors hyprlock.conf -- radius 12, MesloLGS
+// NF everywhere, no bold. Every colour value comes from Colors.qml (generated
+// by matugen): the wallpaper accent, plus the fixed base from matugen/base.json
+// exposed below under its role names.
 // This shell is now the single source of truth for the bar and notification
 // palette that waybar/style.css and mako/config used to own -- see the
 // per-module color roles below, ported straight from waybar/style.css.
@@ -63,8 +64,8 @@ Singleton {
     readonly property int barModulePad: Math.round(6 * s)
     readonly property int fsBar: Local.fsBar > 0 ? Local.fsBar : Math.round(16 * s)
 
-    // #141C21 @ 85%, matches the old waybar pill exactly (QML hex is #AARRGGBB).
-    readonly property color barPill: "#D9141C21"
+    // Base @ 85%, matches the old waybar pill exactly.
+    readonly property color barPill: Qt.alpha(Colors.baseBg, 0.85)
 
     // ---- notifications --------------------------------------------------
     readonly property int notifWidth: Math.round(380 * s)
@@ -127,42 +128,42 @@ Singleton {
     readonly property int osdTimeout: 1200
 
     // ---- per-module bar colors, ported 1:1 from waybar/style.css ---------
-    // Fixed semantics: matugen never touches these, same values the bar and
-    // notifications have always used.
-    readonly property color pink: "#EC407A"
-    readonly property color purple: "#BA68C8"
-    readonly property color blue: "#42A5F5"
-    readonly property color cyan: "#4DD0E1"
-    readonly property color teal: "#00B19F"
-    readonly property color green: "#61C766"
-    readonly property color orange: "#E57C46"
-    readonly property color blueGray: "#6D8895"
+    // Fixed semantics from matugen/base.json: the wallpaper never moves these,
+    // same values the bar and notifications have always used.
+    readonly property color pink: Colors.baseRedBright
+    readonly property color purple: Colors.baseMagenta
+    readonly property color blue: Colors.baseBlue
+    readonly property color cyan: Colors.baseCyan
+    readonly property color teal: Colors.baseCyanBright
+    readonly property color green: Colors.baseGreen
+    readonly property color orange: Colors.baseOrange
+    readonly property color blueGray: Colors.baseDim
 
-    // QML hex is #AARRGGBB, not #RRGGBBAA. Lower than waybar's 0xD9 on purpose:
+    // Base @ 40% -- lower than the bar pill's 85% on purpose:
     // this is a big surface, so it can carry a real frosted-glass read where a
     // thin bar pill cannot. Hyprland blurs it via the quickshell-dashboard layer
     // rule in hypr/hyprland.lua -- keep this above that rule's ignore_alpha (0.2)
     // or the blur stops being applied at all.
-    readonly property color surface: "#66141C21"
+    readonly property color surface: Qt.alpha(Colors.baseBg, 0.4)
 
     // Every popup window -- dropdown panels, menus, dashboard, Ask -- drawn
     // by ui/Surface.qml. They can pop up over arbitrary windows, so the
     // frosted-glass `surface` above reads poorly over bright content: nearly
     // solid instead. Hyprland still blurs the little that shows through (the
     // quickshell-* layer rules in hypr/hyprland.lua).
-    readonly property color windowSurface: "#F2141C21"
+    readonly property color windowSurface: Qt.alpha(Colors.baseBg, 0.95)
     readonly property int windowBorderW: 1
     readonly property color windowBorder: rule
-    readonly property color windowShadow: "#0A0F12"
-    readonly property color fg: "#93A1A1"
-    readonly property color dim: "#6D8895"
-    readonly property color rule: "#3C4449"
-    readonly property color track: "#593C4449"
-    readonly property color divider: "#803C4449"
+    readonly property color windowShadow: Colors.baseShadow
+    readonly property color fg: Colors.baseFg
+    readonly property color dim: Colors.baseDim
+    readonly property color rule: Colors.baseBorder
+    readonly property color track: Qt.alpha(Colors.baseBorder, 0.35)
+    readonly property color divider: Qt.alpha(Colors.baseBorder, 0.5)
 
-    // Fixed semantics -- matugen never regenerates these, same values as waybar.
-    readonly property color red: "#EC7875"
-    readonly property color yellow: "#FDD835"
+    // Fixed semantics from matugen/base.json, same values as waybar.
+    readonly property color red: Colors.baseRed
+    readonly property color yellow: Colors.baseYellow
 
     // Severity for a reading: `base` below warn, yellow from warn, red from
     // crit. One helper so every gauge on the dashboard agrees on thresholds.

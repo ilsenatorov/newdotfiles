@@ -25,10 +25,16 @@
 set -euo pipefail
 
 dry_run=0
-[ "${1:-}" = "--dry-run" ] && { dry_run=1; shift; }
+[ "${1:-}" = "--dry-run" ] && {
+	dry_run=1
+	shift
+}
 
 query=0
-[ "${1:-}" = "--query" ] && { query=1; shift; }
+[ "${1:-}" = "--query" ] && {
+	query=1
+	shift
+}
 
 placement="${1:-}"
 target="${2:-}"
@@ -143,8 +149,8 @@ if [ -z "$target" ]; then
 	esac
 fi
 
-jq -e --arg n "$target" 'map(select(.name == $n)) | length > 0' <<<"$mons" >/dev/null \
-	|| die "No such output: $target"
+jq -e --arg n "$target" 'map(select(.name == $n)) | length > 0' <<<"$mons" >/dev/null ||
+	die "No such output: $target"
 [ "$target" = "$anchor" ] && die "$target is the anchor display; pick another output."
 
 read -r tlw tlh tscale _tx _ty _tdis _tmir < <(target_metrics "$target")
@@ -159,11 +165,11 @@ disabled="false"
 position="0x0"
 
 case "$placement" in
-	right)   position="${alw}x0" ;;
-	left)    position="-${tlw}x0" ;;
-	above)   position="0x-${tlh}" ;;
-	below)   position="0x${alh}" ;;
-	mirror)  mirror="$anchor" ;;
+	right) position="${alw}x0" ;;
+	left) position="-${tlw}x0" ;;
+	above) position="0x-${tlh}" ;;
+	below) position="0x${alh}" ;;
+	mirror) mirror="$anchor" ;;
 	disable) disabled="true" ;;
 	*) die "Unknown placement: $placement (want: left right above below mirror disable)" ;;
 esac
@@ -193,10 +199,10 @@ fi
 python3 "$(dirname "$0")/monitor-layout.py" --place "$placement" "$target"
 
 case "$placement" in
-	mirror)      msg="$target mirroring $anchor" ;;
-	disable)     msg="$target disabled" ;;
-	above|below) msg="$target placed $placement $anchor" ;;
-	*)           msg="$target placed $placement of $anchor" ;;
+	mirror) msg="$target mirroring $anchor" ;;
+	disable) msg="$target disabled" ;;
+	above | below) msg="$target placed $placement $anchor" ;;
+	*) msg="$target placed $placement of $anchor" ;;
 esac
 
 notify-send "Monitor placement" "$msg" 2>/dev/null || true

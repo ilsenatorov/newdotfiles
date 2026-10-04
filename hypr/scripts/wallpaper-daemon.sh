@@ -29,13 +29,13 @@ MPV_HWDEC_INTEROP="auto"
 
 wall="${1:-$WALLPAPER}"
 if [ ! -f "$wall" ]; then
-    notify-send -u critical "Wallpaper" "Not a file: ${wall:-<unset>}" 2>/dev/null || true
-    exit 1
+	notify-send -u critical "Wallpaper" "Not a file: ${wall:-<unset>}" 2>/dev/null || true
+	exit 1
 fi
 
 command -v mpvpaper >/dev/null || {
-    notify-send "Wallpaper" "mpvpaper not installed -- skipping wallpaper daemon" 2>/dev/null || true
-    exit 0
+	notify-send "Wallpaper" "mpvpaper not installed -- skipping wallpaper daemon" 2>/dev/null || true
+	exit 0
 }
 
 # mpv options, in mpvpaper's -o form (no leading dashes needed):
@@ -79,7 +79,7 @@ OPTS="$OPTS input-ipc-server=${XDG_RUNTIME_DIR:-/tmp}/mpvpaper.sock"
 # invocation. (mpvpaper does not accept '*' for this -- that matches no output
 # and mpv exits immediately, leaving the screen black.)
 pkill -x mpvpaper 2>/dev/null || true
-pkill -x hyprpaper 2>/dev/null || true   # legacy: no longer started, may linger
+pkill -x hyprpaper 2>/dev/null || true # legacy: no longer started, may linger
 sleep 0.3
 
 setsid uwsm app -- mpvpaper -f -p -o "$OPTS" ALL "$wall" >/dev/null 2>&1 </dev/null &
@@ -87,10 +87,10 @@ disown 2>/dev/null || true
 
 # confirm it came up; mpvpaper exits silently on an unreadable file
 for _ in 1 2 3 4 5 6; do
-    sleep 0.4
-    pgrep -x mpvpaper >/dev/null && exit 0
+	sleep 0.4
+	pgrep -x mpvpaper >/dev/null && exit 0
 done
 
 notify-send -u critical "Wallpaper" \
-    "mpvpaper did not stay up on $(basename "$wall")" 2>/dev/null || true
+	"mpvpaper did not stay up on $(basename "$wall")" 2>/dev/null || true
 exit 1

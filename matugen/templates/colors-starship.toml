@@ -35,7 +35,7 @@ on_hue     = "{{colors.on_surface.dark.hex}}"
 # hue_orange = "{{colors.rainbow_orange.dark.hex}}"
 # hue_green  = "{{colors.rainbow_green.dark.hex}}"
 # hue_cyan   = "{{colors.rainbow_cyan.dark.hex}}"
-# on_hue     = "#141C21"
+# on_hue     = "{{base.bg}}"
 
 # --- spare hues -----------------------------------------------------------
 # Unused by the default chain, same as gruvbox_dark's own color_purple. Wired up
@@ -53,14 +53,14 @@ on_surface        = "{{colors.on_surface.dark.hex}}"         #              (was
 error    = "{{colors.error.dark.hex}}"
 on_error = "{{colors.on_error.dark.hex}}"
 
-# --- fixed: hand-written semantic colours ---------------------------------
-# Per matugen/config.toml's rule, semantic colours stay hand-written. These are
-# the desktop base from kitty/kitty.conf. gruvbox-rainbow uses
+# --- fixed: semantic colours ----------------------------------------------
+# Per matugen/config.toml's rule, semantic colours never follow the wallpaper.
+# These are the desktop base from matugen/base.json. gruvbox-rainbow uses
 # color_green/color_red for the prompt character for exactly this reason: a
 # success/failure signal must not drift to whatever hue the wallpaper happens
 # to be, or it stops meaning anything.
-green   = "#61C766"
-red     = "#EC7875"
-yellow  = "#FDD835"
-cyan    = "#4DD0E1"
-base_bg = "#141C21"
+green   = "{{base.green}}"
+red     = "{{base.red}}"
+yellow  = "{{base.yellow}}"
+cyan    = "{{base.cyan}}"
+base_bg = "{{base.bg}}"
