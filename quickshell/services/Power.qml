@@ -28,7 +28,7 @@ Singleton {
             // straight from the old script.
             "lock": ["sh", "-c", "pidof hyprlock || hyprlock"],
             // Muting first stops audio blaring on resume.
-            "sleep": ["sh", "-c", "amixer set Master mute; systemctl suspend"],
+            "sleep": ["sh", "-c", "pactl set-sink-mute @DEFAULT_SINK@ 1; systemctl suspend"],
             // Hyprland's Lua config parser has no `exit` keyword dispatcher --
             // the runtime form is a Lua expression. See hypr/hyprland.lua.
             "logout": ["hyprctl", "dispatch", "hl.dsp.exit()"],

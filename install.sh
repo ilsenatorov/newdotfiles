@@ -106,7 +106,9 @@ PKGS_DESKTOP=(
 	pipewire pipewire-pulse wireplumber
 	# network + bluetooth -- network-manager-applet dropped, the bar's
 	# network module + Network panel (SUPER+D, n) replace it
-	networkmanager bluez bluez-utils
+	# blueman: its applet (XDG autostart, started by uwsm) is the Bluetooth
+	# agent that answers PIN/passkey prompts for the Bluetooth panel
+	networkmanager bluez bluez-utils blueman
 	# used by the scripts -- qrencode is the Network panel's Wi-Fi share QR
 	git jq curl ffmpeg imagemagick libnotify fzf qrencode
 	# fallback if hyprsunset is ever missing
@@ -121,6 +123,8 @@ PKGS_FONTS=(
 PKGS_RANGER=(
 	w3m highlight ffmpegthumbnailer mediainfo perl-image-exiftool
 	atool 7zip unrar odt2txt transmission-cli elinks lynx
+	# plocate: ranger's `l` (fzf_locate in ranger/commands.py)
+	plocate
 )
 PKGS_SDDM=(sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative)
 # Terminal/dev tooling that .zshrc, git/config and nvim/ assume is present.
