@@ -23,13 +23,12 @@ Item {
     property bool ready: false
     Component.onCompleted: {
         root.ready = true;
-        // Processes/NVMe sampling and the 2s poll only while this is open.
+        // Processes/NVMe sampling only while this is open; the 2s poll is
+        // always on (shell.qml binds SysMon.fast for the bar).
         SysMon.procsActive = true;
-        SysMon.fast = true;
     }
     Component.onDestruction: {
         SysMon.procsActive = false;
-        SysMon.fast = false;
     }
 
     readonly property real sc: Theme.s
