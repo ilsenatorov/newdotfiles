@@ -27,10 +27,12 @@ Singleton {
     readonly property int dashboardH: num("DASHBOARD_H", 0)
 
     // Comma-separated module names per bar section; Bar.qml maps them through
-    // its registry. A key absent from the file keeps its default below; a key
-    // present but empty hides that section's pill entirely.
-    readonly property var barLeft: list("BAR_LEFT", ["workspaces", "clock"])
-    readonly property var barCenter: list("BAR_CENTER", ["gpu", "sys", "battery", "media"])
+    // its registry (unknown names, e.g. the retired gpu/sys, are skipped). A
+    // key absent from the file keeps its default below; a key present but
+    // empty hides that section's pill entirely. battery hides itself on a
+    // machine without one, so it needs no per-machine probe.
+    readonly property var barLeft: list("BAR_LEFT", ["workspaces", "clock", "battery"])
+    readonly property var barCenter: list("BAR_CENTER", ["media"])
     readonly property var barRight: list("BAR_RIGHT", ["network", "bluetooth", "audio", "notifications", "status", "language"])
 
     readonly property string hddDevice: values["HDD_DEVICE"] || ""

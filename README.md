@@ -127,11 +127,11 @@ FONT=             # blank = MesloLGS NF
 
 # Bar modules, comma-separated per section. A name left out is dropped
 # entirely; an empty value hides that pill. Bar.qml's registry has the full
-# list: workspaces, clock, gpu, sys, battery, network, bluetooth,
-# audio, language.
-BAR_LEFT=workspaces,clock
-BAR_CENTER=gpu,sys,battery
-BAR_RIGHT=network,bluetooth,audio,language
+# list: workspaces, clock, battery, media, network, bluetooth, audio,
+# notifications, status, language.
+BAR_LEFT=workspaces,clock,battery
+BAR_CENTER=media
+BAR_RIGHT=network,bluetooth,audio,notifications,status,language
 
 # Expensive pollers. 0 disables the poller outright, not just the widget.
 SVC_WEATHER=1

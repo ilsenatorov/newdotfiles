@@ -255,15 +255,15 @@ Singleton {
         return null;
     }
 
-    // Signal-strength glyph, four bars over Material Design icons -- mirrors
-    // the four-bar convention the old bluetooth glyph set already used.
+    // Signal-strength glyph, Material Design's four-bar wifi ramp. (The old
+    // Font Awesome set fell back to a plug below 80%, which read as wired.)
     // WifiNetwork.signalStrength is 0.0-1.0, not a percentage.
     function signalGlyph(strength: real): string {
-        if (strength >= 0.80) return "";
-        if (strength >= 0.55) return "";
-        if (strength >= 0.30) return "";
-        if (strength > 0) return "";
-        return "";
+        if (strength >= 0.80) return "󰤨";
+        if (strength >= 0.55) return "󰤥";
+        if (strength >= 0.30) return "󰤢";
+        if (strength > 0) return "󰤟";
+        return "󰤯";
     }
 
     function toggleWifi(): void {

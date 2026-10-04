@@ -430,7 +430,6 @@ svc_weather=1
 svc_claude=1
 interval_fast=2000
 interval_slow=10000
-bar_center="gpu,sys,battery,media"
 if [ "$weak" -eq 1 ]; then
 	ui_scale=0.8
 	svc_weather=0
@@ -438,8 +437,6 @@ if [ "$weak" -eq 1 ]; then
 	interval_fast=4000
 	interval_slow=20000
 fi
-[ "$has_nvidia" -eq 1 ] || bar_center=${bar_center/gpu,/}
-[ "$has_battery" -eq 1 ] || bar_center=${bar_center/,battery/}
 
 local_conf_content="# Per-machine overrides -- read by shell scripts and quickshell/Local.qml.
 # See hypr/hyprland.lua's per-machine block and hypr/local.lua (if present)
@@ -459,8 +456,8 @@ FONT=
 
 # --- bar modules --------------------------------------------------------
 # Comma-separated; a module not listed is dropped. Empty = that pill hidden.
-BAR_LEFT=workspaces,clock
-BAR_CENTER=${bar_center}
+BAR_LEFT=workspaces,clock,battery
+BAR_CENTER=media
 BAR_RIGHT=network,bluetooth,audio,notifications,status,language
 
 # --- services -------------------------------------------------------------

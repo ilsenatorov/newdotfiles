@@ -13,11 +13,15 @@ Row {
     required property var registry
     spacing: Theme.barPillGap
 
+    // Names the registry doesn't know (a stale local.conf listing a retired
+    // module) are dropped rather than leaving an empty slot behind a Sep.
+    readonly property var known: names.filter(n => registry[n] !== undefined)
+
     // The loaded module item for `name`, or null -- how Bar.qml finds where a
     // dropdown's droplet should hang from.
     function find(name: string): var {
         for (let i = 0; i < rep.count; i++) {
-            if (root.names[i] === name) {
+            if (root.known[i] === name) {
                 const row = rep.itemAt(i);
                 return row ? row.children[1].item : null;
             }
@@ -27,7 +31,7 @@ Row {
 
     Repeater {
         id: rep
-        model: root.names
+        model: root.known
         // A module can hide itself (media with no player, status with
         // nothing to report) by declaring `shown`; the whole entry goes then,
         // its divider too, so the pill never shows a dangling Sep. Not

@@ -24,8 +24,6 @@ Item {
     // Everything else is parameterless.
     Component { id: workspacesC; Workspaces { screen: root.screen } }
     Component { id: clockC; ClockModule { onCalendarRequested: root.panelRequested("calendar") } }
-    Component { id: gpuC; Gpu {} }
-    Component { id: sysC; Sys {} }
     Component { id: batteryC; Battery {} }
     Component { id: networkC; Network { onClicked: root.panelRequested("network") } }
     Component { id: bluetoothC; Bluetooth { onClicked: root.panelRequested("bluetooth") } }
@@ -37,7 +35,7 @@ Item {
 
     readonly property var registry: ({
         workspaces: workspacesC, clock: clockC,
-        gpu: gpuC, sys: sysC, battery: batteryC,
+        battery: batteryC,
         network: networkC, bluetooth: bluetoothC, audio: audioC, language: languageC,
         media: mediaC, notifications: notificationsC, status: statusC,
     })
