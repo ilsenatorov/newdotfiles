@@ -183,8 +183,8 @@ the why behind them.
   __ranger__ preview images inline with no overlay process
 * __ranger__ as the file manager in terminal
 * __quickshell__ for the bar, notifications, the network/bluetooth/audio/
-  calendar panels (`quickshell/`; SUPER+N/G), and every menu -- the
-  clipboard, power and exit-confirm pickers (SUPER+V, SUPER+SHIFT+S/E), plus
+  calendar panels (`quickshell/`; bar clicks or SUPER+D), the SUPER+G
+  dashboard, and every menu -- the clipboard picker (SUPER+V), plus
   the SUPER+D menu: one card that opens network, bluetooth, audio, media,
   notifications, quick settings, displays, wallpaper, ask, resize, reload and
   power by letter, launches your most-used apps with 1-9 and 0, and searches apps,
@@ -200,8 +200,9 @@ the why behind them.
 * __neovim__ (`nvim/`), a compact lazy.nvim setup (treesitter, LSP via mason,
   cmp, telescope, gitsigns) with its own accent from matugen, same as every
   other app
-* __eza__/__bat__/__fd__/__ripgrep__ -- `.zshrc` aliases `ls`/`cat`/`grep` to
-  them, each guarded so a machine missing one still works
+* __eza__/__bat__/__fd__/__ripgrep__ -- `.zshrc` aliases `ls`/`cat` to
+  eza/bat (each guarded so a machine missing one still works); fd and rg
+  back fzf, telescope and the shell, but `grep` stays grep
 * __git-delta__ + __lazygit__ (`git/config`) -- delta as the diff pager,
   lazygit for the TUI
 * __shellcheck__/__shfmt__/__luacheck__ to run `check.sh` (dropped by `--minimal`)

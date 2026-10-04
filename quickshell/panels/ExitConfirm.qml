@@ -3,7 +3,8 @@ import Quickshell
 import ".."
 import "../ui"
 
-// SUPER+SHIFT+E. Replaces hypr/scripts/exit-confirm.sh, which piped two
+// No keybind (SUPER+SHIFT+E moves a window to workspace 3 now); open it
+// with `qs ipc call menu toggle exit`. Replaces hypr/scripts/exit-confirm.sh, which piped two
 // lines into `rofi -dmenu -selected-row 0` purely to ask "are you sure".
 // The script had nothing else in it, so it is deleted rather than ported --
 // this component is the whole thing.

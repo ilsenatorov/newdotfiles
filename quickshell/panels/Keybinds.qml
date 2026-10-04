@@ -3,7 +3,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+/ (or ? in the SUPER+D hub). A searchable list of every Hyprland
+// `?` in the SUPER+D hub. A searchable list of every Hyprland
 // bind -- the data and its formatting live in services/KeybindList.qml, which
 // the SUPER+D search's `?` mode shares.
 //

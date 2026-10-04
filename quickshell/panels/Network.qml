@@ -3,7 +3,8 @@ import Quickshell.Networking
 import ".."
 import "../services"
 
-// Replaces the SUPER+N networkmanager_dmenu rofi menu. Ethernet and Wi-Fi in
+// SUPER+D, n (or the bar's network module). Replaces the old
+// networkmanager_dmenu rofi menu. Ethernet and Wi-Fi in
 // one list: Ethernet state via Net's nmcli monitor, Wi-Fi live via
 // Quickshell.Networking; joins that need more than a saved profile (open,
 // new/wrong password, WPA-Enterprise, hidden SSIDs) go through Net.join() ->

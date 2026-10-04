@@ -90,7 +90,8 @@ ShellRoot {
     }
 
     // qs ipc call panel toggle <name> -- for keybinds that used to launch a
-    // GTK/rofi tool directly (SUPER+N network -- see hypr/hyprland.lua).
+    // GTK/rofi tool directly. Unbound now -- the bar and the SUPER+D hub open
+    // these -- but kept for scripts.
     // Bluetooth/audio are pages of the SUPER+D hub now (menuWin below).
     IpcHandler {
         target: "panel"
@@ -99,9 +100,9 @@ ShellRoot {
         function close(): void { shell.activePanel = ""; }
     }
 
-    // qs ipc call audio cycleSink -- bound to SUPER+SHIFT+M in hypr/hyprland.lua,
-    // for switching output without opening the panel at all (SUPER+D does that,
-    // and is where the full list with arrow-key picking lives).
+    // qs ipc call audio cycleSink -- not bound to a key (middle-click on the
+    // bar's audio module does the same); for scripts that switch output
+    // without opening the panel.
     IpcHandler {
         target: "audio"
 
@@ -204,8 +205,8 @@ ShellRoot {
         }
     }
 
-    // qs ipc call menu toggle <name> -- bound to SUPER+D/V/M and SUPER+SHIFT+S/E
-    // in hypr/hyprland.lua. These six were the last things still shelling out
+    // qs ipc call menu toggle <name> -- bound to SUPER+D (hub) and SUPER+V
+    // (clipboard) in hypr/hyprland.lua. These six were the last things still shelling out
     // to rofi; see quickshell/ui/Picker.qml. The keybinds use `toggle`, not
     // `open`: every overlay in this file closes on its own keybind the way the
     // panels and the dashboard do (rofi died on a second SUPER+D too, since
@@ -354,8 +355,8 @@ ShellRoot {
             onCleared: shell.activePanel = ""
         }
 
-        // Grabs keyboard focus the instant a panel opens (SUPER+N/Y/M all
-        // route here via shell.togglePanel), so the network/bluetooth panels
+        // Grabs keyboard focus the instant a panel opens (bar clicks and `qs ipc call panel
+        // toggle` route here via shell.togglePanel), so the network/bluetooth panels
         // are drivable with no mouse click first -- Network.qml and
         // Bluetooth.qml declare `focus: true` on their root, which this
         // scope's `focus: true` binding then activates. Escape closes

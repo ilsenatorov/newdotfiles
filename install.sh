@@ -105,7 +105,7 @@ PKGS_DESKTOP=(
 	mpv playerctl brightnessctl libpulse
 	pipewire pipewire-pulse wireplumber
 	# network + bluetooth -- network-manager-applet dropped, the bar's
-	# network module + Network panel (SUPER+N) replace it
+	# network module + Network panel (SUPER+D, n) replace it
 	networkmanager bluez bluez-utils
 	# used by the scripts -- qrencode is the Network panel's Wi-Fi share QR
 	git jq curl ffmpeg imagemagick libnotify fzf qrencode
@@ -594,7 +594,7 @@ say "done"
 cat <<EOF
 Next:
   * log out and pick "Hyprland (uwsm-managed)" in the display manager
-  * SUPER+D launcher, SUPER+W wallpaper+accent, SUPER+SHIFT+E exit menu
+  * SUPER+D menu (d search, w wallpaper+accent, p power), SUPER+V clipboard
   * SDDM theme (optional):  ./install.sh --sddm
   * after a git pull:       ./install.sh   (idempotent)
 EOF

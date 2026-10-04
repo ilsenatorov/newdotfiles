@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Session/power commands, shared by the SUPER+SHIFT+S power menu
+// Session/power commands, shared by the power menu (SUPER+D, p)
 // (panels/PowerMenu.qml) and the SUPER+D search. The commands are carried over
 // verbatim from the old rofi/powermenu-hypr.sh.
 //
