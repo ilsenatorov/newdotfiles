@@ -19,11 +19,11 @@ STATE="${DOTS}/hypr/wallpaper.conf"
 # laptop. Defaults below are the safe choice if the file is missing.
 GPUCONF="${HOME}/.config/environment.d/20-va.conf"
 
-WALLPAPER=""
+# Read, not sourced: set-wallpaper.sh writes the path unquoted, so sourcing
+# would split a path with spaces and run the tail as a command.
+WALLPAPER=$(sed -n 's/^WALLPAPER=//p' "$STATE" 2>/dev/null | tail -1)
 MPV_HWDEC="auto"
 MPV_HWDEC_INTEROP="auto"
-# shellcheck source=/dev/null
-[ -f "$STATE" ] && . "$STATE"
 # shellcheck source=/dev/null
 [ -f "$GPUCONF" ] && . "$GPUCONF"
 
