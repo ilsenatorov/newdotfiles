@@ -182,6 +182,14 @@ Picker {
 
     // `=2^10*3` -> 3072. Only digits, operators and parentheses get through
     // the check, so the evaluation can't reach anything but arithmetic.
+    // "^" -> "**", and a unary minus becomes "(0-1)*": JS rejects "-2**2"
+    // outright, and this keeps maths precedence (-2^2 = -4, 2^-1 = 0.5).
+    // ponytail: a negative exponent inside a chain (2^-3^2) still evaluates
+    // left-heavy; a real tokenizer if that ever matters.
+    function jsExpr(e: string): string {
+        return e.replace(/(^|[+\-*/%^(])\s*-/g, "$1(0-1)*").replace(/\^/g, "**");
+    }
+
     function calcRows(expr: string): var {
         const e = expr.trim().replace(/,/g, ".");
         if (e === "")
@@ -190,7 +198,7 @@ Picker {
             return [{ label: "Only numbers and + - * / % ^ ( )", sublabel: "", glyph: "󰃬", key: { type: "noop" } }];
         let v;
         try {
-            v = Function('"use strict"; return (' + e.replace(/\^/g, "**") + ");")();
+            v = Function('"use strict"; return (' + root.jsExpr(e) + ");")();
         } catch (err) {
             return [{ label: "…", sublabel: "incomplete expression", glyph: "󰃬", key: { type: "noop" } }];
         }
