@@ -11,10 +11,21 @@ import ".."
 // Rows are space-separated tokens, base level then shift level; a shift
 // glyph is only drawn when it isn't just the uppercase letter. Graphite
 // mirrors xkb/symbols/graphite -- keep them in sync.
+//
+// While the TOTEM is the keyboard in use it's drawn in the TOTEM's shape
+// instead. Its firmware sends qwerty keycodes, so the same rows and codes
+// apply; the outer pinky keys and thumbs are labelled by hand from its base
+// layer.
 Item {
     id: root
 
     property string layout: ""
+    // Hyprland's main keyboard, i.e. the one last typed on.
+    property string keyboard: ""
+    // SUPER+SHIFT+K pins the other shape until the shell restarts.
+    property var forceTotem: null
+    readonly property bool totem: forceTotem ?? /totem/i.test(keyboard)
+    function flip() { forceTotem = !totem }
     // Set by shell.qml while visible; gates the keypress reader.
     property bool active: false
     // Evdev keycodes currently held, from scripts/keypress.py.
@@ -55,9 +66,45 @@ Item {
 
     readonly property int unit: Math.round(46 * Theme.s)
     readonly property int gap: Math.round(5 * Theme.s)
+    readonly property int step: unit + gap
+
+    // TOTEM column stagger (in keys, down from the middle finger), outer
+    // pinky to inner index on the left, mirrored on the right.
+    readonly property var totemStagger: [0.5, 0.15, 0, 0.15, 0.3]
+    // Thumbs left to right: label, evdev keycode, column, drop.
+    readonly property var totemThumbs: [
+        ["esc", 1, 3, 3.3], ["spc", 57, 4, 3.4], ["ret", 28, 5, 3.6],
+        ["bsp", 14, 7.5, 3.6], ["tab", 15, 8.5, 3.4], ["del", 111, 9.5, 3.3],
+    ]
+
+    // Every drawn key: position in key units, legends, evdev code, home row.
+    readonly property var keys: {
+        const rows = maps[mapName].map(r => [r[0].split(" "), r[1].split(" ")]);
+        const key = (x, y, row, i) => ({
+            x, y, base: rows[row][0][i], shift: rows[row][1][i] ?? "",
+            code: codes[row][i], home: row === 2 && i < 10,
+        });
+        const out = [];
+        if (!totem) {
+            rows.forEach((r, row) => r[0].forEach((_, i) => out.push(key(stagger[row] + i, row, row, i))));
+            return out;
+        }
+        // Rows 1-3 are the 3x5 halves; column 0 is the outer pinky key.
+        for (let row = 1; row <= 3; row++)
+            for (let i = 0; i < 10; i++)
+                out.push(key(i < 5 ? i + 1 : i + 2.5, row - 1 + totemStagger[i < 5 ? i : 9 - i], row, i));
+        out.push({ x: 0, y: 2.5, base: "fn", shift: "", code: -1, home: false });
+        out.push({ x: 12.5, y: 2.5, base: "adj", shift: "", code: -1, home: false });
+        for (const [label, code, x, y] of totemThumbs)
+            out.push({ x, y, base: label, shift: "", code, home: false });
+        return out;
+    }
 
     implicitWidth: board.implicitWidth + Theme.pad * 2
     implicitHeight: board.implicitHeight + Theme.pad * 2
+
+    // Main keyboard can change while hidden; re-read it on every show.
+    onActiveChanged: if (active) devicesProc.running = true
 
     Process {
         id: devicesProc
@@ -68,7 +115,10 @@ Item {
                 try {
                     const kbs = JSON.parse(text).keyboards ?? [];
                     const kb = kbs.filter(k => k.main === true)[0] ?? kbs[0];
-                    if (kb) root.layout = kb.active_keymap;
+                    if (kb) {
+                        root.layout = kb.active_keymap;
+                        root.keyboard = kb.name;
+                    }
                 } catch (e) {}
             }
         }
@@ -92,6 +142,7 @@ Item {
         function onRawEvent(event) {
             if (event.name !== "activelayout") return;
             const parts = event.data.split(",");
+            root.keyboard = parts[0];
             root.layout = parts[parts.length - 1] ?? "";
         }
     }
@@ -103,12 +154,14 @@ Item {
         border.color: Qt.alpha(Theme.rule, 0.6)
     }
 
-    Column {
+    Item {
         id: board
         anchors.centerIn: parent
-        spacing: root.gap
+        implicitWidth: Math.max(...root.keys.map(k => k.x)) * root.step + root.unit
+        implicitHeight: title.height + root.gap + Math.max(...root.keys.map(k => k.y)) * root.step + root.unit
 
         Text {
+            id: title
             text: root.layout || root.mapName
             font.family: Theme.font
             font.pixelSize: Theme.fsLabel
@@ -116,56 +169,42 @@ Item {
         }
 
         Repeater {
-            model: root.maps[root.mapName]
+            model: root.keys
 
-            Row {
-                id: keyRow
+            Rectangle {
+                id: key
                 required property var modelData
-                required property int index
-                readonly property var base: modelData[0].split(" ")
-                readonly property var shifted: modelData[1].split(" ")
+                readonly property bool held: root.down.includes(modelData.code)
+                readonly property bool word: modelData.base.length > 1
 
-                spacing: root.gap
-                leftPadding: root.stagger[index] * (root.unit + root.gap)
+                x: Math.round(modelData.x * root.step)
+                y: title.height + root.gap + Math.round(modelData.y * root.step)
+                width: root.unit
+                height: root.unit
+                radius: Math.round(6 * Theme.s)
+                // Home row tinted so your fingers' anchor is easy to find.
+                color: held ? Colors.accent
+                    : modelData.home ? Qt.alpha(Colors.accentDim, 0.45)
+                    : Qt.alpha(Theme.rule, 0.35)
+                Behavior on color { ColorAnimation { duration: 80 } }
 
-                Repeater {
-                    model: keyRow.base
-
-                    Rectangle {
-                        id: key
-                        required property string modelData
-                        required property int index
-                        readonly property string shift: keyRow.shifted[index] ?? ""
-                        readonly property bool held: root.down.includes(root.codes[keyRow.index][index])
-
-                        width: root.unit
-                        height: root.unit
-                        radius: Math.round(6 * Theme.s)
-                        // Home row tinted so your fingers' anchor is easy to find.
-                        color: held ? Colors.accent
-                            : keyRow.index === 2 ? Qt.alpha(Colors.accentDim, 0.45)
-                            : Qt.alpha(Theme.rule, 0.35)
-                        Behavior on color { ColorAnimation { duration: 80 } }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: key.modelData
-                            font.family: Theme.font
-                            font.pixelSize: Math.round(20 * Theme.s)
-                            font.bold: true
-                            color: key.held ? Colors.baseBg : Colors.accent
-                        }
-                        Text {
-                            visible: key.shift !== key.modelData.toUpperCase()
-                            anchors.top: parent.top
-                            anchors.right: parent.right
-                            anchors.margins: Math.round(3 * Theme.s)
-                            text: key.shift
-                            font.family: Theme.font
-                            font.pixelSize: Math.round(11 * Theme.s)
-                            color: Theme.dim
-                        }
-                    }
+                Text {
+                    anchors.centerIn: parent
+                    text: key.modelData.base
+                    font.family: Theme.font
+                    font.pixelSize: Math.round((key.word ? 13 : 20) * Theme.s)
+                    font.bold: true
+                    color: key.held ? Colors.baseBg : key.word ? Theme.dim : Colors.accent
+                }
+                Text {
+                    visible: key.modelData.shift !== key.modelData.base.toUpperCase()
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: Math.round(3 * Theme.s)
+                    text: key.modelData.shift
+                    font.family: Theme.font
+                    font.pixelSize: Math.round(11 * Theme.s)
+                    color: Theme.dim
                 }
             }
         }
