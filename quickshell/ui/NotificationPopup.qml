@@ -1,10 +1,13 @@
 import QtQuick
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
+import Quickshell.Wayland
 import ".."
 
 // One toast. Geometry/behavior ported 1:1 from mako/config: 380 wide, radius
 // 12, border 2, padding 10/14, markup+icons on, left-click dismiss,
 // right-click dismiss-all (handled by the stack, see NotificationStack.qml),
+// left-click takes you to the sender (see activate()),
 // middle-click invokes the default action. Per-urgency border/text color and
 // timeout mirror mako's [urgency=low]/[urgency=critical] rules; critical
 // never auto-expires, same as mako's default-timeout=0 there.
@@ -44,8 +47,34 @@ Rectangle {
             else if (mouse.button === Qt.MiddleButton && notification.actions.length > 0)
                 notification.actions[0].invoke();
             else
-                notification.dismiss();
+                root.activate();
         }
+    }
+
+    // Focus the window the notification came from, then run its default
+    // action (opens the chat/tab in Slack, Telegram, browsers) or dismiss.
+    // x-hyprland-address is our own hint: ~/.claude/notify.sh sets it to the
+    // exact kitty window Claude runs in. It's Lua-eval'd by Hyprland, hence
+    // the strict pattern. Otherwise match the app's window by class.
+    function activate(): void {
+        const addr = String(notification.hints["x-hyprland-address"] ?? "");
+        if (/^0x[0-9a-f]+$/.test(addr)) {
+            Hyprland.dispatch("hl.dsp.focus({window='address:" + addr + "'})");
+        } else {
+            const want = [notification.desktopEntry, notification.appName]
+                .filter(n => n).map(n => n.toLowerCase());
+            // ponytail: first window of the app wins; several windows of one
+            // app (browsers) may focus the wrong one -- the default action
+            // usually corrects that by raising its own window.
+            const win = ToplevelManager.toplevels.values.find(t => {
+                const id = t.appId.toLowerCase();
+                return want.some(n => id === n || id.endsWith("." + n) || n.includes(id));
+            });
+            if (win) win.activate();
+        }
+        const def = notification.actions.find(a => a.identifier === "default");
+        if (def) def.invoke();
+        else notification.dismiss();
     }
 
     Row {
