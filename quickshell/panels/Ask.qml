@@ -23,6 +23,20 @@ Item {
 
     signal closeRequested()
 
+    // Message text: read-only but mouse-selectable, so commands in an answer
+    // can be selected and Ctrl+C'd. Clicking takes focus from the input;
+    // click the input again to keep typing.
+    component Body: TextEdit {
+        readOnly: true
+        selectByMouse: true
+        wrapMode: TextEdit.Wrap
+        textFormat: TextEdit.PlainText
+        color: Theme.fg
+        selectionColor: Colors.accent
+        font.family: Theme.font
+        font.pixelSize: Theme.fsValue
+    }
+
     // TextInput's own `focus: true` isn't enough to win active focus when
     // it's created by a Loader (shell.qml's askLoader) -- the FocusScope
     // above it may already have settled its focus chain before this item
@@ -153,6 +167,8 @@ Item {
             clip: true
             contentHeight: convoCol.implicitHeight
             boundsBehavior: Flickable.StopAtBounds
+            // Mouse drag selects text instead of flicking; wheel still scrolls.
+            acceptedButtons: Qt.NoButton
 
             onContentHeightChanged: convoScroll.contentY = Math.max(0, contentHeight - height)
 
@@ -186,14 +202,9 @@ Item {
                             color: modelData.role === "you" ? Colors.accent : Theme.dim
                         }
 
-                        Text {
+                        Body {
                             width: convoCol.width
                             text: modelData.text
-                            wrapMode: Text.Wrap
-                            color: Theme.fg
-                            font.family: Theme.font
-                            font.pixelSize: Theme.fsValue
-                            textFormat: Text.PlainText
                         }
                     }
                 }
@@ -211,14 +222,9 @@ Item {
                         color: Theme.dim
                     }
 
-                    Text {
+                    Body {
                         width: convoCol.width
                         text: AskService.partialAnswer
-                        wrapMode: Text.Wrap
-                        color: Theme.fg
-                        font.family: Theme.font
-                        font.pixelSize: Theme.fsValue
-                        textFormat: Text.PlainText
                     }
                 }
             }
