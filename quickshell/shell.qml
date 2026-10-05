@@ -21,6 +21,15 @@ ShellRoot {
         reloadableId: "dashboardState"
 
         property bool expanded: false
+        // SUPER+K layout cheat sheet (ui/KeymapOverlay.qml).
+        property bool keymap: false
+    }
+
+    // qs ipc call keymap toggle -- bound to SUPER+K in hypr/hyprland.lua.
+    IpcHandler {
+        target: "keymap"
+
+        function toggle(): void { state.keymap = !state.keymap }
     }
 
     // qs ipc call dashboard toggle -- bound to SUPER+G in hypr/hyprland.lua.
@@ -468,6 +477,38 @@ ShellRoot {
             Osd {
                 id: osd
                 anchors.fill: parent
+            }
+        }
+    }
+
+    // SUPER+K keyboard cheat sheet. Like the OSD: Overlay layer, empty input
+    // mask, no focus -- it sits there while you type through it.
+    PanelWindow {
+        visible: keymapReveal.live
+        screen: Quickshell.screens.find(s => Hyprland.focusedMonitor && s.name === Hyprland.focusedMonitor.name) ?? null
+
+        anchors.bottom: true
+        margins.bottom: Theme.inset
+        implicitWidth: keymap.implicitWidth
+        implicitHeight: keymap.implicitHeight
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-keymap"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+        mask: Region {}
+
+        Reveal {
+            id: keymapReveal
+            anchors.fill: parent
+            shown: state.keymap
+
+            KeymapOverlay {
+                id: keymap
+                anchors.fill: parent
+                active: state.keymap
             }
         }
     }

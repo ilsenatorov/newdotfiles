@@ -94,10 +94,11 @@ end)
 
 
 
-for _, ns in ipairs({ "bar", "notifications", "dashboard", "ask", "menu", "panel", "osd" }) do
+for _, ns in ipairs({ "bar", "notifications", "dashboard", "ask", "menu", "panel", "osd", "keymap" }) do
     hl.layer_rule({
         match        = { namespace = "quickshell-" .. ns },
-        blur         = true,
+        -- keymap stays unblurred so what you type underneath stays readable.
+        blur         = ns ~= "keymap",
         ignore_alpha = 0.2,
         -- quickshell/ui/Reveal.qml animates these surfaces itself.
         no_anim      = ns ~= "bar" and ns ~= "notifications" or nil,
@@ -246,6 +247,9 @@ hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
 -- launching a separate rofi/GTK tool -- see quickshell/panels/.
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
+})
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("qs ipc call keymap toggle"), {
+	description = "Toggle keyboard layout cheat sheet",
 })
 -- Also on the SUPER+D hub (c); the Lua API has no reload dispatcher.
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprctl reload"), {
