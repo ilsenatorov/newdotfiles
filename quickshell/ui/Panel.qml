@@ -32,7 +32,7 @@ Item {
     property real originFromRight: -1
 
     implicitWidth: Theme.panelW + Theme.inset + Theme.barMarginSide
-    implicitHeight: col.implicitHeight + 24 + Theme.inset * 2
+    implicitHeight: col.implicitHeight + Math.round(24 * Theme.s) + Theme.inset * 2
 
     Item {
         id: card
@@ -46,16 +46,16 @@ Item {
         // ---- droplet geometry, in card coordinates -----------------------
         // The bar pill's bottom edge sits barMarginTop above the card.
         readonly property real barY: -Theme.barMarginTop
-        readonly property real dropW: 38
-        readonly property real dropH: 54
-        readonly property real neckHalf: 7
+        readonly property real dropW: 38 * Theme.s
+        readonly property real dropH: 54 * Theme.s
+        readonly property real neckHalf: 7 * Theme.s
 
         // Where the drop hangs from: under the module, kept far enough in
         // from the card's corners that the neck always lands on its flat top.
         readonly property real ox: {
             const want = root.originFromRight >= 0
                 ? card.width - (root.originFromRight - Theme.barMarginSide)
-                : card.width - 48;
+                : card.width - 48 * Theme.s;
             const edge = Theme.radius + card.dropW / 2 + 2;
             return Math.max(edge, Math.min(card.width - edge, want));
         }
@@ -80,7 +80,7 @@ Item {
         readonly property real sw: spring(b, 7, 6)
         readonly property real sh: spring(b, 6, 8.5)
 
-        readonly property real curW: b > 0 ? 0 : lerp(12, dropW, ea)
+        readonly property real curW: b > 0 ? 0 : lerp(12 * Theme.s, dropW, ea)
         readonly property real blobLeft: b > 0 ? Math.max(-Theme.inset + 2, lerp(ox - dropW / 2, 0, sw)) : ox - curW / 2
         readonly property real blobRight: b > 0 ? Math.min(card.width + 3, lerp(ox + dropW / 2, card.width, sw)) : ox + curW / 2
         readonly property real blobTop: b > 0 ? lerp(barY, 0, easeOutCubic(Math.min(1, b * 1.6))) : barY
@@ -96,7 +96,7 @@ Item {
         // The neck: flares into the bar like a meniscus while the drop
         // hangs, then pinches off as the card pulls away.
         readonly property real pinch: easeOutCubic(Math.min(1, b / 0.45))
-        readonly property real flare: 7 * ea * (1 - pinch)
+        readonly property real flare: 7 * Theme.s * ea * (1 - pinch)
         readonly property real waist: neckHalf * (1 - pinch)
         readonly property real neckOpacity: b < 0.35 ? 1 : Math.max(0, 1 - (b - 0.35) / 0.15)
 
@@ -171,10 +171,10 @@ Item {
 
             Column {
                 id: col
-                x: 12 - clipper.x
-                y: 12 - clipper.y
-                width: card.width - 24
-                spacing: 10
+                x: Math.round(12 * Theme.s) - clipper.x
+                y: Math.round(12 * Theme.s) - clipper.y
+                width: card.width - Math.round(24 * Theme.s)
+                spacing: Math.round(10 * Theme.s)
 
                 Text {
                     id: header
@@ -189,7 +189,7 @@ Item {
                 Column {
                     id: body
                     width: col.width
-                    spacing: 8
+                    spacing: Math.round(8 * Theme.s)
                 }
             }
         }

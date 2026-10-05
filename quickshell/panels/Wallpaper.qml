@@ -212,7 +212,7 @@ Item {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.pad / 2
-            spacing: 10
+            spacing: Math.round(10 * Theme.s)
 
             Text {
                 visible: root.items.length === 0
@@ -367,7 +367,7 @@ Item {
                     anchors.centerIn: parent
                     width: Theme.wallSlideW
                     height: parent.height
-                    spacing: 4
+                    spacing: Math.round(4 * Theme.s)
 
                     Repeater {
                         model: bar.swatches
@@ -377,7 +377,7 @@ Item {
 
                             width: (bar.width - bar.spacing * (bar.swatches.length - 1)) / bar.swatches.length
                             height: bar.height
-                            radius: 3
+                            radius: Math.round(3 * Theme.s)
                             color: modelData
                         }
                     }
@@ -405,12 +405,12 @@ Item {
             Item {
                 visible: root.items.length > 0
                 width: col.width
-                height: Theme.fsValue + 6
+                height: Theme.fsValue + Math.round(6 * Theme.s)
 
                 Text {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - counter.width - 12
+                    width: parent.width - counter.width - Math.round(12 * Theme.s)
                     text: root.current ? root.current.label : ""
                     elide: Text.ElideMiddle
                     color: Theme.fg

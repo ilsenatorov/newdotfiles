@@ -12,7 +12,7 @@ note_fail() { fail=1; }
 cd "$(dirname "$0")" || exit 1
 
 SHELL_SCRIPTS=(
-	install.sh link.sh check.sh starship/build.sh
+	install.sh configure.sh link.sh check.sh starship/build.sh
 	sddm/install.sh sddm/sync-wallpaper.sh
 	hypr/scripts/*.sh quickshell/scripts/*.sh
 )

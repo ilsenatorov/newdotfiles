@@ -7,7 +7,7 @@ import "../services"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 10
+    spacing: Math.round(10 * Theme.s)
 
     property date viewDate: new Date(Time.now.getFullYear(), Time.now.getMonth(), 1)
 
@@ -27,7 +27,7 @@ Column {
 
         Row {
             id: nav
-            spacing: 4
+            spacing: Math.round(4 * Theme.s)
 
             Text {
                 text: "‹"
@@ -36,7 +36,7 @@ Column {
                 color: Theme.fg
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: -6
+                    anchors.margins: Math.round(-6 * Theme.s)
                     onClicked: root.viewDate = new Date(root.viewDate.getFullYear(), root.viewDate.getMonth() - 1, 1)
                 }
             }
@@ -47,7 +47,7 @@ Column {
                 color: Theme.fg
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: -6
+                    anchors.margins: Math.round(-6 * Theme.s)
                     onClicked: root.viewDate = new Date(root.viewDate.getFullYear(), root.viewDate.getMonth() + 1, 1)
                 }
             }
@@ -57,7 +57,7 @@ Column {
     Grid {
         width: parent.width
         columns: 7
-        rowSpacing: 6
+        rowSpacing: Math.round(6 * Theme.s)
         columnSpacing: 0
 
         Repeater {
@@ -68,7 +68,7 @@ Column {
                 horizontalAlignment: Text.AlignHCenter
                 text: modelData
                 font.family: Theme.font
-                font.pixelSize: Theme.fsLabel - 2
+                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                 color: Theme.dim
             }
         }

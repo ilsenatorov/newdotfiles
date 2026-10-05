@@ -171,11 +171,11 @@ Item {
     // Hover readout: how long ago, then each series' value at that moment.
     Rectangle {
         visible: root.hoverIndex >= 0
-        x: Math.max(0, Math.min(root.width - width, mouse.mouseX + 10))
-        y: 2
-        width: tip.implicitWidth + 12
-        height: tip.implicitHeight + 6
-        radius: 6
+        x: Math.max(0, Math.min(root.width - width, mouse.mouseX + Math.round(10 * Theme.s)))
+        y: Math.round(2 * Theme.s)
+        width: tip.implicitWidth + Math.round(12 * Theme.s)
+        height: tip.implicitHeight + Math.round(6 * Theme.s)
+        radius: Math.round(6 * Theme.s)
         color: Theme.windowSurface
         border.width: 1
         border.color: Theme.rule

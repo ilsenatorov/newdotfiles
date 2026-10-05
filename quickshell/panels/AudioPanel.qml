@@ -13,7 +13,7 @@ import "../services"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 10
+    spacing: Math.round(10 * Theme.s)
     focus: true
 
     // Starts on the *active* output rather than at -1, so Enter is never a
@@ -65,7 +65,7 @@ Column {
 
     Row {
         width: parent.width
-        spacing: 8
+        spacing: Math.round(8 * Theme.s)
 
         Text {
             text: Audio.volumeGlyph()
@@ -77,9 +77,9 @@ Column {
 
         Rectangle {
             id: track
-            width: parent.width - 70
-            height: 8
-            radius: 4
+            width: parent.width - Math.round(70 * Theme.s)
+            height: Math.round(8 * Theme.s)
+            radius: Math.round(4 * Theme.s)
             color: Theme.track
             anchors.verticalCenter: parent.verticalCenter
 
@@ -107,9 +107,9 @@ Column {
     }
 
     Rectangle {
-        width: 80
-        height: 26
-        radius: 8
+        width: Math.round(80 * Theme.s)
+        height: Math.round(26 * Theme.s)
+        radius: Math.round(8 * Theme.s)
         color: Audio.muted ? Colors.accent : "transparent"
         border.width: 1
         border.color: Theme.rule
@@ -152,17 +152,17 @@ Column {
             readonly property bool active: sinkRow.modelData === Audio.sink
 
             width: root.width
-            height: 34
-            radius: 8
+            height: Math.round(34 * Theme.s)
+            radius: Math.round(8 * Theme.s)
             color: (sinkArea.containsMouse || sinkRow.index === root.currentIndex) ? Colors.surface : "transparent"
             border.width: sinkRow.index === root.currentIndex ? 1 : 0
             border.color: Colors.accent
 
             Row {
                 anchors.fill: parent
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-                spacing: 8
+                anchors.leftMargin: Math.round(8 * Theme.s)
+                anchors.rightMargin: Math.round(8 * Theme.s)
+                spacing: Math.round(8 * Theme.s)
 
                 Text {
                     text: sinkRow.active ? "󰓃" : "󰕿"
@@ -173,7 +173,7 @@ Column {
                 }
 
                 Text {
-                    width: parent.width - 60
+                    width: parent.width - Math.round(60 * Theme.s)
                     text: Audio.nodeLabel(sinkRow.modelData)
                     color: sinkRow.active ? Colors.accent : Theme.fg
                     font.family: Theme.font

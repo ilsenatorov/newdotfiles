@@ -42,14 +42,14 @@ Item {
     Row {
         id: row
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
 
         // The SUPER+D hub for mouse-only use. Same IPC call as the keybind,
         // so a second click (or SUPER+D) closes it again.
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            width: implicitWidth + 8
-            height: Theme.barHeight - 8
+            width: implicitWidth + Math.round(8 * Theme.s)
+            height: Theme.barHeight - Math.round(8 * Theme.s)
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             text: ""
@@ -73,10 +73,10 @@ Item {
                 id: ws
                 required property var modelData
 
-                width: map.implicitWidth + 6
-                height: Theme.barHeight - 8
+                width: map.implicitWidth + Math.round(6 * Theme.s)
+                height: Theme.barHeight - Math.round(8 * Theme.s)
                 anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-                radius: 6
+                radius: Math.round(6 * Theme.s)
                 color: modelData.active ? Colors.surface : "transparent"
 
                 WorkspaceMap {
@@ -122,7 +122,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             visible: root.submap !== "" && root.submap !== "global"
             text: " " + root.submap
-            height: Theme.barHeight - 8
+            height: Theme.barHeight - Math.round(8 * Theme.s)
             verticalAlignment: Text.AlignVCenter
             font.family: Theme.font
             font.pixelSize: Theme.fsBar
@@ -220,8 +220,8 @@ Item {
             left: Math.max(0, root.previewX - preview.implicitWidth / 2)
         }
 
-        implicitWidth: previewMap.implicitWidth + 24 + Theme.inset * 2
-        implicitHeight: previewCol.implicitHeight + 20 + Theme.inset * 2
+        implicitWidth: previewMap.implicitWidth + Math.round(24 * Theme.s) + Theme.inset * 2
+        implicitHeight: previewCol.implicitHeight + Math.round(20 * Theme.s) + Theme.inset * 2
 
         Reveal {
             id: previewReveal
@@ -237,12 +237,12 @@ Item {
 
             Column {
                 id: previewCol
-                x: Theme.inset + 12
-                y: Theme.inset + 10
-                spacing: 8
+                x: Theme.inset + Math.round(12 * Theme.s)
+                y: Theme.inset + Math.round(10 * Theme.s)
+                spacing: Math.round(8 * Theme.s)
 
                 Row {
-                    spacing: 8
+                    spacing: Math.round(8 * Theme.s)
 
                     Text {
                         text: "Workspace " + (preview.workspace ? root.keyLabel(preview.workspace) : "")
@@ -256,7 +256,7 @@ Item {
                         anchors.baseline: parent.children[0].baseline
                         text: n === 0 ? "empty" : n + (n === 1 ? " window" : " windows")
                         font.family: Theme.font
-                        font.pixelSize: Theme.fsLabel - 2
+                        font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                         color: Theme.dim
                     }
                 }

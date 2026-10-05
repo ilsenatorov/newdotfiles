@@ -19,7 +19,7 @@ Rectangle {
     readonly property bool critical: urgency === NotificationUrgency.Critical
 
     width: Theme.notifWidth
-    implicitHeight: Math.max(Theme.notifMinHeight, col.implicitHeight + 20)
+    implicitHeight: Math.max(Theme.notifMinHeight, col.implicitHeight + Math.round(20 * Theme.s))
     radius: Theme.radius
     color: Theme.barPill
     border.width: Theme.notifBorder
@@ -51,8 +51,8 @@ Rectangle {
     Row {
         id: outer
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 10
+        anchors.margins: Math.round(14 * Theme.s)
+        spacing: Math.round(10 * Theme.s)
 
         Image {
             id: icon
@@ -67,7 +67,7 @@ Rectangle {
         Column {
             id: col
             width: outer.width - (icon.visible ? Theme.notifIconSize + outer.spacing : 0)
-            spacing: 4
+            spacing: Math.round(4 * Theme.s)
 
             Text {
                 width: parent.width
@@ -96,17 +96,17 @@ Rectangle {
 
             Row {
                 visible: notification.actions.length > 0
-                spacing: 6
-                topPadding: 4
+                spacing: Math.round(6 * Theme.s)
+                topPadding: Math.round(4 * Theme.s)
 
                 Repeater {
                     model: notification.actions
 
                     Rectangle {
                         required property var modelData
-                        width: actionLabel.implicitWidth + 16
-                        height: 26
-                        radius: 8
+                        width: actionLabel.implicitWidth + Math.round(16 * Theme.s)
+                        height: Math.round(26 * Theme.s)
+                        radius: Math.round(8 * Theme.s)
                         color: actionArea.containsMouse ? Colors.surface : "transparent"
                         border.width: 1
                         border.color: Theme.rule

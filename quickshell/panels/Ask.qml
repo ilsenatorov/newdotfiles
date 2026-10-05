@@ -67,10 +67,10 @@ Item {
         Rectangle {
             id: inputBox
             anchors.top: header.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: Math.round(10 * Theme.s)
             anchors.left: parent.left
             anchors.right: parent.right
-            height: input.implicitHeight + 16
+            height: input.implicitHeight + Math.round(16 * Theme.s)
             radius: Theme.radius / 2
             color: Theme.surface
             border.width: 1
@@ -83,7 +83,7 @@ Item {
                 font.family: Theme.font
                 font.pixelSize: Theme.fsValue
                 anchors.left: parent.left
-                anchors.leftMargin: 10
+                anchors.leftMargin: Math.round(10 * Theme.s)
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -91,8 +91,8 @@ Item {
                 id: input
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 10
-                anchors.rightMargin: 10
+                anchors.leftMargin: Math.round(10 * Theme.s)
+                anchors.rightMargin: Math.round(10 * Theme.s)
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Theme.font
                 font.pixelSize: Theme.fsValue
@@ -146,7 +146,7 @@ Item {
         Flickable {
             id: convoScroll
             anchors.top: status.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: Math.round(10 * Theme.s)
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -159,7 +159,7 @@ Item {
             Column {
                 id: convoCol
                 width: convoScroll.width
-                spacing: 14
+                spacing: Math.round(14 * Theme.s)
 
                 Text {
                     visible: AskService.messages.length === 0 && AskService.partialAnswer === ""
@@ -176,7 +176,7 @@ Item {
                     Column {
                         required property var modelData
                         width: convoCol.width
-                        spacing: 2
+                        spacing: Math.round(2 * Theme.s)
 
                         Text {
                             text: modelData.role === "you" ? "You" : "Ask"
@@ -201,7 +201,7 @@ Item {
                 Column {
                     visible: AskService.partialAnswer !== ""
                     width: convoCol.width
-                    spacing: 2
+                    spacing: Math.round(2 * Theme.s)
 
                     Text {
                         text: "Ask"

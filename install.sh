@@ -8,7 +8,8 @@
 #   ./install.sh --minimal       core desktop only: no ranger previews, no extras
 #   ./install.sh --reconfigure   redo hardware detection: back up and rewrite
 #                                 ~/.config/dotfiles/{local.conf,local.lua} and
-#                                 ~/.zshrc.local from fresh probes
+#                                 ~/.zshrc.local from fresh probes, then run
+#                                 ./configure.sh's pickers
 #   ./install.sh --list-packages print every package this script would install,
 #                                 one per line, and exit (used by `make doctor`)
 #
@@ -35,7 +36,7 @@ for arg in "$@"; do
 		--reconfigure) RECONFIGURE=1 ;;
 		--list-packages) LIST_PACKAGES=1 ;;
 		-h | --help)
-			sed -n '2,13p' "$0" | sed 's/^# \?//'
+			sed -n '2,14p' "$0" | sed 's/^# \?//'
 			exit 0
 			;;
 		*)
@@ -46,6 +47,10 @@ for arg in "$@"; do
 done
 
 stamp="$(date +%Y%m%d-%H%M%S)"
+# The GPUs, probed once: 20-va.conf, ~/.zshrc.local and local.conf all key off it.
+gpus="$(lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' || true)"
+has_nvidia=0
+grep -qi nvidia <<<"$gpus" && has_nvidia=1
 # Write $2 to file $1 unless it already exists, UNLESS --reconfigure was
 # passed, in which case the existing file (if any) is backed up first. Used
 # for every per-machine file this script generates: local.conf, local.lua,
@@ -65,6 +70,21 @@ write_local() {
 	fi
 	printf '%s' "$content" >"$dst"
 	echo "WROTE   $dst"
+}
+
+# Symlink $2 -> $1, moving anything real at $2 aside to $2.bak-<stamp> first.
+# Already-correct links are left alone. link.sh does the same for ~/.config.
+link_file() {
+	if [ "$(readlink "$2" 2>/dev/null)" = "$1" ]; then
+		echo "OK      ${2#"$HOME"/}"
+		return 0
+	fi
+	if [ -e "$2" ] || [ -L "$2" ]; then
+		echo "BACKUP  ${2#"$HOME"/} -> $(basename "$2").bak-${stamp}"
+		mv "$2" "$2.bak-${stamp}"
+	fi
+	echo "LINK    ${2#"$HOME"/}"
+	ln -s "$1" "$2"
 }
 
 say() { printf '\n\033[1;36m==>\033[0m %s\n' "$1"; }
@@ -109,8 +129,9 @@ PKGS_DESKTOP=(
 	# blueman: its applet (XDG autostart, started by uwsm) is the Bluetooth
 	# agent that answers PIN/passkey prompts for the Bluetooth panel
 	networkmanager bluez bluez-utils blueman
-	# used by the scripts -- qrencode is the Network panel's Wi-Fi share QR
-	git jq curl ffmpeg imagemagick libnotify fzf qrencode
+	# used by the scripts -- qrencode is the Network panel's Wi-Fi share QR,
+	# gum draws configure.sh's pickers
+	git jq curl ffmpeg imagemagick libnotify fzf qrencode gum
 	# fallback if hyprsunset is ever missing
 	wlsunset
 )
@@ -180,17 +201,7 @@ say "linking configs into ~/.config"
 
 # .zshrc sits at the repo root, so link.sh (which only walks directories) does
 # not touch it.
-if [ "$(readlink "${HOME}/.zshrc" 2>/dev/null)" != "${DOTS}/.zshrc" ]; then
-	if [ -e "${HOME}/.zshrc" ] || [ -L "${HOME}/.zshrc" ]; then
-		bak="${HOME}/.zshrc.bak-$(date +%Y%m%d-%H%M%S)"
-		echo "BACKUP  .zshrc -> $(basename "$bak")"
-		mv "${HOME}/.zshrc" "$bak"
-	fi
-	echo "LINK    .zshrc"
-	ln -s "${DOTS}/.zshrc" "${HOME}/.zshrc"
-else
-	echo "OK      .zshrc"
-fi
+link_file "${DOTS}/.zshrc" "${HOME}/.zshrc"
 
 # git/ is symlinked to ~/.config/git by link.sh above, but git only reads
 # $XDG_CONFIG_HOME/git/config as a FALLBACK below ~/.gitconfig -- an existing
@@ -198,7 +209,7 @@ fi
 # once, same as the .zshrc step above.
 gitconfig_bak=""
 if [ -e "${HOME}/.gitconfig" ] || [ -L "${HOME}/.gitconfig" ]; then
-	gitconfig_bak="${HOME}/.gitconfig.bak-$(date +%Y%m%d-%H%M%S)"
+	gitconfig_bak="${HOME}/.gitconfig.bak-${stamp}"
 	echo "BACKUP  .gitconfig -> $(basename "$gitconfig_bak")"
 	mv "${HOME}/.gitconfig" "$gitconfig_bak"
 fi
@@ -236,17 +247,7 @@ write_local "${HOME}/.config/git/config.local" "$git_local_content"
 say "pi agent config (~/.pi/agent)"
 mkdir -p "${HOME}/.pi/agent"
 for f in AGENTS.md settings.json models.json; do
-	if [ "$(readlink "${HOME}/.pi/agent/$f" 2>/dev/null)" = "${DOTS}/pi/$f" ]; then
-		echo "OK      pi/$f"
-		continue
-	fi
-	if [ -e "${HOME}/.pi/agent/$f" ] || [ -L "${HOME}/.pi/agent/$f" ]; then
-		bak="${HOME}/.pi/agent/$f.bak-$(date +%Y%m%d-%H%M%S)"
-		echo "BACKUP  pi/$f -> $(basename "$bak")"
-		mv "${HOME}/.pi/agent/$f" "$bak"
-	fi
-	echo "LINK    pi/$f"
-	ln -s "${DOTS}/pi/$f" "${HOME}/.pi/agent/$f"
+	link_file "${DOTS}/pi/$f" "${HOME}/.pi/agent/$f"
 done
 
 # Packages listed in settings.json are not auto-installed for the user scope
@@ -309,8 +310,7 @@ zshrc_local_content="# Per-machine zsh tail, sourced from the end of ~/dotfiles/
 
 export CLAUDE_OBSIDIAN_VAULT=\"\$HOME/Documents/MyKnowledgeVault\"
 "
-if lspci -mm 2>/dev/null | grep -Eqi 'VGA compatible controller|3D controller' &&
-	lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' | grep -qi nvidia; then
+if [ "$has_nvidia" -eq 1 ]; then
 	zshrc_local_content="${zshrc_local_content}
 # VS Code: native Wayland backend segfaults on this NVIDIA setup; force XWayland
 alias code=\"code --ozone-platform=x11\"
@@ -352,8 +352,6 @@ fi
 # environment (LIBVA_DRIVER_NAME, for VAAPI apps in general) and directly by
 # hypr/scripts/wallpaper-daemon.sh (MPV_HWDEC / MPV_HWDEC_INTEROP).
 if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
-	gpus="$(lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' || true)"
-
 	if echo "$gpus" | grep -qi intel; then
 		# Intel iGPU present: on a laptop (Optimus or not) it is what actually
 		# drives the display, so VAAPI via iHD is correct even with an NVIDIA
@@ -417,62 +415,47 @@ weak=0
 [ "$mem_kb" -lt 6000000 ] 2>/dev/null && weak=1
 [ "$ncores" -le 2 ] 2>/dev/null && weak=1
 
-gpus_lc="$(lspci -mm 2>/dev/null | grep -Ei 'VGA compatible controller|3D controller' || true)"
-has_nvidia=0
-echo "$gpus_lc" | grep -qi nvidia && has_nvidia=1
-has_battery=0
-for b in /sys/class/power_supply/BAT*; do
-	[ -e "$b" ] && has_battery=1 && break
-done
-
-ui_scale=1.0
-svc_weather=1
-svc_claude=1
-interval_fast=2000
-interval_slow=10000
+# Only what the probes change is written as a live key; everything else stays
+# a comment, so the defaults in quickshell/Local.qml (and later changes to
+# them) keep applying -- a written-out default would freeze it on this box.
+probed=""
+[ "$has_nvidia" -eq 1 ] || probed+="SVC_GPU=0"$'\n'
 if [ "$weak" -eq 1 ]; then
-	ui_scale=0.8
-	svc_weather=0
-	svc_claude=0
-	interval_fast=4000
-	interval_slow=20000
+	probed+="UI_SCALE=0.8
+SVC_WEATHER=0
+SVC_CLAUDE_USAGE=0
+SYSMON_INTERVAL_FAST=4000
+SYSMON_INTERVAL_SLOW=20000
+"
 fi
 
-local_conf_content="# Per-machine overrides -- read by shell scripts and quickshell/Local.qml.
-# See hypr/hyprland.lua's per-machine block and hypr/local.lua (if present)
-# for the monitor/workspace/keyboard knobs, which are structured and live
-# there instead. Generated once by install.sh from hardware probes
-# (mem=${mem_kb}kB cores=${ncores} nvidia=${has_nvidia} battery=${has_battery});
-# never overwritten after that except with --reconfigure. Blank/absent = the
-# hardcoded default in Theme.qml / SysMon.qml / etc stands.
+local_conf_content="# Per-machine overrides -- read by quickshell/Local.qml, hypr/hyprland.lua
+# and shell scripts. Easiest changed with ./configure.sh. Generated once by
+# install.sh from hardware probes (mem=${mem_kb}kB cores=${ncores}
+# nvidia=${has_nvidia}); never overwritten after that except with
+# --reconfigure. An absent key means the default shown in the comment.
 
-# --- UI scale ---------------------------------------------------------
-UI_SCALE=${ui_scale}
-BAR_HEIGHT=
-FONT_SIZE_BAR=
-DASHBOARD_W=
-DASHBOARD_H=
-FONT=
-
-# --- bar modules --------------------------------------------------------
-# Comma-separated; a module not listed is dropped. Empty = that pill hidden.
-BAR_LEFT=workspaces,clock,battery
-BAR_CENTER=media
-BAR_RIGHT=network,bluetooth,audio,notifications,status,language
-
-# --- services -------------------------------------------------------------
-# Expensive pollers. 0 disables the poller outright, not just the widget.
-SVC_WEATHER=${svc_weather}
-SVC_CLAUDE_USAGE=${svc_claude}
-SVC_GPU=${has_nvidia}
-SYSMON_INTERVAL_FAST=${interval_fast}
-SYSMON_INTERVAL_SLOW=${interval_slow}
-
-# --- theme / wallpaper ------------------------------------------------
-# Seeds hypr/wallpaper.conf on first run if set; otherwise the first image
-# found in ~/Pictures/Wallpapers is used (see the wallpaper step below).
-WALLPAPER=
+# --- probed on this machine ----------------------------------------------
+${probed:-# (nothing -- every default fits)
+}
+# --- defaults (uncomment to override) ---------------------------------------
+# UI_SCALE=1.0                 # every size in the shell
+# FONT=                        # blank = MesloLGS NF
+# BAR_LEFT=workspaces,clock,battery
+# BAR_CENTER=media             # empty value = that pill hidden
+# BAR_RIGHT=network,bluetooth,audio,notifications,status,language
+# SVC_WEATHER=1                # 0 stops the poller, not just the widget
+# SVC_CLAUDE_USAGE=1
+# SVC_GPU=1
+# SYSMON_INTERVAL_FAST=2000
+# SYSMON_INTERVAL_SLOW=10000
+# KB_LAYOUT=us,ru,graphite     # first = where Hyprland shortcuts sit
+# AUTOSTART_HYPRIDLE=0         # next login
+# AUTOSTART_WALLPAPER=1
+# WALLPAPER=                   # seeds hypr/wallpaper.conf on first run
 "
+first_configure=0
+[ -f "${HOME}/.config/dotfiles/local.conf" ] || first_configure=1
 write_local "${HOME}/.config/dotfiles/local.conf" "$local_conf_content"
 
 # Detected outputs, offered as commented-out examples -- hyprctl usually isn't
@@ -490,12 +473,12 @@ else
 	done 2>/dev/null)
 fi
 
-local_lua_content="-- Per-machine overrides for hypr/hyprland.lua -- monitors, workspace
--- pinning, keyboard layout, optional autostarts. See local.conf (sibling
--- file) for everything else. Generated once by install.sh; never overwritten
--- after that except with --reconfigure. Both blocks below are commented out,
--- so hyprland.lua's generic defaults (eDP-1 + catch-all monitor, workspaces
--- 1-5 -> eDP-1, kb_layout us,ru) stand until you fill one in.
+local_lua_content="-- Per-machine overrides for hypr/hyprland.lua -- monitor rules and workspace
+-- pinning. See local.conf (sibling file, ./configure.sh) for everything else.
+-- Generated once by install.sh; never overwritten after that except with
+-- --reconfigure. Both blocks below are commented out, so hyprland.lua's
+-- generic defaults (eDP-1 + catch-all monitor, workspaces 1-5 -> eDP-1) stand
+-- until you fill one in.
 --
 -- Detected outputs at install time:$(for c in $conns; do printf '\n--   %s' "$c"; done)
 
@@ -513,18 +496,17 @@ return {
     --     { 6, 10, \"desc:Dell Inc. DELL P2422H F4JL9D3\" },
     -- },
 
-    -- kb_layout = \"us,ru\",
-
     -- gaps_out = 8,  -- keep matching Theme.barMarginSide if UI_SCALE changes it
-
-    autostart = {
-        -- hypridle = true,   -- idle timeouts / auto-lock (off everywhere by default)
-        -- wallpaper = false, -- video wallpaper daemon (on everywhere by default;
-                               -- set false if this machine has no mpvpaper wallpaper)
-    },
 }
 "
 write_local "${HOME}/.config/dotfiles/local.lua" "$local_lua_content"
+
+# The probes above only guess; let a human pick on a first install or a
+# --reconfigure. configure.sh itself no-ops without a terminal or gum.
+if [ "$first_configure" -eq 1 ] || [ "$RECONFIGURE" -eq 1 ]; then
+	say "per-machine settings (./configure.sh -- rerun any time)"
+	"${DOTS}/configure.sh" || warn "configure.sh failed; rerun it later"
+fi
 
 # Fresh clone: seed the generated theme files from their committed snapshot so
 # the desktop is themed before the wallpaper step below (or SUPER+D, w) ever

@@ -17,25 +17,31 @@ hl.env("XCURSOR_THEME", cursor_theme())
 local ok, local_cfg = pcall(dofile, os.getenv("HOME") .. "/.config/dotfiles/local.lua")
 local M = (ok and type(local_cfg) == "table") and local_cfg or {}
 
-if M.monitors and #M.monitors > 0 then
-    for _, m in ipairs(M.monitors) do
-        hl.monitor(m)
+-- The flat KEY=value sibling (configure.sh): keyboard layout and autostarts.
+local C = {}
+do
+    local f = io.open(os.getenv("HOME") .. "/.config/dotfiles/local.conf", "r")
+    if f then
+        for line in f:lines() do
+            local k, v = line:match("^%s*([%w_]+)%s*=%s*(.-)%s*$")
+            if k then C[k] = v end
+        end
+        f:close()
     end
-else
-    hl.monitor({
-        output   = "eDP-1",
-        mode     = "preferred",
-        position = "auto",
-        scale    = 1,
-    })
+end
+local function conf_bool(key, default)
+    local v = C[key]
+    if v == nil or v == "" then return default end
+    return v ~= "0" and v:lower() ~= "false"
+end
 
+local monitors = M.monitors and #M.monitors > 0 and M.monitors or {
+    { output = "eDP-1", mode = "preferred", position = "auto", scale = 1 },
     -- Fallback for any other output (desktops, or external monitors on a laptop).
-    hl.monitor({
-        output   = "",
-        mode     = "preferred",
-        position = "auto",
-        scale    = 1,
-    })
+    { output = "",      mode = "preferred", position = "auto", scale = 1 },
+}
+for _, m in ipairs(monitors) do
+    hl.monitor(m)
 end
 
 local function restore_monitor_layout()
@@ -69,10 +75,10 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
 
     app("qs -d -n")
-    if M.autostart == nil or M.autostart.wallpaper ~= false then
+    if conf_bool("AUTOSTART_WALLPAPER", true) then
         hl.exec_cmd(dotfiles .. "/hypr/scripts/wallpaper-daemon.sh")
     end
-    if M.autostart and M.autostart.hypridle then
+    if conf_bool("AUTOSTART_HYPRIDLE", false) then
         app("hypridle")
     end
     hl.exec_cmd("sh -c 'command -v hyprsunset >/dev/null "
@@ -88,52 +94,15 @@ end)
 
 
 
-hl.layer_rule({
-    match        = { namespace = "quickshell-bar" },
-    blur         = true,
-    ignore_alpha = 0.2,
-})
-
-hl.layer_rule({
-    match        = { namespace = "quickshell-notifications" },
-    blur         = true,
-    ignore_alpha = 0.2,
-})
-hl.layer_rule({
-    match        = { namespace = "quickshell-dashboard" },
-    blur         = true,
-    ignore_alpha = 0.2,
-    -- quickshell/ui/Reveal.qml animates this surface itself.
-    no_anim      = true,
-})
-hl.layer_rule({
-    match        = { namespace = "quickshell-ask" },
-    blur         = true,
-    ignore_alpha = 0.2,
-    -- quickshell/ui/Reveal.qml animates this surface itself.
-    no_anim      = true,
-})
-hl.layer_rule({
-    match        = { namespace = "quickshell-menu" },
-    blur         = true,
-    ignore_alpha = 0.2,
-    -- quickshell/ui/Reveal.qml animates this surface itself.
-    no_anim      = true,
-})
-hl.layer_rule({
-    match        = { namespace = "quickshell-panel" },
-    blur         = true,
-    ignore_alpha = 0.2,
-    -- quickshell/ui/Reveal.qml animates this surface itself.
-    no_anim      = true,
-})
-hl.layer_rule({
-    match        = { namespace = "quickshell-osd" },
-    blur         = true,
-    ignore_alpha = 0.2,
-    -- quickshell/ui/Reveal.qml animates this surface itself.
-    no_anim      = true,
-})
+for _, ns in ipairs({ "bar", "notifications", "dashboard", "ask", "menu", "panel", "osd" }) do
+    hl.layer_rule({
+        match        = { namespace = "quickshell-" .. ns },
+        blur         = true,
+        ignore_alpha = 0.2,
+        -- quickshell/ui/Reveal.qml animates these surfaces itself.
+        no_anim      = ns ~= "bar" and ns ~= "notifications" or nil,
+    })
+end
 
 hl.config({
     general = {
@@ -233,7 +202,9 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 1.94, bezier = "almo
 
 hl.config({
     input = {
-        kb_layout  = M.kb_layout or "us,ru",
+        -- graphite: xkb/symbols/graphite (not in xkeyboard-config). us stays
+        -- first so binds resolve by qwerty position on every layout.
+        kb_layout  = (C.KB_LAYOUT ~= "" and C.KB_LAYOUT) or "us,ru,graphite",
         kb_options = "grp:shifts_toggle",
 
         follow_mouse = 1,
@@ -282,16 +253,11 @@ hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprctl reload"), {
 })
 
 ---- Focus and movement -----------------------------------------------------
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }), { description = "Focus left" })
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }), { description = "Focus down" })
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }), { description = "Focus up" })
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }), { description = "Focus right" })
-
-hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }), { description = "Move window left" })
-hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.move({ direction = "down" }), { description = "Move window down" })
-hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.move({ direction = "up" }), { description = "Move window up" })
-hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" }),
-	{ description = "Move window right" })
+for _, dir in ipairs({ "left", "down", "up", "right" }) do
+    hl.bind(mainMod .. " + " .. dir, hl.dsp.focus({ direction = dir }), { description = "Focus " .. dir })
+    hl.bind(mainMod .. " + SHIFT + " .. dir, hl.dsp.window.move({ direction = dir }),
+        { description = "Move window " .. dir })
+end
 
 ---- Layout -----------------------------------------------------------------
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(),                { description = "Fullscreen" })
@@ -344,18 +310,10 @@ local function merge_into(dir)
 	end
 end
 
-hl.bind(mainMod .. " + CTRL + left",  merge_into("left"), {
-	description = "Merge window into group (left)",
-})
-hl.bind(mainMod .. " + CTRL + right", merge_into("right"), {
-	description = "Merge window into group (right)",
-})
-hl.bind(mainMod .. " + CTRL + up",    merge_into("up"), {
-	description = "Merge window into group (up)",
-})
-hl.bind(mainMod .. " + CTRL + down",  merge_into("down"), {
-	description = "Merge window into group (down)",
-})
+for _, dir in ipairs({ "left", "right", "up", "down" }) do
+    hl.bind(mainMod .. " + CTRL + " .. dir, merge_into(dir),
+        { description = "Merge window into group (" .. dir .. ")" })
+end
 hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), {
 	description = "Move out of group",
 })

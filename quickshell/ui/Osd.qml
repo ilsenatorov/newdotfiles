@@ -112,9 +112,9 @@ Item {
 
         Row {
             anchors.fill: parent
-            anchors.leftMargin: 18
-            anchors.rightMargin: 18
-            spacing: 12
+            anchors.leftMargin: Math.round(18 * Theme.s)
+            anchors.rightMargin: Math.round(18 * Theme.s)
+            spacing: Math.round(12 * Theme.s)
 
             Text {
                 id: g
@@ -130,8 +130,8 @@ Item {
                 visible: root.showBar
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - g.implicitWidth - pct.width - parent.spacing * 2
-                height: 6
-                radius: 3
+                height: Math.round(6 * Theme.s)
+                radius: Math.round(3 * Theme.s)
                 color: Theme.track
 
                 Rectangle {

@@ -19,7 +19,6 @@ Singleton {
     property real tempC: 0
     property real disk: 0
     property real diskFreeBytes: 0
-    property real hddFreeBytes: -1
     property real swapUsedBytes: 0
     property real swapTotalBytes: 0
     property real uptimeSeconds: 0
@@ -295,26 +294,6 @@ Singleton {
                 root.mounts = out;
             }
         }
-    }
-
-    Process {
-        id: hddProc
-        command: ["findmnt", "--bytes", "--noheadings", "--raw", "--first-only",
-                  "--source", Local.hddDevice, "--output", "AVAIL"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const bytes = parseFloat(text.trim());
-                root.hddFreeBytes = isNaN(bytes) ? -1 : bytes;
-            }
-        }
-    }
-
-    Timer {
-        running: Local.hddDevice !== ""
-        repeat: true
-        triggeredOnStart: true
-        interval: 60000
-        onTriggered: hddProc.running = true
     }
 
     Process {

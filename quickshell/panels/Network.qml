@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Networking
 import ".."
 import "../services"
+import "../ui"
 
 // SUPER+D, n (or the bar's network module). Replaces the old
 // networkmanager_dmenu rofi menu. Ethernet and Wi-Fi in
@@ -18,7 +19,7 @@ import "../services"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 8
+    spacing: Math.round(8 * Theme.s)
     focus: true
 
     signal shareRequested
@@ -376,218 +377,6 @@ Column {
         done();
     }
 
-    // ---- reusable bits ---------------------------------------------------------
-    component NetRow: Rectangle {
-        id: netRow
-
-        property string glyph: ""
-        property string title: ""
-        property string subtitle: ""
-        property bool subtitleIsError: false
-        property bool active: false      // connected -- accent colouring + check
-        property bool selected: false
-        property bool locked: false
-        property bool forgettable: false
-
-        signal activated
-        signal forgetRequested
-
-        height: Math.round(42 * Theme.s)
-        radius: 8
-        color: (rowArea.containsMouse || selected) ? Colors.surface : "transparent"
-        border.width: selected ? 1 : 0
-        border.color: Colors.accent
-
-        MouseArea {
-            id: rowArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: netRow.activated()
-        }
-
-        Row {
-            anchors.fill: parent
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
-            spacing: 8
-
-            Text {
-                id: glyphText
-                width: Math.round(Theme.fsValue * 1.4)
-                text: netRow.glyph
-                font.family: Theme.font
-                font.pixelSize: Theme.fsValue
-                color: netRow.active ? Colors.accent : Theme.fg
-                anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Column {
-                width: parent.width - glyphText.width - trailing.width - parent.spacing * 2
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 1
-
-                Text {
-                    width: parent.width
-                    text: netRow.title
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsValue
-                    color: netRow.active ? Colors.accent : Theme.fg
-                    elide: Text.ElideRight
-                }
-
-                Text {
-                    width: parent.width
-                    visible: text !== ""
-                    text: netRow.subtitle
-                    font.family: Theme.font
-                    font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                    color: netRow.subtitleIsError ? Colors.urgent : Theme.dim
-                    elide: Text.ElideRight
-                }
-            }
-
-            Row {
-                id: trailing
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                Text {
-                    visible: netRow.locked
-                    text: "󰌾"
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                    color: Theme.dim
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // Forget: drops every saved profile for this SSID.
-                Text {
-                    visible: netRow.forgettable
-                    text: "󰆴"
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsValue
-                    color: forgetArea.containsMouse ? Colors.urgent : Theme.dim
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    MouseArea {
-                        id: forgetArea
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        onClicked: netRow.forgetRequested()
-                    }
-                }
-
-                Text {
-                    visible: netRow.active
-                    text: "✓"
-                    color: Colors.accent
-                    font.pixelSize: Theme.fsValue
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-        }
-    }
-
-    component Field: Rectangle {
-        id: field
-
-        property alias input: textInput
-        property string placeholder: ""
-        property bool secret: false
-        property bool revealed: false
-        // Tab / Shift+Tab targets -- the neighbouring fields in the form.
-        property Item next: null
-        property Item prev: null
-        signal accepted
-
-        width: parent.width
-        height: Math.round(32 * Theme.s)
-        radius: 6
-        color: Theme.surface
-        border.width: 1
-        border.color: textInput.activeFocus ? Colors.accent : Theme.rule
-
-        TextInput {
-            id: textInput
-            anchors.fill: parent
-            anchors.leftMargin: 8
-            anchors.rightMargin: field.secret ? eye.width + 16 : 8
-            verticalAlignment: TextInput.AlignVCenter
-            echoMode: field.secret && !field.revealed ? TextInput.Password : TextInput.Normal
-            color: Theme.fg
-            font.family: Theme.font
-            font.pixelSize: Theme.fsValue
-            clip: true
-            KeyNavigation.tab: field.next
-            KeyNavigation.backtab: field.prev
-            onAccepted: field.accepted()
-        }
-
-        Text {
-            anchors.fill: textInput
-            verticalAlignment: Text.AlignVCenter
-            visible: textInput.text === ""
-            text: field.placeholder
-            color: Theme.dim
-            font.family: Theme.font
-            font.pixelSize: Theme.fsLabel
-            elide: Text.ElideRight
-        }
-
-        Text {
-            id: eye
-            visible: field.secret
-            anchors.right: parent.right
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            text: field.revealed ? "󰈉" : "󰈈"
-            font.family: Theme.font
-            font.pixelSize: Theme.fsValue
-            color: eyeArea.containsMouse ? Colors.accent : Theme.dim
-
-            MouseArea {
-                id: eyeArea
-                anchors.fill: parent
-                anchors.margins: -4
-                hoverEnabled: true
-                onClicked: field.revealed = !field.revealed
-            }
-        }
-    }
-
-    component Chip: Rectangle {
-        id: chip
-
-        property string label: ""
-        property bool active: false
-        signal clicked
-
-        width: chipText.implicitWidth + 20
-        height: Math.round(26 * Theme.s)
-        radius: height / 2
-        color: active ? Colors.accent : "transparent"
-        border.width: 1
-        border.color: active ? Colors.accent : Theme.rule
-
-        Text {
-            id: chipText
-            anchors.centerIn: parent
-            text: chip.label
-            color: chip.active ? Theme.surface : Theme.fg
-            font.family: Theme.font
-            font.pixelSize: Theme.fsLabel
-        }
-        MouseArea { anchors.fill: parent; onClicked: chip.clicked() }
-    }
-
-    component SectionLabel: Text {
-        font.family: Theme.font
-        font.pixelSize: Theme.fsLabel
-        font.bold: true
-        color: Theme.dim
-    }
-
     // ---- connection details ----------------------------------------------------
     // Whatever is carrying traffic (Ethernet preferred). One label/value row,
     // not a 2-column grid -- the MAC alone is wider than half the panel.
@@ -595,7 +384,7 @@ Column {
     Column {
         visible: Net.connected && Net.detailsShown && !root.formOpen
         width: parent.width
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
 
         readonly property var rows: {
             const r = [];
@@ -615,31 +404,9 @@ Column {
             return r;
         }
 
-        Repeater {
-            model: parent.rows
-
-            Row {
-                width: parent.width
-                spacing: 8
-
-                required property var modelData
-
-                Text {
-                    width: 56
-                    text: modelData[0]
-                    color: Theme.dim
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                }
-                Text {
-                    width: parent.width - 64
-                    text: modelData[1]
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                    elide: Text.ElideRight
-                }
-            }
+        InfoRows {
+            width: parent.width
+            rows: parent.rows
         }
     }
 
@@ -647,14 +414,14 @@ Column {
     Column {
         visible: root.ethCount > 0 && !root.formOpen
         width: parent.width
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
 
         SectionLabel { text: "Ethernet" }
 
         Repeater {
             model: root.ethEntries
 
-            NetRow {
+            ListRow {
                 required property var modelData
                 required property int index
                 readonly property var dev: modelData.wired
@@ -684,7 +451,7 @@ Column {
     // ---- wi-fi header: label, rescan, share, radio toggle ------------------------
     Row {
         width: parent.width
-        spacing: 12
+        spacing: Math.round(12 * Theme.s)
         visible: !root.formOpen
 
         SectionLabel {
@@ -715,7 +482,7 @@ Column {
             MouseArea {
                 id: refreshArea
                 anchors.fill: parent
-                anchors.margins: -4
+                anchors.margins: Math.round(-4 * Theme.s)
                 hoverEnabled: true
                 onClicked: root.refresh()
             }
@@ -730,31 +497,15 @@ Column {
             color: Colors.accent
             anchors.verticalCenter: parent.verticalCenter
 
-            MouseArea { anchors.fill: parent; anchors.margins: -4; onClicked: root.shareRequested() }
+            MouseArea { anchors.fill: parent; anchors.margins: Math.round(-4 * Theme.s); onClicked: root.shareRequested() }
         }
 
-        Rectangle {
+        Toggle {
             id: toggle
-            width: 40
-            height: 20
-            radius: 10
             opacity: root.wifiDevice ? 1 : 0.4
-            color: Networking.wifiEnabled ? Colors.accent : Theme.track
-
-            Rectangle {
-                width: 16
-                height: 16
-                radius: 8
-                color: Theme.surface
-                anchors.verticalCenter: parent.verticalCenter
-                x: Networking.wifiEnabled ? parent.width - width - 2 : 2
-                Behavior on x { NumberAnimation { duration: Theme.durHover } }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
-            }
+            anchors.verticalCenter: parent.verticalCenter
+            checked: Networking.wifiEnabled
+            onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
         }
     }
 
@@ -789,12 +540,12 @@ Column {
         height: Math.min(contentHeight, root.maxRows * (root.rowH + spacing))
         visible: root.wifiOn && !root.formOpen && count > 0
         clip: true
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
         boundsBehavior: Flickable.StopAtBounds
         interactive: contentHeight > height
         model: root.wifiEntries
 
-        delegate: NetRow {
+        delegate: ListRow {
             required property var modelData
             required property int index
             readonly property var net: modelData.net ?? null
@@ -855,7 +606,7 @@ Column {
     Column {
         visible: root.formOpen
         width: parent.width
-        spacing: 8
+        spacing: Math.round(8 * Theme.s)
 
         Text {
             width: parent.width
@@ -894,7 +645,7 @@ Column {
 
         Row {
             visible: root.formKind === "eap"
-            spacing: 6
+            spacing: Math.round(6 * Theme.s)
 
             Chip { label: "PEAP"; active: root.eapMethod === "peap"; onClicked: root.eapMethod = "peap" }
             Chip { label: "TTLS"; active: root.eapMethod === "ttls"; onClicked: root.eapMethod = "ttls" }
@@ -931,103 +682,42 @@ Column {
 
         Row {
             anchors.right: parent.right
-            spacing: 6
+            spacing: Math.round(6 * Theme.s)
 
-            Rectangle {
-                width: 70
-                height: 30
-                radius: 6
-                color: "transparent"
-                border.width: 1
-                border.color: Theme.rule
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "Cancel"
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                }
-                MouseArea { anchors.fill: parent; onClicked: root.closeForm() }
-            }
-
-            Rectangle {
-                width: 70
-                height: 30
-                radius: 6
-                color: Colors.accent
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "Join"
-                    color: Theme.surface
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                }
-                MouseArea { anchors.fill: parent; onClicked: root.submitForm() }
-            }
+            Button { label: "Cancel"; onClicked: root.closeForm() }
+            Button { label: "Join"; primary: true; onClicked: root.submitForm() }
         }
     }
 
     // ---- key hints -----------------------------------------------------------------
     // Context-sensitive: only what the current state/selection responds to.
-    Rectangle {
+    KeyHints {
         width: parent.width
-        height: 1
-        color: Theme.rule
-    }
-
-    Flow {
-        width: parent.width
-        spacing: 10
-
-        readonly property var hints: {
-            if (root.formOpen) {
-                const h = [["↵", "join"], ["tab", "next field"], ["alt+v", "show password"]];
-                if (root.formKind === "eap") h.push(["alt+m", "PEAP/TTLS"]);
-                h.push(["esc", "cancel"]);
-                return h;
-            }
-            if (root.filtering) return [["↑↓", "select"], ["↵", "connect"], ["esc", "clear filter"]];
-
-            const c = root.current;
-            const h = [["j/k", "move"]];
-            if (c) {
-                const label = c.hidden ? "join hidden"
-                    : !root.isOn(c) ? "connect"
-                    : root.confirmKey === root.entryKey(c) ? "confirm disconnect" : "disconnect";
-                h.push(["↵", label]);
-                if (c.net && c.net.known) h.push(["d", "forget"]);
-            }
-            h.push(["r", "rescan"]);
-            if (root.wifiOn) h.push(["/", "filter"], ["h", "hidden"]);
-            if (root.wifiDevice) h.push(["w", Networking.wifiEnabled ? "wifi off" : "wifi on"]);
-            if (Net.wifiConnected) h.push(["s", "share"]);
-            if (Net.connected) h.push(["i", Net.detailsShown ? "hide details" : "details"]);
-            h.push(["esc", "close"]);
+        hints: {
+        if (root.formOpen) {
+            const h = [["↵", "join"], ["tab", "next field"], ["alt+v", "show password"]];
+            if (root.formKind === "eap") h.push(["alt+m", "PEAP/TTLS"]);
+            h.push(["esc", "cancel"]);
             return h;
         }
+        if (root.filtering) return [["↑↓", "select"], ["↵", "connect"], ["esc", "clear filter"]];
 
-        Repeater {
-            model: parent.hints
-
-            Row {
-                required property var modelData
-                spacing: 4
-
-                Text {
-                    text: modelData[0]
-                    color: Colors.accent
-                    font.family: Theme.font
-                    font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                }
-                Text {
-                    text: modelData[1]
-                    color: Theme.dim
-                    font.family: Theme.font
-                    font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                }
-            }
+        const c = root.current;
+        const h = [["j/k", "move"]];
+        if (c) {
+            const label = c.hidden ? "join hidden"
+                : !root.isOn(c) ? "connect"
+                : root.confirmKey === root.entryKey(c) ? "confirm disconnect" : "disconnect";
+            h.push(["↵", label]);
+            if (c.net && c.net.known) h.push(["d", "forget"]);
         }
+        h.push(["r", "rescan"]);
+        if (root.wifiOn) h.push(["/", "filter"], ["h", "hidden"]);
+        if (root.wifiDevice) h.push(["w", Networking.wifiEnabled ? "wifi off" : "wifi on"]);
+        if (Net.wifiConnected) h.push(["s", "share"]);
+        if (Net.connected) h.push(["i", Net.detailsShown ? "hide details" : "details"]);
+        h.push(["esc", "close"]);
+        return h;
+    }
     }
 }

@@ -138,7 +138,7 @@ Item {
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
+                    spacing: Math.round(2 * Theme.s)
 
                     Text {
                         text: Qt.formatDateTime(Time.now, "dddd").toUpperCase()

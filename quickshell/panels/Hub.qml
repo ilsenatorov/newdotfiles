@@ -179,12 +179,12 @@ Item {
             id: col
 
             anchors.centerIn: parent
-            spacing: 12
+            spacing: Math.round(12 * Theme.s)
 
             // Looks like the search box it opens, so the way in is visible.
             Rectangle {
                 width: grid.width
-                height: searchLabel.implicitHeight + 16
+                height: searchLabel.implicitHeight + Math.round(16 * Theme.s)
                 radius: Theme.radius / 2
                 color: searchArea.containsMouse ? Colors.surface : Theme.surface
                 border.width: 1
@@ -193,7 +193,7 @@ Item {
                 Text {
                     id: searchLabel
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: Math.round(10 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
                     text: "󰍉  Search apps, settings, actions"
                     color: Theme.dim
@@ -203,11 +203,11 @@ Item {
 
                 Rectangle {
                     anchors.right: parent.right
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: Math.round(8 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.round(20 * Theme.s)
                     height: width
-                    radius: 5
+                    radius: Math.round(5 * Theme.s)
                     color: Theme.track
 
                     Text {
@@ -215,7 +215,7 @@ Item {
                         text: "d"
                         color: Colors.accent
                         font.family: Theme.font
-                        font.pixelSize: Theme.fsLabel - 2
+                        font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                     }
                 }
 
@@ -293,8 +293,8 @@ Item {
                         Text {
                             anchors.left: parent.left
                             anchors.top: parent.top
-                            anchors.leftMargin: 12
-                            anchors.topMargin: 10
+                            anchors.leftMargin: Math.round(12 * Theme.s)
+                            anchors.topMargin: Math.round(10 * Theme.s)
                             text: tile.modelData.glyph
                             color: tile.hue
                             opacity: tile.current ? 1 : 0.75
@@ -308,10 +308,10 @@ Item {
                         Rectangle {
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.margins: 8
+                            anchors.margins: Math.round(8 * Theme.s)
                             width: Math.round(20 * Theme.s)
                             height: width
-                            radius: 5
+                            radius: Math.round(5 * Theme.s)
                             color: tile.current ? Qt.rgba(tile.hue.r, tile.hue.g, tile.hue.b, 0.2) : Theme.track
 
                             Text {
@@ -319,7 +319,7 @@ Item {
                                 text: tile.modelData.hint
                                 color: tile.current ? tile.hue : Theme.dim
                                 font.family: Theme.font
-                                font.pixelSize: Theme.fsLabel - 2
+                                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                             }
                         }
 
@@ -327,9 +327,9 @@ Item {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 10
-                            anchors.bottomMargin: 10
+                            anchors.leftMargin: Math.round(12 * Theme.s)
+                            anchors.rightMargin: Math.round(10 * Theme.s)
+                            anchors.bottomMargin: Math.round(10 * Theme.s)
                             spacing: 1
 
                             Text {
@@ -347,7 +347,7 @@ Item {
                                 color: Theme.dim
                                 elide: Text.ElideRight
                                 font.family: Theme.font
-                                font.pixelSize: Theme.fsLabel - 2
+                                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                             }
                         }
 
@@ -389,7 +389,7 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: parent.top
-                            anchors.topMargin: 8
+                            anchors.topMargin: Math.round(8 * Theme.s)
                             visible: appIcon.status !== Image.Ready
                             text: "󰀻"
                             color: Theme.dim
@@ -401,7 +401,7 @@ Item {
                             id: appIcon
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: parent.top
-                            anchors.topMargin: 8
+                            anchors.topMargin: Math.round(8 * Theme.s)
                             width: Math.round(28 * Theme.s)
                             height: width
                             sourceSize.width: width * 2
@@ -413,25 +413,25 @@ Item {
 
                         Text {
                             anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 6
+                            anchors.bottomMargin: Math.round(6 * Theme.s)
                             anchors.horizontalCenter: parent.horizontalCenter
-                            width: parent.width - 8
+                            width: parent.width - Math.round(8 * Theme.s)
                             horizontalAlignment: Text.AlignHCenter
                             text: app.modelData.name
                             elide: Text.ElideRight
                             color: Theme.dim
                             font.family: Theme.font
-                            font.pixelSize: Theme.fsLabel - 3
+                            font.pixelSize: Theme.fsLabel - Math.round(3 * Theme.s)
                         }
 
                         Text {
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.margins: 5
+                            anchors.margins: Math.round(5 * Theme.s)
                             text: String((app.index + 1) % 10)
                             color: Theme.dim
                             font.family: Theme.font
-                            font.pixelSize: Theme.fsLabel - 3
+                            font.pixelSize: Theme.fsLabel - Math.round(3 * Theme.s)
                         }
 
                         MouseArea {
@@ -451,7 +451,7 @@ Item {
                 text: "letter open · d search" + (root.recent.length > 0 ? " · 1–" + root.recent.length % 10 + " apps" : "") + " · ? keys · esc close"
                 color: Theme.dim
                 font.family: Theme.font
-                font.pixelSize: Theme.fsLabel - 2
+                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
             }
         }
     }

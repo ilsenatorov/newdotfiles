@@ -187,13 +187,13 @@ Item {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.pad / 2
-            spacing: 8
+            spacing: Math.round(8 * Theme.s)
 
             Rectangle {
                 id: inputBox
 
                 visible: root.searchable
-                height: root.searchable ? input.implicitHeight + 16 : 0
+                height: root.searchable ? input.implicitHeight + Math.round(16 * Theme.s) : 0
                 width: col.width
                 radius: Theme.radius / 2
                 color: Theme.surface
@@ -207,7 +207,7 @@ Item {
                     font.family: Theme.font
                     font.pixelSize: Theme.fsValue
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: Math.round(10 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -216,8 +216,8 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
+                    anchors.leftMargin: Math.round(10 * Theme.s)
+                    anchors.rightMargin: Math.round(10 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Theme.font
                     font.pixelSize: Theme.fsValue
@@ -314,9 +314,9 @@ Item {
 
                     // base.rasi's `element selected` accent left-border.
                     Rectangle {
-                        width: 3
-                        height: parent.height - 8
-                        radius: 2
+                        width: Math.round(3 * Theme.s)
+                        height: parent.height - Math.round(8 * Theme.s)
+                        radius: Math.round(2 * Theme.s)
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         color: Colors.accent
@@ -325,9 +325,9 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
+                        anchors.leftMargin: Math.round(10 * Theme.s)
                         anchors.rightMargin: root.deletable ? 40 : 10
-                        spacing: 8
+                        spacing: Math.round(8 * Theme.s)
 
                         Text {
                             id: glyph
@@ -359,7 +359,7 @@ Item {
                         }
 
                         Text {
-                            width: parent.width - (rowIcon.visible ? Theme.menuIconSize + 8 : 0) - (glyph.visible ? glyph.width + 8 : 0)
+                            width: parent.width - (rowIcon.visible ? Theme.menuIconSize + Math.round(8 * Theme.s) : 0) - (glyph.visible ? glyph.width + Math.round(8 * Theme.s) : 0)
                             anchors.verticalCenter: parent.verticalCenter
                             text: row.modelData.sublabel ? row.modelData.label + "   " + row.modelData.sublabel : row.modelData.label
                             elide: Text.ElideRight
@@ -381,7 +381,7 @@ Item {
                         visible: root.deletable
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 36
+                        width: Math.round(36 * Theme.s)
                         height: parent.height
                         text: "×"
                         horizontalAlignment: Text.AlignHCenter

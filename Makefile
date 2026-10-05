@@ -1,8 +1,12 @@
 SHELL := /usr/bin/bash
-.PHONY: install link unlink check lint fmt doctor
+.PHONY: install configure link unlink check lint fmt doctor
 
 install:
 	./install.sh
+
+# Interactive per-machine settings (~/.config/dotfiles/local.conf).
+configure:
+	./configure.sh
 
 link:
 	./link.sh
@@ -17,7 +21,7 @@ check:
 lint: check
 
 fmt:
-	shfmt -i 0 -ci -w install.sh link.sh check.sh starship/build.sh \
+	shfmt -i 0 -ci -w install.sh configure.sh link.sh check.sh starship/build.sh \
 		sddm/install.sh sddm/sync-wallpaper.sh \
 		hypr/scripts/*.sh quickshell/scripts/*.sh
 

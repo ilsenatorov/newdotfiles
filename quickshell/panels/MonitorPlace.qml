@@ -260,7 +260,7 @@ Item {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.pad / 2
-            spacing: 8
+            spacing: Math.round(8 * Theme.s)
 
             // ---- place ----
             SectionLabel {
@@ -274,7 +274,7 @@ Item {
                 visible: root.chosen !== ""
                 anchors.horizontalCenter: parent.horizontalCenter
                 columns: 3
-                spacing: 6
+                spacing: Math.round(6 * Theme.s)
                 Item { width: Theme.menuTileW; height: Theme.menuTileH }
                 Tile { placement: "Above" }
                 Item { width: Theme.menuTileW; height: Theme.menuTileH }
@@ -288,7 +288,7 @@ Item {
                     border.color: Theme.divider
                     Text {
                         anchors.centerIn: parent
-                        width: parent.width - 8
+                        width: parent.width - Math.round(8 * Theme.s)
                         horizontalAlignment: Text.AlignHCenter
                         text: root.anchorName
                         elide: Text.ElideRight
@@ -306,7 +306,7 @@ Item {
             Row {
                 visible: root.chosen !== ""
                 anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 6
+                spacing: Math.round(6 * Theme.s)
                 Tile { placement: "Mirror"; tileW: Theme.menuTileW * 1.5 }
                 Tile { placement: "Disable"; tileW: Theme.menuTileW * 1.5 }
             }
@@ -346,9 +346,9 @@ Item {
                     color: layoutRow.current ? Colors.surface : "transparent"
 
                     Rectangle {
-                        width: 3
-                        height: parent.height - 8
-                        radius: 2
+                        width: Math.round(3 * Theme.s)
+                        height: parent.height - Math.round(8 * Theme.s)
+                        radius: Math.round(2 * Theme.s)
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         color: Colors.accent
@@ -357,7 +357,7 @@ Item {
                     Text {
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.leftMargin: 10
+                        anchors.leftMargin: Math.round(10 * Theme.s)
                         anchors.verticalCenter: parent.verticalCenter
                         text: layoutRow.modelData
                         elide: Text.ElideRight
@@ -381,7 +381,7 @@ Item {
 
             Rectangle {
                 width: col.width
-                height: nameInput.implicitHeight + 16
+                height: nameInput.implicitHeight + Math.round(16 * Theme.s)
                 radius: Theme.radius / 2
                 color: Theme.surface
                 border.width: 1
@@ -394,7 +394,7 @@ Item {
                     font.family: Theme.font
                     font.pixelSize: Theme.fsValue
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: Math.round(10 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -402,8 +402,8 @@ Item {
                     id: nameInput
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
+                    anchors.leftMargin: Math.round(10 * Theme.s)
+                    anchors.rightMargin: Math.round(10 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Theme.font
                     font.pixelSize: Theme.fsValue

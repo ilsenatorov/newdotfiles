@@ -33,7 +33,8 @@ it, and the installer refuses to run from anywhere else.
 1. writes `~/.config/dotfiles/{local.conf,local.lua}` and `~/.zshrc.local`
    from hardware probes, and seeds the generated `colors.*` theme files from
    `matugen/defaults/` -- see **Per-machine config** below. Also skipped if
-   already present, unless `--reconfigure` is passed;
+   already present, unless `--reconfigure` is passed. On a first install (or
+   `--reconfigure`) it then runs `./configure.sh`'s pickers;
 1. symlinks the pi agent's shared config into `~/.pi/agent` (`pi/` in this
    repo) and `pi install`s every package listed in `pi/settings.json` -- see
    **The pi coding agent** below;
@@ -43,7 +44,7 @@ it, and the installer refuses to run from anywhere else.
 Flags: `--no-packages` (links and theme only), `--no-aur`, `--minimal` (skips
 ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
 `--reconfigure` (redo hardware detection: backs up and rewrites `local.conf`,
-`local.lua` and `~/.zshrc.local`).
+`local.lua` and `~/.zshrc.local`, then runs `./configure.sh`).
 
 ### After it finishes
 
@@ -58,9 +59,10 @@ ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
   not in git, so edit that file directly if the detection guesses wrong (e.g. an
   NVIDIA box with `nvidia-vaapi-driver` installed can go back to
   `LIBVA_DRIVER_NAME=nvidia` and `MPV_HWDEC=auto`).
-* Check `~/.config/dotfiles/local.conf` and `local.lua` -- the installer's
-  guesses (small-screen scale, dropped bar modules, monitor layout) are a
-  starting point, not gospel.
+* Run `./configure.sh` (or `make configure`) any time to change this machine's
+  settings with pickers: UI scale and per-monitor scale, keyboard layouts, bar
+  modules, services and autostarts. It rewrites only the keys you change in
+  `local.conf`, after backing it up; monitor scale is applied live.
 
 ### The pi coding agent
 
@@ -98,17 +100,23 @@ this particular box is**:
 
 | File | Read by | Holds |
 |---|---|---|
-| `~/.config/dotfiles/local.conf` | shell scripts, `quickshell/Local.qml` | UI scale, which bar modules run, poll intervals, wallpaper |
-| `~/.config/dotfiles/local.lua` | `hypr/hyprland.lua` | monitor rules, workspace pinning, keyboard layout, optional autostarts |
+| `~/.config/dotfiles/local.conf` | shell scripts, `quickshell/Local.qml`, `hypr/hyprland.lua` | UI scale, keyboard layout, which bar modules and services run, autostarts, poll intervals, wallpaper |
+| `~/.config/dotfiles/local.lua` | `hypr/hyprland.lua` | monitor rules, workspace pinning |
 | `~/.zshrc.local` | `.zshrc` (sourced at the end) | `$CLAUDE_OBSIDIAN_VAULT`, the NVIDIA VS Code workaround, anything else true only on this box |
 | `~/.config/git/config.local` | `git/config` (included at the end) | `[user] name`/`email`, anything else true only on this box |
 
 All four are **generated once by `install.sh` from hardware probes and never
 overwritten after that** -- the same contract `20-va.conf` already used for
 GPU video decode. Edit them freely; re-run with `--reconfigure` to redo
-detection (the old files are backed up, never discarded). A missing file (a
-fresh clone before the first `install.sh` run) just means every default below
-matches what the desktop looked like before this mechanism existed.
+detection (the old files are backed up, never discarded), or run
+`./configure.sh` to change `local.conf` with pickers. A missing file or key
+means the default below. `install.sh` writes only the keys its probes change
+and leaves the rest as comments, so a default changed in the repo still
+reaches every machine.
+
+Per-monitor scale is not a file key: `./configure.sh` (or `hyprctl`) applies it
+live, and `hypr/scripts/monitor-layout.py` remembers it with the rest of the
+display layout for that set of connected displays.
 
 **Rule of thumb: if a value would be wrong copied onto another PC, it belongs
 in `local.conf` or `local.lua`, not in a tracked config.**
@@ -116,13 +124,9 @@ in `local.conf` or `local.lua`, not in a tracked config.**
 ### `local.conf` keys
 
 ```sh
-# UI scale -- multiplies every geometry/font value in Theme.qml. This is the
-# "make the bar fit a small screen" lever.
+# UI scale -- multiplies every size in the shell (Theme.qml and the panels).
+# Per-monitor pixel density is Hyprland's monitor scale, not this.
 UI_SCALE=1.0
-BAR_HEIGHT=       # blank = derive from UI_SCALE; set to override outright
-FONT_SIZE_BAR=
-DASHBOARD_W=
-DASHBOARD_H=
 FONT=             # blank = MesloLGS NF
 
 # Bar modules, comma-separated per section. A name left out is dropped
@@ -139,6 +143,11 @@ SVC_CLAUDE_USAGE=1
 SVC_GPU=1
 SYSMON_INTERVAL_FAST=2000
 SYSMON_INTERVAL_SLOW=10000
+
+# Read by hypr/hyprland.lua.
+KB_LAYOUT=us,ru,graphite   # first layout = where Hyprland shortcuts sit
+AUTOSTART_HYPRIDLE=0       # takes effect at the next login
+AUTOSTART_WALLPAPER=1      # 0 on a machine without mpvpaper
 
 # Seeds hypr/wallpaper.conf on first run.
 WALLPAPER=
@@ -157,18 +166,12 @@ return {
         { 1, 5,  "eDP-1" },
         { 6, 10, "desc:Dell Inc. DELL P2422H F4JL9D3" },
     },
-    kb_layout = "us,ru",
     gaps_out = 8,   -- keep matching Theme.barMarginSide if UI_SCALE changes it
-    -- hypridle defaults OFF; wallpaper defaults ON (set false on a machine
-    -- with no video wallpaper / no mpvpaper, or wallpaper-daemon.sh nags with
-    -- a "mpvpaper is not installed" notification every login).
-    autostart = { hypridle = true, wallpaper = false },
 }
 ```
 
 Any key (or the whole file) can be omitted; `hypr/hyprland.lua` falls back to
-its generic defaults (`eDP-1` + catch-all monitor, workspaces 1-5 on `eDP-1`,
-`kb_layout = "us,ru"`, `hypridle` off).
+its generic defaults (`eDP-1` + catch-all monitor, workspaces 1-5 on `eDP-1`).
 
 Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 `hyprland.conf`, and Lua configs are a recent feature. Tested on 0.56.2.
@@ -276,6 +279,7 @@ back to Adwaita). `papirus-icon-theme` and `ttf-meslo-nerd` are required.
 ## Development
 
 ```sh
+make configure # ./configure.sh -- per-machine settings pickers
 make check     # shellcheck, shfmt, luac, luacheck, qmllint (see check.sh)
 make doctor    # missing packages, dangling ~/.config links, per-machine files
 make link      # ./link.sh

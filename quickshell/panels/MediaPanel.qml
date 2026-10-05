@@ -15,7 +15,7 @@ import "../ui"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 10
+    spacing: Math.round(10 * Theme.s)
     focus: true
 
     readonly property var player: Media.player
@@ -53,7 +53,7 @@ Column {
     // ---- player chips (only with more than one) ---------------------------
     Row {
         visible: Media.players.length > 1
-        spacing: 6
+        spacing: Math.round(6 * Theme.s)
 
         Repeater {
             model: Media.players
@@ -61,9 +61,9 @@ Column {
             Rectangle {
                 required property var modelData
                 readonly property bool current: modelData === Media.player
-                width: chip.implicitWidth + 16
-                height: 24
-                radius: 8
+                width: chip.implicitWidth + Math.round(16 * Theme.s)
+                height: Math.round(24 * Theme.s)
+                radius: Math.round(8 * Theme.s)
                 color: current ? Colors.surface : "transparent"
                 border.width: 1
                 border.color: current ? root.hue : Theme.rule
@@ -74,7 +74,7 @@ Column {
                     text: parent.modelData.identity || "Player"
                     color: parent.current ? root.hue : Theme.dim
                     font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel - 2
+                    font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                 }
 
                 MouseArea {
@@ -89,7 +89,7 @@ Column {
     Row {
         visible: Media.present
         width: parent.width
-        spacing: 12
+        spacing: Math.round(12 * Theme.s)
 
         ClippingRectangle {
             width: Theme.mediaArt
@@ -122,7 +122,7 @@ Column {
         Column {
             width: parent.width - Theme.mediaArt - parent.spacing
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 3
+            spacing: Math.round(3 * Theme.s)
 
             Text {
                 width: parent.width
@@ -160,7 +160,7 @@ Column {
     Column {
         visible: Media.present && Media.length > 0
         width: parent.width
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
 
         Slider {
             width: parent.width
@@ -179,14 +179,14 @@ Column {
                 text: Media.formatTime(Media.position)
                 color: Theme.dim
                 font.family: Theme.font
-                font.pixelSize: Theme.fsLabel - 2
+                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
             }
             Text {
                 anchors.right: parent.right
                 text: Media.formatTime(Media.length)
                 color: Theme.dim
                 font.family: Theme.font
-                font.pixelSize: Theme.fsLabel - 2
+                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
             }
         }
     }
@@ -267,7 +267,7 @@ Column {
     Row {
         visible: Media.present && Media.volumeAvailable
         width: parent.width
-        spacing: 8
+        spacing: Math.round(8 * Theme.s)
 
         Text {
             text: Media.volume === 0 ? "󰝟" : "󰕾"
@@ -277,7 +277,7 @@ Column {
             anchors.verticalCenter: parent.verticalCenter
         }
         Slider {
-            width: parent.width - 70
+            width: parent.width - Math.round(70 * Theme.s)
             anchors.verticalCenter: parent.verticalCenter
             value: Media.volume
             fill: root.hue
@@ -304,7 +304,7 @@ Column {
     Column {
         visible: Media.present
         width: parent.width
-        spacing: 4
+        spacing: Math.round(4 * Theme.s)
 
         Text {
             visible: Lyrics.state !== "ok"

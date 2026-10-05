@@ -11,7 +11,7 @@ import "../ui"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 6
+    spacing: Math.round(6 * Theme.s)
     focus: true
 
     // Recording needs the menu gone first: slurp draws its own overlay and
@@ -75,8 +75,8 @@ Column {
 
         visible: root.rows.includes(key)
         width: root.width
-        height: col.implicitHeight + 16
-        radius: 8
+        height: col.implicitHeight + Math.round(16 * Theme.s)
+        radius: Math.round(8 * Theme.s)
         color: current || area.containsMouse ? Colors.surface : "transparent"
         border.width: current ? 1 : 0
         border.color: Qt.rgba(hue.r, hue.g, hue.b, 0.7)
@@ -91,10 +91,10 @@ Column {
 
         Column {
             id: col
-            x: 10
-            y: 8
-            width: parent.width - 20
-            spacing: 8
+            x: Math.round(10 * Theme.s)
+            y: Math.round(8 * Theme.s)
+            width: parent.width - Math.round(20 * Theme.s)
+            spacing: Math.round(8 * Theme.s)
 
             Item {
                 width: parent.width
@@ -113,9 +113,9 @@ Column {
                 Column {
                     id: labelCol
                     anchors.left: g.right
-                    anchors.leftMargin: 6
+                    anchors.leftMargin: Math.round(6 * Theme.s)
                     anchors.right: sw.left
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: Math.round(8 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
 
                     Text {
@@ -132,7 +132,7 @@ Column {
                         text: r.sub
                         color: Theme.dim
                         font.family: Theme.font
-                        font.pixelSize: Theme.fsLabel - 2
+                        font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                         elide: Text.ElideRight
                     }
                 }
@@ -225,7 +225,7 @@ Column {
 
     Text {
         width: parent.width
-        topPadding: 4
+        topPadding: Math.round(4 * Theme.s)
         text: "↑↓ pick · space toggle" + (NightLight.available ? " · ←→ temperature" : "")
         color: Theme.dim
         font.family: Theme.font

@@ -30,9 +30,9 @@ Item {
     Rectangle {
         id: rowBg
         anchors.fill: parent
-        anchors.leftMargin: -6
-        anchors.rightMargin: -6
-        radius: 6
+        anchors.leftMargin: Math.round(-6 * Theme.s)
+        anchors.rightMargin: Math.round(-6 * Theme.s)
+        radius: Math.round(6 * Theme.s)
         color: Colors.surface
         opacity: hover.hovered ? 1 : 0
 
@@ -43,7 +43,7 @@ Item {
         anchors.left: rowBg.left
         anchors.top: rowBg.top
         anchors.bottom: rowBg.bottom
-        width: 3
+        width: Math.round(3 * Theme.s)
         radius: 1.5
         color: Colors.accent
         opacity: hover.hovered ? 1 : 0
@@ -90,7 +90,7 @@ Item {
 
         Row {
             anchors.fill: parent
-            spacing: 2
+            spacing: Math.round(2 * Theme.s)
 
             Repeater {
                 model: root.parts

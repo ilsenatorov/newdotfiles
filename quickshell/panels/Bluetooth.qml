@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Bluetooth
 import ".."
 import "../services"
+import "../ui"
 
 // Replaces rofi-bluetooth (SUPER+D, b). Live Bluez state via
 // Quickshell.Bluetooth -- no bluetoothctl scraping -- and everything
@@ -21,7 +22,7 @@ import "../services"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 8
+    spacing: Math.round(8 * Theme.s)
     focus: true
 
     readonly property var adapter: Bt.adapter
@@ -361,211 +362,10 @@ Column {
         done();
     }
 
-    // ---- reusable bits (same look as Network.qml's) ----------------------------
-    component DevRow: Rectangle {
-        id: devRow
-
-        property string glyph: ""
-        property string title: ""
-        property string subtitle: ""
-        property bool subtitleIsError: false
-        property bool active: false
-        property bool selected: false
-        property bool forgettable: false
-        property string battery: ""
-
-        signal activated
-        signal secondary
-        signal forgetRequested
-
-        height: Math.round(42 * Theme.s)
-        radius: 8
-        color: (rowArea.containsMouse || selected) ? Colors.surface : "transparent"
-        border.width: selected ? 1 : 0
-        border.color: Colors.accent
-
-        MouseArea {
-            id: rowArea
-            anchors.fill: parent
-            hoverEnabled: true
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: mouse => mouse.button === Qt.RightButton ? devRow.secondary() : devRow.activated()
-        }
-
-        Row {
-            anchors.fill: parent
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
-            spacing: 8
-
-            Text {
-                id: glyphText
-                width: Math.round(Theme.fsValue * 1.4)
-                text: devRow.glyph
-                font.family: Theme.font
-                font.pixelSize: Theme.fsValue
-                color: devRow.active ? Colors.accent : Theme.fg
-                anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Column {
-                width: parent.width - glyphText.width - trailing.width - parent.spacing * 2
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 1
-
-                Text {
-                    width: parent.width
-                    text: devRow.title
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsValue
-                    color: devRow.active ? Colors.accent : Theme.fg
-                    elide: Text.ElideRight
-                }
-
-                Text {
-                    width: parent.width
-                    visible: text !== ""
-                    text: devRow.subtitle
-                    font.family: Theme.font
-                    font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                    color: devRow.subtitleIsError ? Colors.urgent : Theme.dim
-                    elide: Text.ElideRight
-                }
-            }
-
-            Row {
-                id: trailing
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                Text {
-                    visible: devRow.battery !== ""
-                    text: devRow.battery
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                    color: Theme.dim
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // Forget: bluetoothctl `remove` -- unpairs and drops the device.
-                Text {
-                    visible: devRow.forgettable
-                    text: "󰆴"
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsValue
-                    color: forgetArea.containsMouse ? Colors.urgent : Theme.dim
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    MouseArea {
-                        id: forgetArea
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        onClicked: devRow.forgetRequested()
-                    }
-                }
-
-                Text {
-                    visible: devRow.active
-                    text: "✓"
-                    color: Colors.accent
-                    font.pixelSize: Theme.fsValue
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-        }
-    }
-
-    component Field: Rectangle {
-        id: field
-
-        property alias input: textInput
-        property string placeholder: ""
-        signal accepted
-
-        width: parent.width
-        height: Math.round(32 * Theme.s)
-        radius: 6
-        color: Theme.surface
-        border.width: 1
-        border.color: textInput.activeFocus ? Colors.accent : Theme.rule
-
-        TextInput {
-            id: textInput
-            anchors.fill: parent
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
-            verticalAlignment: TextInput.AlignVCenter
-            color: Theme.fg
-            font.family: Theme.font
-            font.pixelSize: Theme.fsValue
-            clip: true
-            onAccepted: field.accepted()
-        }
-
-        Text {
-            anchors.fill: textInput
-            verticalAlignment: Text.AlignVCenter
-            visible: textInput.text === ""
-            text: field.placeholder
-            color: Theme.dim
-            font.family: Theme.font
-            font.pixelSize: Theme.fsLabel
-            elide: Text.ElideRight
-        }
-    }
-
-    component Chip: Rectangle {
-        id: chip
-
-        property string label: ""
-        property string key: ""
-        property bool active: false
-        signal clicked
-
-        width: chipRow.implicitWidth + 20
-        height: Math.round(26 * Theme.s)
-        radius: height / 2
-        color: active ? Colors.accent : "transparent"
-        border.width: 1
-        border.color: active ? Colors.accent : Theme.rule
-
-        Row {
-            id: chipRow
-            anchors.centerIn: parent
-            spacing: 5
-
-            Text {
-                visible: chip.key !== ""
-                text: chip.key
-                color: chip.active ? Theme.surface : Colors.accent
-                opacity: 0.7
-                font.family: Theme.font
-                font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Text {
-                text: chip.label
-                color: chip.active ? Theme.surface : Theme.fg
-                font.family: Theme.font
-                font.pixelSize: Theme.fsLabel
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
-        MouseArea { anchors.fill: parent; onClicked: chip.clicked() }
-    }
-
-    component SectionLabel: Text {
-        font.family: Theme.font
-        font.pixelSize: Theme.fsLabel
-        font.bold: true
-        color: Theme.dim
-    }
-
     // ---- controller header: name, scan, power ------------------------------------
     Row {
         width: parent.width
-        spacing: 12
+        spacing: Math.round(12 * Theme.s)
         visible: !root.formOpen
 
         SectionLabel {
@@ -600,41 +400,25 @@ Column {
             MouseArea {
                 id: scanArea
                 anchors.fill: parent
-                anchors.margins: -4
+                anchors.margins: Math.round(-4 * Theme.s)
                 hoverEnabled: true
                 onClicked: root.toggleScan()
             }
         }
 
-        Rectangle {
+        Toggle {
             id: toggle
             visible: Bt.available
-            width: 40
-            height: 20
-            radius: 10
-            color: Bt.powered ? Colors.accent : Theme.track
-
-            Rectangle {
-                width: 16
-                height: 16
-                radius: 8
-                color: Theme.surface
-                anchors.verticalCenter: parent.verticalCenter
-                x: Bt.powered ? parent.width - width - 2 : 2
-                Behavior on x { NumberAnimation { duration: Theme.durHover } }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Bt.togglePower()
-            }
+            anchors.verticalCenter: parent.verticalCenter
+            checked: Bt.powered
+            onToggled: Bt.togglePower()
         }
     }
 
     // Controller modes (bluetoothctl discoverable / pairable / select).
     Flow {
         width: parent.width
-        spacing: 6
+        spacing: Math.round(6 * Theme.s)
         visible: Bt.powered && !root.formOpen
 
         Chip {
@@ -667,7 +451,7 @@ Column {
         id: details
         visible: root.detailsShown && root.currentDev !== null && !root.formOpen
         width: parent.width
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
 
         readonly property var dev: root.currentDev
         readonly property var rows: {
@@ -684,38 +468,16 @@ Column {
             return r;
         }
 
-        Repeater {
-            model: details.rows
-
-            Row {
-                width: details.width
-                spacing: 8
-
-                required property var modelData
-
-                Text {
-                    width: 56
-                    text: modelData[0]
-                    color: Theme.dim
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                }
-                Text {
-                    width: parent.width - 64
-                    text: modelData[1]
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                    elide: Text.ElideRight
-                }
-            }
+        InfoRows {
+            width: parent.width
+            rows: details.rows
         }
 
-        Item { width: 1; height: 4 }
+        Item { width: 1; height: Math.round(4 * Theme.s) }
 
         Flow {
             width: details.width
-            spacing: 6
+            spacing: Math.round(6 * Theme.s)
 
             Chip {
                 key: "t"
@@ -771,12 +533,12 @@ Column {
         height: Math.min(contentHeight, root.maxRows * (root.rowH + spacing))
         visible: Bt.powered && !root.formOpen && count > 0
         clip: true
-        spacing: 2
+        spacing: Math.round(2 * Theme.s)
         boundsBehavior: Flickable.StopAtBounds
         interactive: contentHeight > height
         model: root.entries
 
-        delegate: DevRow {
+        delegate: ListRow {
             required property var modelData
             required property int index
             readonly property var dev: modelData.dev ?? null
@@ -844,7 +606,7 @@ Column {
     Column {
         visible: root.formOpen
         width: parent.width
-        spacing: 8
+        spacing: Math.round(8 * Theme.s)
 
         Text {
             width: parent.width
@@ -888,102 +650,41 @@ Column {
 
         Row {
             anchors.right: parent.right
-            spacing: 6
+            spacing: Math.round(6 * Theme.s)
 
-            Rectangle {
-                width: 70
-                height: 30
-                radius: 6
-                color: "transparent"
-                border.width: 1
-                border.color: Theme.rule
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "Cancel"
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                }
-                MouseArea { anchors.fill: parent; onClicked: root.closeForm() }
-            }
-
-            Rectangle {
-                width: 70
-                height: 30
-                radius: 6
-                color: Colors.accent
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "Save"
-                    color: Theme.surface
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel
-                }
-                MouseArea { anchors.fill: parent; onClicked: root.submitForm() }
-            }
+            Button { label: "Cancel"; onClicked: root.closeForm() }
+            Button { label: "Save"; primary: true; onClicked: root.submitForm() }
         }
     }
 
     // ---- key hints -----------------------------------------------------------------
-    Rectangle {
+    KeyHints {
         width: parent.width
-        height: 1
-        color: Theme.rule
+        hints: {
+        if (root.formOpen) return [["↵", "save"], ["esc", "cancel"]];
+        if (root.filtering) return [["↑↓", "select"], ["↵", "connect"], ["esc", "clear filter"]];
+
+        const h = [];
+        if (Bt.powered) {
+            h.push(["j/k", "move"]);
+            const c = root.current;
+            const d = root.currentDev;
+            if (c && !d) h.push(["↵", root.showUnnamed ? "hide unnamed" : "show unnamed"]);
+            if (d) {
+                const label = d.pairing ? "cancel pairing"
+                    : d.connected ? (root.confirmKey === d.address ? "confirm disconnect" : "disconnect")
+                    : d.paired ? "connect" : "pair";
+                h.push(["↵", label]);
+                if (!d.connected && !d.paired) h.push(["c", "connect only"]);
+                if (d.paired || d.trusted || d.blocked) h.push(["d", "forget"]);
+                h.push(["t", d.trusted ? "untrust" : "trust"], ["b", d.blocked ? "unblock" : "block"], ["n", "rename"]);
+                h.push(["i", root.detailsShown ? "hide details" : "details"]);
+            }
+            h.push(["r", Bt.discovering ? "stop scan" : "scan"], ["/", "filter"], ["u", root.showUnnamed ? "hide unnamed" : "unnamed"]);
+        }
+        if (Bt.available) h.push(["w", Bt.powered ? "power off" : "power on"]);
+        h.push(["esc", "close"]);
+        return h;
     }
-
-    Flow {
-        width: parent.width
-        spacing: 10
-
-        readonly property var hints: {
-            if (root.formOpen) return [["↵", "save"], ["esc", "cancel"]];
-            if (root.filtering) return [["↑↓", "select"], ["↵", "connect"], ["esc", "clear filter"]];
-
-            const h = [];
-            if (Bt.powered) {
-                h.push(["j/k", "move"]);
-                const c = root.current;
-                const d = root.currentDev;
-                if (c && !d) h.push(["↵", root.showUnnamed ? "hide unnamed" : "show unnamed"]);
-                if (d) {
-                    const label = d.pairing ? "cancel pairing"
-                        : d.connected ? (root.confirmKey === d.address ? "confirm disconnect" : "disconnect")
-                        : d.paired ? "connect" : "pair";
-                    h.push(["↵", label]);
-                    if (!d.connected && !d.paired) h.push(["c", "connect only"]);
-                    if (d.paired || d.trusted || d.blocked) h.push(["d", "forget"]);
-                    h.push(["t", d.trusted ? "untrust" : "trust"], ["b", d.blocked ? "unblock" : "block"], ["n", "rename"]);
-                    h.push(["i", root.detailsShown ? "hide details" : "details"]);
-                }
-                h.push(["r", Bt.discovering ? "stop scan" : "scan"], ["/", "filter"], ["u", root.showUnnamed ? "hide unnamed" : "unnamed"]);
-            }
-            if (Bt.available) h.push(["w", Bt.powered ? "power off" : "power on"]);
-            h.push(["esc", "close"]);
-            return h;
-        }
-
-        Repeater {
-            model: parent.hints
-
-            Row {
-                required property var modelData
-                spacing: 4
-
-                Text {
-                    text: modelData[0]
-                    color: Colors.accent
-                    font.family: Theme.font
-                    font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                }
-                Text {
-                    text: modelData[1]
-                    color: Theme.dim
-                    font.family: Theme.font
-                    font.pixelSize: Math.round(Theme.fsLabel * 0.85)
-                }
-            }
-        }
     }
 }

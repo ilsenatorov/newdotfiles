@@ -35,7 +35,7 @@ Item {
 
         anchors.centerIn: parent
         width: Theme.panelW
-        height: Math.min(col.implicitHeight + 24, root.height - Theme.inset * 2)
+        height: Math.min(col.implicitHeight + Math.round(24 * Theme.s), root.height - Theme.inset * 2)
         clip: true
 
         MouseArea {
@@ -46,10 +46,10 @@ Item {
         Column {
             id: col
 
-            x: 12
-            y: 12
-            width: card.width - 24
-            spacing: 10
+            x: Math.round(12 * Theme.s)
+            y: Math.round(12 * Theme.s)
+            width: card.width - Math.round(24 * Theme.s)
+            spacing: Math.round(10 * Theme.s)
 
             Item {
                 width: col.width
@@ -57,7 +57,7 @@ Item {
 
                 Row {
                     id: crumbs
-                    spacing: 6
+                    spacing: Math.round(6 * Theme.s)
 
                     Repeater {
                         model: root.trail
@@ -94,14 +94,14 @@ Item {
                     text: "esc back"
                     color: Theme.dim
                     font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel - 2
+                    font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                 }
             }
 
             Column {
                 id: body
                 width: col.width
-                spacing: 8
+                spacing: Math.round(8 * Theme.s)
             }
         }
     }

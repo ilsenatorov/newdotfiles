@@ -16,11 +16,8 @@ Singleton {
     // reasoning hyprland.lua's cursor_theme() probe uses for cursors.
     readonly property string font: Local.values["FONT"] || "MesloLGS NF"
 
-    // Every geometry/font value below scales with local.conf's UI_SCALE
-    // (default 1.0, unchanged from today) -- the "make it fit the small
-    // screen" lever. A same-named local.conf key (BAR_HEIGHT, FONT_SIZE_BAR,
-    // DASHBOARD_W/H) overrides its derived value outright instead of scaling
-    // it, for a machine that needs one dimension tuned independently.
+    // Every geometry/font value below (and in the panels, via Theme.s) scales
+    // with local.conf's UI_SCALE, default 1.0.
     readonly property real s: Local.uiScale
 
     // Type scale, in one place. At scale 1.0 this panel is 1920x1080 on a
@@ -36,8 +33,8 @@ Singleton {
     // cardH+inset*2 -- a four-column tile grid sized for its fullest state
     // (GPU, weather and Claude tiles all present) so it never renegotiates
     // layer-shell geometry while open. The inset is headroom for the drop shadow.
-    readonly property int cardW: Local.dashboardW > 0 ? Local.dashboardW : Math.round(1040 * s)
-    readonly property int cardH: Local.dashboardH > 0 ? Local.dashboardH : Math.round(860 * s)
+    readonly property int cardW: Math.round(1040 * s)
+    readonly property int cardH: Math.round(860 * s)
 
     // SUPER+D i's ask-a-quick-question overlay. Fixed size like the dashboard,
     // sized to show a full back-and-forth conversation, not just one answer.
@@ -55,14 +52,14 @@ Singleton {
     // pills, no fixed bar height, margin-top 6 / sides 8. hyprland.lua's
     // gaps_out (8) is tuned to this margin -- keep them matching (M.gaps_out
     // in local.lua overrides that side if this margin is scaled).
-    readonly property int barHeight: Local.barHeight > 0 ? Local.barHeight : Math.round(40 * s)
+    readonly property int barHeight: Math.round(40 * s)
     readonly property int barMarginTop: Math.round(6 * s)
     readonly property int barMarginSide: Math.round(8 * s)
     readonly property int barPillPadH: Math.round(10 * s)
     readonly property int barPillPadV: Math.round(6 * s)
     readonly property int barPillGap: Math.round(6 * s)
     readonly property int barModulePad: Math.round(6 * s)
-    readonly property int fsBar: Local.fsBar > 0 ? Local.fsBar : Math.round(16 * s)
+    readonly property int fsBar: Math.round(16 * s)
 
     // Base @ 85%, matches the old waybar pill exactly.
     readonly property color barPill: Qt.alpha(Colors.baseBg, 0.85)

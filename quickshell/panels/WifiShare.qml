@@ -12,7 +12,7 @@ import "../services"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 10
+    spacing: Math.round(10 * Theme.s)
     focus: true
 
     Keys.onEscapePressed: event => {
@@ -111,8 +111,8 @@ Column {
 
     Grid {
         columns: 2
-        columnSpacing: 12
-        rowSpacing: 2
+        columnSpacing: Math.round(12 * Theme.s)
+        rowSpacing: Math.round(2 * Theme.s)
         width: parent.width
 
         Text { text: "IP"; color: Theme.dim; font.family: Theme.font; font.pixelSize: Theme.fsLabel }

@@ -7,9 +7,7 @@
 # runtime equivalent is `hyprctl eval 'hl.monitor({...})'`.
 #
 # Usage:
-#   monitor-place.sh above            # apply directly (single external display)
-#   monitor-place.sh above DP-6       # apply to a named output
-#   monitor-place.sh --dry-run above  # print the hl.monitor calls, change nothing
+#   monitor-place.sh above DP-6       # place DP-6 above the anchor display
 #   monitor-place.sh --query          # JSON: anchor + each output's placement
 #
 # Picking interactively is quickshell's job now (SUPER+D, m ->
@@ -23,12 +21,6 @@
 # Hyprland restores them after login, config reload and monitor hotplug.
 
 set -euo pipefail
-
-dry_run=0
-[ "${1:-}" = "--dry-run" ] && {
-	dry_run=1
-	shift
-}
 
 query=0
 [ "${1:-}" = "--query" ] && {
@@ -45,10 +37,9 @@ die() {
 	exit 1
 }
 
-# Tests inject a fixture here; normally we ask the running compositor. `all` is
-# required -- a disabled output disappears from plain `monitors`, and it has to
-# stay listed so it can be switched back on.
-mons="${MONITOR_PLACE_JSON:-$(hyprctl monitors all -j)}"
+# `all` is required -- a disabled output disappears from plain `monitors`, and
+# it has to stay listed so it can be switched back on.
+mons=$(hyprctl monitors all -j)
 
 # The built-in panel anchors the layout. eDP-1 is the generic DRM connector class
 # for a laptop panel; on a desktop there is none, so fall back to the focused
@@ -138,17 +129,7 @@ fi
 
 # --- resolve the output to act on -------------------------------------------
 
-if [ -z "$target" ]; then
-	mapfile -t candidates < <(jq -r --arg a "$anchor" '.[] | select(.name != $a) | .name' <<<"$mons")
-
-	case ${#candidates[@]} in
-		0) die "No external display connected." ;;
-		1) target="${candidates[0]}" ;;
-		# No interactive fallback any more: the caller names the output.
-		*) die "Several external displays; name one: ${candidates[*]}" ;;
-	esac
-fi
-
+[ -n "$target" ] || die "No output given (usage: monitor-place.sh PLACEMENT OUTPUT)"
 jq -e --arg n "$target" 'map(select(.name == $n)) | length > 0' <<<"$mons" >/dev/null ||
 	die "No such output: $target"
 [ "$target" = "$anchor" ] && die "$target is the anchor display; pick another output."
@@ -185,18 +166,14 @@ spec() {
 		"$1" "$2" "$3" "$4" "$5"
 }
 
-anchor_call=$(spec "$anchor" "0x0" "$ascale" "" "false")
-target_call=$(spec "$target" "$position" "$tscale" "$mirror" "$disabled")
-
-if [ "$dry_run" = 1 ]; then
-	printf '%s\n%s\n' "$anchor_call" "$target_call"
-	exit 0
-fi
-
 # Anchor first: it is pinned to 0x0 so the target's coordinates mean what they
 # say. Left/Above put the target at negative coordinates, and an anchor left on
 # position = "auto" would otherwise re-flow out from under it.
-python3 "$(dirname "$0")/monitor-layout.py" --place "$placement" "$target"
+result=$(hyprctl eval "$(spec "$anchor" "0x0" "$ascale" "" "false");$(spec "$target" "$position" "$tscale" "$mirror" "$disabled")")
+grep -qi error <<<"$result" && die "$result"
+# Let the compositor settle, then remember this layout for this display set.
+sleep 0.1
+python3 "$(dirname "$0")/monitor-layout.py" --remember || die "Could not remember the layout"
 
 case "$placement" in
 	mirror) msg="$target mirroring $anchor" ;;

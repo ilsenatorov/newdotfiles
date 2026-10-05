@@ -62,6 +62,11 @@ run() {
 	return 1
 }
 
+if [[ $mode != rescan && -z $ssid ]]; then
+	[[ $mode == hidden ]] && echo "Enter the network name" >&2 || echo "missing SSID" >&2
+	exit 2
+fi
+
 case $mode in
 	rescan)
 		# NM refuses a rescan while one is already running (or right after one);
@@ -71,18 +76,10 @@ case $mode in
 		;;
 
 	open)
-		[[ -n $ssid ]] || {
-			echo "missing SSID" >&2
-			exit 2
-		}
 		run device wifi connect "$ssid" ifname "$iface"
 		;;
 
 	psk)
-		[[ -n $ssid ]] || {
-			echo "missing SSID" >&2
-			exit 2
-		}
 		password=$(read_secret)
 		[[ -n $password ]] || {
 			echo "Enter a password" >&2
@@ -93,23 +90,16 @@ case $mode in
 		# other tweaks (autoconnect priority, metered, ...) survive.
 		uuid=$(profiles_for "$ssid" | head -n1)
 		if [[ -n $uuid ]]; then
-			key_mgmt=$(nmcli --get-values 802-11-wireless-security.key-mgmt connection show uuid "$uuid" 2>/dev/null)
-			case $key_mgmt in
-				wpa-psk | sae)
-					nmcli connection modify uuid "$uuid" 802-11-wireless-security.psk "$password" >/dev/null 2>&1 &&
-						{
-							run connection up uuid "$uuid" ifname "$iface"
-							exit
-						}
-					;;
-				none)
-					nmcli connection modify uuid "$uuid" 802-11-wireless-security.wep-key0 "$password" >/dev/null 2>&1 &&
-						{
-							run connection up uuid "$uuid" ifname "$iface"
-							exit
-						}
-					;;
+			case $(nmcli --get-values 802-11-wireless-security.key-mgmt connection show uuid "$uuid" 2>/dev/null) in
+				wpa-psk | sae) field=psk ;;
+				none) field=wep-key0 ;;
+				*) field="" ;;
 			esac
+			if [[ -n $field ]] &&
+				nmcli connection modify uuid "$uuid" "802-11-wireless-security.$field" "$password" >/dev/null 2>&1; then
+				run connection up uuid "$uuid" ifname "$iface"
+				exit
+			fi
 			# Profile of some other shape (or modify failed) -- start over.
 			delete_profiles "$ssid"
 		fi
@@ -117,10 +107,6 @@ case $mode in
 		;;
 
 	eap)
-		[[ -n $ssid ]] || {
-			echo "missing SSID" >&2
-			exit 2
-		}
 		method=${4:?missing EAP method}
 		identity=${5:-}
 		password=$(read_secret)
@@ -157,10 +143,6 @@ case $mode in
 		;;
 
 	hidden)
-		[[ -n $ssid ]] || {
-			echo "Enter the network name" >&2
-			exit 2
-		}
 		password=$(read_secret)
 		delete_profiles "$ssid"
 		if [[ -n $password ]]; then

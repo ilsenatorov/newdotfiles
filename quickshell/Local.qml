@@ -20,12 +20,6 @@ Singleton {
 
     readonly property real uiScale: num("UI_SCALE", 1.0)
 
-    // 0/blank = derive from uiScale (see Theme.qml); set to override outright.
-    readonly property int barHeight: num("BAR_HEIGHT", 0)
-    readonly property int fsBar: num("FONT_SIZE_BAR", 0)
-    readonly property int dashboardW: num("DASHBOARD_W", 0)
-    readonly property int dashboardH: num("DASHBOARD_H", 0)
-
     // Comma-separated module names per bar section; Bar.qml maps them through
     // its registry (unknown names, e.g. the retired gpu/sys, are skipped). A
     // key absent from the file keeps its default below; a key present but
@@ -34,8 +28,6 @@ Singleton {
     readonly property var barLeft: list("BAR_LEFT", ["workspaces", "clock", "battery"])
     readonly property var barCenter: list("BAR_CENTER", ["media"])
     readonly property var barRight: list("BAR_RIGHT", ["network", "bluetooth", "audio", "notifications", "status", "language"])
-
-    readonly property string hddDevice: values["HDD_DEVICE"] || ""
 
     // Expensive pollers/services -- 0 disables outright on weak hardware.
     readonly property bool svcWeather: bool_("SVC_WEATHER", true)

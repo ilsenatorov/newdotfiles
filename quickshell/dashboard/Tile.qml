@@ -53,7 +53,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius - 2
+        radius: Theme.radius - Math.round(2 * Theme.s)
         color: Qt.alpha(Colors.surface, 0.55)
         border.width: 1
         border.color: Theme.divider
@@ -64,7 +64,7 @@ Item {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.leftMargin: root.padding
-        anchors.topMargin: root.padding - 2
+        anchors.topMargin: root.padding - Math.round(2 * Theme.s)
         spacing: Math.round(8 * Theme.s)
         visible: root.title !== ""
 

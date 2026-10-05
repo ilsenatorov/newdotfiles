@@ -121,7 +121,6 @@ def main():
     action.add_argument("--apply", metavar="NAME")
     action.add_argument("--restore", action="store_true")
     action.add_argument("--list", action="store_true")
-    action.add_argument("--place", nargs=2, metavar=("PLACEMENT", "OUTPUT"))
     args = parser.parse_args()
 
     if args.restore:
@@ -144,17 +143,7 @@ def main():
             raise ValueError("No connected displays.")
         key = topology(monitors)
         previous = data["last"].get(key, [])
-        if args.place:
-            calls = subprocess.check_output(
-                [str(Path(__file__).with_name("monitor-place.sh")), "--dry-run", *args.place], text=True
-            )
-            result = hyprctl("eval", ";".join(calls.splitlines()))
-            if "error" in result.lower():
-                raise ValueError(result)
-            time.sleep(0.1)
-            monitors = connected()
-            layout = snapshot(monitors, previous)
-        elif args.apply is not None or args.restore:
+        if args.apply is not None or args.restore:
             if args.apply is not None:
                 if args.apply not in data["profiles"]:
                     raise ValueError("No saved layout named " + args.apply)

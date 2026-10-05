@@ -14,7 +14,7 @@ import "../ui"
 Column {
     id: root
     width: parent ? parent.width : Theme.panelW
-    spacing: 10
+    spacing: Math.round(10 * Theme.s)
     focus: true
 
     property int currentIndex: 0
@@ -103,7 +103,7 @@ Column {
 
         Row {
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
+            spacing: Math.round(8 * Theme.s)
 
             Toggle {
                 anchors.verticalCenter: parent.verticalCenter
@@ -124,9 +124,9 @@ Column {
             visible: Notifications.history.length > 0
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            width: clearLabel.implicitWidth + 16
-            height: 24
-            radius: 8
+            width: clearLabel.implicitWidth + Math.round(16 * Theme.s)
+            height: Math.round(24 * Theme.s)
+            radius: Math.round(8 * Theme.s)
             color: clearArea.containsMouse ? Colors.surface : "transparent"
             border.width: 1
             border.color: Theme.rule
@@ -158,8 +158,8 @@ Column {
         visible: Notifications.history.length === 0
         width: parent.width
         horizontalAlignment: Text.AlignHCenter
-        topPadding: 12
-        bottomPadding: 12
+        topPadding: Math.round(12 * Theme.s)
+        bottomPadding: Math.round(12 * Theme.s)
         text: "󰂜  No notifications"
         color: Theme.dim
         font.family: Theme.font
@@ -174,7 +174,7 @@ Column {
         // Grows with content up to roughly half a 1080p screen, then scrolls.
         height: Math.min(contentHeight, Math.round(460 * Theme.s))
         clip: true
-        spacing: 4
+        spacing: Math.round(4 * Theme.s)
         boundsBehavior: Flickable.StopAtBounds
         model: root.entries
 
@@ -185,7 +185,7 @@ Column {
             required property int index
 
             width: list.width
-            spacing: 2
+            spacing: Math.round(2 * Theme.s)
 
             Text {
                 visible: entry.modelData.header !== ""
@@ -194,7 +194,7 @@ Column {
                 text: entry.modelData.header
                 color: Theme.dim
                 font.family: Theme.font
-                font.pixelSize: Theme.fsLabel - 2
+                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                 font.bold: true
             }
 
@@ -206,8 +206,8 @@ Column {
                 readonly property bool current: index === root.currentIndex
 
                 width: list.width
-                height: inner.implicitHeight + 14
-                radius: 8
+                height: inner.implicitHeight + Math.round(14 * Theme.s)
+                radius: Math.round(8 * Theme.s)
                 color: current || rowArea.containsMouse ? Colors.surface : "transparent"
                 border.width: current ? 1 : 0
                 border.color: Colors.accent
@@ -221,10 +221,10 @@ Column {
 
                 Row {
                     id: inner
-                    x: 8
-                    y: 7
-                    width: parent.width - 16
-                    spacing: 8
+                    x: Math.round(8 * Theme.s)
+                    y: Math.round(7 * Theme.s)
+                    width: parent.width - Math.round(16 * Theme.s)
+                    spacing: Math.round(8 * Theme.s)
 
                     Image {
                         id: icon
@@ -240,8 +240,8 @@ Column {
                     }
 
                     Column {
-                        width: inner.width - (icon.visible ? icon.width + inner.spacing : 0) - 26
-                        spacing: 2
+                        width: inner.width - (icon.visible ? icon.width + inner.spacing : 0) - Math.round(26 * Theme.s)
+                        spacing: Math.round(2 * Theme.s)
 
                         Item {
                             width: parent.width
@@ -249,7 +249,7 @@ Column {
 
                             Text {
                                 id: summary
-                                width: parent.width - when.implicitWidth - 8
+                                width: parent.width - when.implicitWidth - Math.round(8 * Theme.s)
                                 text: row.modelData.summary
                                 color: row.modelData.urgency === 2 ? Theme.red : Theme.fg
                                 font.family: Theme.font
@@ -263,7 +263,7 @@ Column {
                                 text: root.ago(row.modelData.time)
                                 color: Theme.dim
                                 font.family: Theme.font
-                                font.pixelSize: Theme.fsLabel - 2
+                                font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
                             }
                         }
 
@@ -284,9 +284,9 @@ Column {
 
                 Text {
                     anchors.right: parent.right
-                    anchors.rightMargin: 6
+                    anchors.rightMargin: Math.round(6 * Theme.s)
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 22
+                    width: Math.round(22 * Theme.s)
                     horizontalAlignment: Text.AlignHCenter
                     text: "×"
                     color: closeArea.containsMouse ? Theme.red : Theme.dim
@@ -295,7 +295,7 @@ Column {
                     MouseArea {
                         id: closeArea
                         anchors.fill: parent
-                        anchors.margins: -4
+                        anchors.margins: Math.round(-4 * Theme.s)
                         hoverEnabled: true
                         onClicked: Notifications.remove(row.modelData.uid)
                     }

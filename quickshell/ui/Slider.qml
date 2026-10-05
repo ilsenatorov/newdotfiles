@@ -16,15 +16,15 @@ Item {
 
     signal moved(real v)
 
-    implicitHeight: 16
+    implicitHeight: Math.round(16 * Theme.s)
     opacity: root.enabled_ ? 1 : 0.5
 
     Rectangle {
         id: track
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
-        height: 8
-        radius: 4
+        height: Math.round(8 * Theme.s)
+        radius: Math.round(4 * Theme.s)
         color: Theme.track
 
         Rectangle {
@@ -37,9 +37,9 @@ Item {
 
     Rectangle {
         visible: root.knob && root.enabled_ && (area.containsMouse || area.pressed)
-        width: 14
-        height: 14
-        radius: 7
+        width: Math.round(14 * Theme.s)
+        height: Math.round(14 * Theme.s)
+        radius: Math.round(7 * Theme.s)
         color: root.fill
         anchors.verticalCenter: parent.verticalCenter
         x: track.width * Math.max(0, Math.min(1, root.value)) - width / 2

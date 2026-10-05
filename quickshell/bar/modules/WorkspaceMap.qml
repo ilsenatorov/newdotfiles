@@ -82,7 +82,7 @@ Item {
     readonly property int pad: detailed ? 6 : 2
     readonly property int gap: detailed ? 5 : 1
 
-    implicitHeight: Math.round((Theme.barHeight - 8) * 0.52)
+    implicitHeight: Math.round((Theme.barHeight - Math.round(8 * Theme.s)) * 0.52)
     implicitWidth: area ? Math.round(implicitHeight * area.w / area.h) : implicitHeight
     opacity: active || highlighted || detailed ? 1 : 0.75
 
@@ -108,7 +108,7 @@ Item {
         visible: root.detailed && root.cells.length === 0
         text: "empty"
         font.family: Theme.font
-        font.pixelSize: Theme.fsLabel - 2
+        font.pixelSize: Theme.fsLabel - Math.round(2 * Theme.s)
         color: Theme.dim
     }
 
@@ -179,7 +179,7 @@ Item {
                         required property int index
                         readonly property bool lit: index === cell.modelData.shown
                         width: (cell.width - (cell.modelData.members.length - 1)) / cell.modelData.members.length
-                        height: 2
+                        height: Math.round(2 * Theme.s)
                         color: cell.modelData.focused && lit ? Theme.windowShadow
                             : root.tint(AppStyle.style(modelData.cls).color, lit ? 1 : 0.45)
                     }
@@ -190,7 +190,7 @@ Item {
             Rectangle {
                 visible: root.detailed
                 anchors.fill: parent
-                radius: 6
+                radius: Math.round(6 * Theme.s)
                 color: root.tint(cell.appColor, cell.modelData.focused ? 0.26 : 0.13)
                 border.width: cell.modelData.focused ? 2 : 1
                 border.color: cell.modelData.focused ? Colors.accent : root.tint(cell.appColor, 0.55)
@@ -201,7 +201,7 @@ Item {
                 id: tabs
                 visible: root.detailed && cell.grouped && cell.height > 40
                 anchors { left: parent.left; top: parent.top; margins: 4 }
-                spacing: 3
+                spacing: Math.round(3 * Theme.s)
 
                 Repeater {
                     model: cell.modelData.members
@@ -209,9 +209,9 @@ Item {
                     Rectangle {
                         required property var modelData
                         required property int index
-                        width: 20
-                        height: 18
-                        radius: 4
+                        width: Math.round(20 * Theme.s)
+                        height: Math.round(18 * Theme.s)
+                        radius: Math.round(4 * Theme.s)
                         color: index === cell.modelData.shown ? root.tint(cell.appColor, 0.35) : "transparent"
 
                         AppGlyph {
@@ -227,8 +227,8 @@ Item {
                 visible: root.detailed
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: tabs.visible ? 9 : 0
-                width: parent.width - 12
-                spacing: 3
+                width: parent.width - Math.round(12 * Theme.s)
+                spacing: Math.round(3 * Theme.s)
 
                 AppGlyph {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -245,7 +245,7 @@ Item {
                     maximumLineCount: cell.height > 110 ? 2 : 1
                     wrapMode: Text.Wrap
                     font.family: Theme.font
-                    font.pixelSize: Theme.fsLabel - 3
+                    font.pixelSize: Theme.fsLabel - Math.round(3 * Theme.s)
                     color: Theme.fg
                 }
             }
@@ -256,7 +256,7 @@ Item {
     // no themed icon for the class.
     component AppGlyph: Item {
         property string cls
-        property real size: 16
+        property real size: Math.round(16 * Theme.s)
         readonly property string icon: AppStyle.iconPath(cls)
         readonly property var style: AppStyle.style(cls)
 

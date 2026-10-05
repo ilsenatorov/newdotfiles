@@ -11,7 +11,7 @@ import "../.."
 // after that the activelayout listener below keeps it current. No polling --
 // which is also why there is no Caps Lock indicator: Hyprland emits no event
 // for key states, and a 1s `hyprctl` poll for it was not worth the spawns.
-// The us/ru layouts themselves come from Hyprland's input{} block, unchanged
+// The us/ru/graphite layouts themselves come from Hyprland's input{} block, unchanged
 // here -- this only displays what Hyprland reports.
 Text {
     id: root
