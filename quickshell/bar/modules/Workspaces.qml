@@ -44,6 +44,28 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 2
 
+        // The SUPER+D hub for mouse-only use. Same IPC call as the keybind,
+        // so a second click (or SUPER+D) closes it again.
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            width: implicitWidth + 8
+            height: Theme.barHeight - 8
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            text: ""
+            font.family: Theme.font
+            font.pixelSize: Math.round(Theme.fsBar * 1.5)
+            color: menuHover.containsMouse ? Colors.accent : Colors.purple
+
+            MouseArea {
+                id: menuHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Quickshell.execDetached(["qs", "ipc", "call", "menu", "toggle", "hub"])
+            }
+        }
+
         Repeater {
             model: root.sortedWorkspaces
 
