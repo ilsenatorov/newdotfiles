@@ -48,9 +48,9 @@ Item {
         ],
         graphite: [
             ["` 1 2 3 4 5 6 7 8 9 0 [ ]", "~ ! @ # $ % ^ & * ( ) { }"],
-            ["b l d w z ' f o u j ; = \\", "B L D W Z _ F O U J : + |"],
-            ["n r t s g y h a e i ,", "N R T S G Y H A E I ?"],
-            ["q x m c v k p . - /", "Q X M C V K P > \" <"],
+            ["b l d w z - f o u j ; = \\", "B L D W Z _ F O U J : + |"],
+            ["n r t s g y h a e i '", "N R T S G Y H A E I \""],
+            ["q x m c v k p , . /", "Q X M C V K P < > ?"],
         ],
         ru: [
             ["ё 1 2 3 4 5 6 7 8 9 0 - =", "Ё ! \" № ; % : ? * ( ) _ +"],
