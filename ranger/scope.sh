@@ -49,17 +49,18 @@ safepipe() { "$@"; test $? = 0 -o $? = 141; }
 # Image previews, if enabled in ranger.
 if [ "$preview_images" = "True" ]; then
     case "$mimetype" in
-        # Image previews for SVG files, disabled by default.
-        ###image/svg+xml)
-        ###   convert "$path" "$cached" && exit 6 || exit 1;;
+        # Kitty's Pillow decoder cannot read SVG directly.
+        image/svg+xml)
+            magick -background none "$path" "png:$cached" && exit 6
+            ;;
         # Image previews for image files. Exit 7 hands the file straight to
         # ranger's configured image displayer (kitty here, see rc.conf);
         # it might still fail for types that displayer cannot decode.
         image/*)
             exit 7;;
-        # Image preview for video, disabled by default.:
-        ###video/*)
-        ###    ffmpegthumbnailer -i "$path" -o "$cached" -s 0 && exit 6 || exit 1;;
+        video/*)
+            ffmpegthumbnailer -i "$path" -o "$cached" -s 640 && exit 6
+            ;;
     esac
 fi
 
@@ -97,16 +98,11 @@ esac
 
 case "$mimetype" in
     # Syntax highlight for text files:
-    text/* | */xml)
-        if [ "$(tput colors)" -ge 256 ]; then
-            pygmentize_format=ansi
-            highlight_format=ansi
-        else
-            pygmentize_format=ansi
-            highlight_format=ansi
-        fi
-        try safepipe highlight --out-format=${highlight_format} "$path" && { dump | trim; exit 5; }
-        try safepipe pygmentize -f ${pygmentize_format} "$path" && { dump | trim; exit 5; }
+    text/* | */xml | */json | */javascript | */yaml | */x-yaml)
+        bat --color=always --paging=never --style=plain \
+            --line-range="1:$maxln" -- "$path" && exit 5
+        try safepipe highlight --out-format=ansi "$path" && { dump | trim; exit 5; }
+        try safepipe pygmentize -f ansi "$path" && { dump | trim; exit 5; }
         exit 2;;
     # Ascii-previews of images:
     image/*)

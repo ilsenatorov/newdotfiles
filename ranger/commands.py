@@ -1,66 +1,75 @@
-from ranger.api.commands import Command, LinemodeBase
-import ranger
 import os
-import ranger.api
-import ranger.core.linemode
-
+import shlex
 import subprocess
-import json
-# https://github.com/ranger/ranger/wiki/Integrating-File-Search-with-fzf
-# Now, simply bind this function to a key, by adding this to your ~/dotfiles/ranger/rc.conf: map <C-f> fzf_select
-# fzf_locate
+
+from ranger.api.commands import Command
+
+
+def _fzf_select(fm, source):
+    preview = (
+        'if [ -d {} ]; then ls -A -1 --color=always -- {}; '
+        'else bat --color=always --paging=never --style=plain '
+        '--line-range=1:200 -- {}; fi'
+    )
+    picker = shlex.join([
+        'fzf', '--read0', '--print0', '+m', '--layout=reverse',
+        '--bind=ctrl-j:down,ctrl-k:up,ctrl-/:toggle-preview',
+        '--header=Enter: select · Esc: cancel · Ctrl-J/K: move · Ctrl-/: preview',
+        '--preview', preview, '--preview-window=right:50%',
+    ])
+    process = fm.execute_command(
+        source + ' | ' + picker, stdout=subprocess.PIPE, cwd=fm.thisdir.path,
+    )
+    if not process:
+        return
+    stdout, _ = process.communicate()
+    if process.returncode == 0 and stdout:
+        path = os.path.abspath(os.path.join(
+            fm.thisdir.path, os.fsdecode(stdout.removesuffix(b'\0')),
+        ))
+        if os.path.isdir(path):
+            fm.cd(path)
+        elif os.path.lexists(path):
+            fm.select_file(path)
+        else:
+            fm.notify('Path no longer exists: ' + path, bad=True)
+
 
 class fzf_select(Command):
+    """:fzf_select — search below the current directory; prefix 1 for directories.
+
+    Respects gitignore; includes dotfiles when Ranger's show_hidden is enabled.
     """
-    :fzf_select
 
-    Find a file using fzf.
-
-    With a prefix argument select only directories.
-
-    See: https://github.com/junegunn/fzf
-    """
     def execute(self):
-        import subprocess
+        source = ['fd', '--print0']
         if self.quantifier:
-            # match only directories
-            command=r"find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -type d -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
-        else:
-            # match files and directories
-            command=r"find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
-        fzf = self.fm.execute_command(command, stdout=subprocess.PIPE)
-        stdout, stderr = fzf.communicate()
-        if fzf.returncode == 0:
-            fzf_file = os.path.abspath(stdout.decode('utf-8').rstrip('\n'))
-            if os.path.isdir(fzf_file):
-                self.fm.cd(fzf_file)
-            else:
-                self.fm.select_file(fzf_file)
-# fzf_locate
+            source += ['--type', 'd']
+        if self.fm.settings.show_hidden:
+            source += ['--hidden']
+        _fzf_select(self.fm, shlex.join(source))
+
+
 class fzf_locate(Command):
-    """
-    :fzf_locate
+    """:fzf_locate — search the system's locate database with previews."""
 
-    Find a file using fzf.
-
-    With a prefix argument select only directories.
-
-    See: https://github.com/junegunn/fzf
-    """
     def execute(self):
-        import subprocess
-        if self.quantifier:
-            command="locate / /home/ilya | fzf -e -i"
-        else:
-            command="locate / /home/ilya | fzf -e -i"
-        fzf = self.fm.execute_command(command, stdout=subprocess.PIPE)
-        stdout, stderr = fzf.communicate()
-        if fzf.returncode == 0:
-            fzf_file = os.path.abspath(stdout.decode('utf-8').rstrip('\n'))
-            if os.path.isdir(fzf_file):
-                self.fm.cd(fzf_file)
-            else:
-                self.fm.select_file(fzf_file)
+        _fzf_select(self.fm, 'locate --null /')
+
+
+class zoxide_jump(Command):
+    """:zoxide_jump [keywords] — pick a frequently visited directory."""
+
+    def execute(self):
+        process = self.fm.execute_command(
+            ['zoxide', 'query', '--interactive', '--'] + shlex.split(self.rest(1)),
+            stdout=subprocess.PIPE,
+        )
+        if not process:
+            return
+        stdout, _ = process.communicate()
+        if process.returncode == 0 and stdout:
+            self.fm.cd(os.fsdecode(stdout.removesuffix(b'\n')))
 
 class gdrive(Command):
     """
