@@ -243,6 +243,9 @@ hl.bind(mainMod .. " + X", hl.dsp.window.close(),     { description = "Close win
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
 	description = "Menu (d search apps, 1-9/0 recent, letters open pages)",
 })
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
+	description = "Power menu",
+})
 -- Network/bluetooth/audio now open the quickshell panels instead of
 -- launching a separate rofi/GTK tool -- see quickshell/panels/.
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {

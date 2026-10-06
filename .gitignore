@@ -29,3 +29,4 @@ graphify-out/
 
 # pi-web-access fetched-page cache; machine-local state.
 /pi/web-search-cache/
+__pycache__
