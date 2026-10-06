@@ -251,6 +251,9 @@ hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("qs ipc call keymap toggle"), {
 	description = "Toggle keyboard layout cheat sheet",
 })
+hl.bind(mainMod .. " + SHIFT + K", hl.dsp.exec_cmd("qs ipc call keymap shape"), {
+	description = "Cheat sheet: switch between normal and TOTEM shape",
+})
 -- Also on the SUPER+D hub (c); the Lua API has no reload dispatcher.
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprctl reload"), {
 	description = "Reload Hyprland config",

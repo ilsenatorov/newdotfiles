@@ -25,11 +25,15 @@ ShellRoot {
         property bool keymap: false
     }
 
-    // qs ipc call keymap toggle -- bound to SUPER+K in hypr/hyprland.lua.
+    // qs ipc call keymap toggle|shape -- SUPER+K / SUPER+SHIFT+K in hypr/hyprland.lua.
     IpcHandler {
         target: "keymap"
 
         function toggle(): void { state.keymap = !state.keymap }
+        function shape(): void {
+            keymap.flip();
+            state.keymap = true;
+        }
     }
 
     // qs ipc call dashboard toggle -- bound to SUPER+G in hypr/hyprland.lua.
