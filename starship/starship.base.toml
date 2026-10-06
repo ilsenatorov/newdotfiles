@@ -138,13 +138,6 @@ read_only = " "
 read_only_style = "fg:red bg:hue_orange"
 home_symbol = "~"
 
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Developer" = "󰲋 "
-
 [git_branch]
 symbol = ""
 style = "bg:hue_green"
