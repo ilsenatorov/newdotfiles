@@ -26,3 +26,6 @@ graphify-out/
 
 # lazy.nvim's own state, not configuration.
 /nvim/lazy-lock.json.bak
+
+# pi-web-access fetched-page cache; machine-local state.
+/pi/web-search-cache/
