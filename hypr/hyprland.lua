@@ -430,38 +430,61 @@ if M.workspaces and #M.workspaces > 0 then
         end
     end
 else
-    for i = 1, 5 do
-        hl.workspace_rule({ workspace = tostring(i), monitor = "eDP-1" })
-    end
-
-    -- 6-10 follow whichever external output is connected. Rules only take a
+    -- 1-10 are split across the screens in reading order: rows top to bottom
+    -- (screens whose vertical spans overlap share a row), left to right
+    -- within a row. Uneven splits give the extra workspace to the earlier
+    -- screens, so four in a square get 1-3 4-6 / 7-8 9-10. Rules only take a
     -- fixed monitor, so they are rebuilt (and existing workspaces moved) on
     -- every hotplug / layout change. Mirrors don't count as a separate screen.
-    local external_rules = {}
-    local function pin_external_workspaces()
-        for _, rule in ipairs(external_rules) do rule:set_enabled(false) end
-        external_rules = {}
-        local target
+    local ws_rules = {}
+    local function distribute_workspaces()
+        for _, rule in ipairs(ws_rules) do rule:set_enabled(false) end
+        ws_rules = {}
+
+        local screens = {}
         for _, m in ipairs(hl.get_monitors()) do
-            if m.name ~= "eDP-1" and not m.is_mirror then target = m.name; break end
+            if not m.is_mirror then
+                local s = (m.scale and m.scale > 0) and m.scale or 1
+                screens[#screens + 1] = { name = m.name, x = m.x, y = m.y, b = m.y + m.height / s }
+            end
         end
-        if not target then return end
-        for i = 6, 10 do
-            local ws = tostring(i)
-            external_rules[#external_rules + 1] = hl.workspace_rule({ workspace = ws, monitor = target })
-            local existing = hl.get_workspace(ws)
-            if existing and existing.monitor and existing.monitor.name ~= target then
-                hl.dispatch(hl.dsp.workspace.move({ workspace = ws, monitor = target }))
+        if #screens == 0 then return end
+
+        table.sort(screens, function(a, b) return a.y < b.y or (a.y == b.y and a.x < b.x) end)
+        local rows = {}
+        for _, s in ipairs(screens) do
+            local row = rows[#rows]
+            if row and s.y < row.b then row[#row + 1] = s
+            else rows[#rows + 1] = { s, b = s.b } end
+        end
+        local order = {}
+        for _, row in ipairs(rows) do
+            table.sort(row, function(a, b) return a.x < b.x end)
+            for _, s in ipairs(row) do order[#order + 1] = s.name end
+        end
+
+        local n = #order
+        local ws = 1
+        for i, name in ipairs(order) do
+            local count = 10 // n + (i <= 10 % n and 1 or 0)
+            for _ = 1, count do
+                local id = tostring(ws)
+                ws_rules[#ws_rules + 1] = hl.workspace_rule({ workspace = id, monitor = name })
+                local existing = hl.get_workspace(id)
+                if existing and existing.monitor and existing.monitor.name ~= name then
+                    hl.dispatch(hl.dsp.workspace.move({ workspace = id, monitor = name }))
+                end
+                ws = ws + 1
             end
         end
     end
     -- Deferred so the event's layout (and monitor-layout.py --restore) settles first.
-    local function schedule_pin()
-        hl.timer(pin_external_workspaces, { timeout = 500, type = "oneshot" })
+    local function schedule_distribute()
+        hl.timer(distribute_workspaces, { timeout = 500, type = "oneshot" })
     end
     for _, event in ipairs({ "hyprland.start", "config.reloaded", "monitor.added",
                              "monitor.removed", "monitor.layout_changed" }) do
-        hl.on(event, schedule_pin)
+        hl.on(event, schedule_distribute)
     end
 end
 

@@ -477,7 +477,7 @@ local_lua_content="-- Per-machine overrides for hypr/hyprland.lua -- monitor rul
 -- pinning. See local.conf (sibling file, ./configure.sh) for everything else.
 -- Generated once by install.sh; never overwritten after that except with
 -- --reconfigure. Both blocks below are commented out, so hyprland.lua's
--- generic defaults (eDP-1 + catch-all monitor, workspaces 1-5 -> eDP-1) stand
+-- generic defaults (eDP-1 + catch-all monitor, workspaces 1-10 split across screens left to right) stand
 -- until you fill one in.
 --
 -- Detected outputs at install time:$(for c in $conns; do printf '\n--   %s' "$c"; done)
