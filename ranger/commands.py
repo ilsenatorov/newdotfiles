@@ -3,6 +3,16 @@ import shlex
 import subprocess
 
 from ranger.api.commands import Command
+from ranger.config.commands import trash as _trash
+from ranger.container.file import File
+
+
+class trash(_trash):
+    # ranger 1.9.4 passes path strings to execute_file, which expects File objects.
+    # ponytail: only the confirm path is fixed; rc.conf sets confirm_on_delete always.
+    def _question_callback(self, files, answer):
+        if answer in ('y', 'Y'):
+            self.fm.execute_file([File(os.path.abspath(f)) for f in files], label='trash')
 
 
 def _fzf_select(fm, source):
