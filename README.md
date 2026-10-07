@@ -17,8 +17,7 @@ it, and the installer refuses to run from anywhere else.
 `install.sh` is idempotent; re-run it after every `git pull`. It:
 
 1. installs the repo packages (see below) and, through whichever AUR helper is
-   present (`yay`/`paru`/`trizen`/`pacaur`), **mpvpaper** -- the wallpaper daemon,
-   the one hard AUR dependency -- plus optional `adw-gtk3`;
+   present (`yay`/`paru`/`trizen`/`pacaur`), the optional `adw-gtk3`;
 1. runs `link.sh`, which symlinks every top-level directory into `~/.config`;
    anything real in the way is moved to `<name>.bak-<timestamp>`, never deleted;
 1. symlinks `~/.zshrc` (link.sh only walks directories, so it skips this one);
@@ -28,8 +27,7 @@ it, and the installer refuses to run from anywhere else.
 1. writes `~/.config/environment.d/10-locale.conf` (under UWSM only what the
    systemd user manager exports reaches apps started as scopes);
 1. detects the GPU via `lspci` and writes `~/.config/environment.d/20-va.conf`
-   (`LIBVA_DRIVER_NAME` plus `MPV_HWDEC`/`MPV_HWDEC_INTEROP` for the wallpaper
-   daemon) -- skipped if that file already exists, so a hand edit sticks;
+   (`LIBVA_DRIVER_NAME`) -- skipped if that file already exists, so a hand edit sticks;
 1. writes `~/.config/dotfiles/{local.conf,local.lua}` and `~/.zshrc.local`
    from hardware probes, and seeds the generated `colors.*` theme files from
    `matugen/defaults/` -- see **Per-machine config** below. Also skipped if
@@ -48,17 +46,17 @@ ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
 
 ### After it finishes
 
-* **Wallpaper**: not in git (too large). Drop an image or video into
+* **Wallpaper**: not in git (too large). Drop an image into
   `~/Pictures/Wallpapers` and press `SUPER+D` then `w`, or run
   `hypr/scripts/set-wallpaper.sh <file>`. Until then the theme files seeded
   from `matugen/defaults/` keep the desktop themed.
 * Log out and pick **"Hyprland (uwsm-managed)"** in the greeter. Every autostart
   in `hypr/hyprland.lua` goes through `uwsm app --`, so the session wants UWSM.
 * Hardware video decode is auto-detected into `~/.config/environment.d/20-va.conf`
-  (`LIBVA_DRIVER_NAME` + `MPV_HWDEC`/`MPV_HWDEC_INTEROP`); it is per-machine and
+  (`LIBVA_DRIVER_NAME`); it is per-machine and
   not in git, so edit that file directly if the detection guesses wrong (e.g. an
-  NVIDIA box with `nvidia-vaapi-driver` installed can go back to
-  `LIBVA_DRIVER_NAME=nvidia` and `MPV_HWDEC=auto`).
+  NVIDIA box with `nvidia-vaapi-driver` installed can set
+  `LIBVA_DRIVER_NAME=nvidia`).
 * Run `./configure.sh` (or `make configure`) any time to change this machine's
   settings with pickers: UI scale and per-monitor scale, keyboard layouts, bar
   modules, services and autostarts. It rewrites only the keys you change in
@@ -147,7 +145,7 @@ SYSMON_INTERVAL_SLOW=10000
 # Read by hypr/hyprland.lua.
 KB_LAYOUT=us,ru,graphite   # first layout = where Hyprland shortcuts sit
 AUTOSTART_HYPRIDLE=0       # takes effect at the next login
-AUTOSTART_WALLPAPER=1      # 0 on a machine without mpvpaper
+AUTOSTART_WALLPAPER=1      # 0 on a machine without hyprpaper
 
 # Seeds hypr/wallpaper.conf on first run.
 WALLPAPER=
@@ -181,7 +179,7 @@ Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 The authoritative list is the `PKGS_*` / `AUR_*` arrays in `install.sh`; this is
 the why behind them.
 
-* __hyprland__ as the compositor/WM, with __mpvpaper__ for the video wallpaper
+* __hyprland__ as the compositor/WM, with __hyprpaper__ for the wallpaper (stills only)
 * __kitty__ as the terminal emulator -- its native graphics protocol lets
   __ranger__ preview images inline with no overlay process
 * __ranger__ as the file manager in terminal
@@ -216,16 +214,15 @@ The wallpaper is machine state, not configuration: `hypr/wallpaper.conf` holds
 the current path and is **not tracked in git** (see `.gitignore`), same as
 every generated `colors.*` file below -- a wallpaper picked on one PC no
 longer produces a diff, let alone a merge conflict, on another.
-`hypr/scripts/wallpaper-daemon.sh` (mpvpaper -- hyprpaper is gone, since it
-only handles stills and mpvpaper covers both) starts the daemon at session
-login and after every change.
+`hypr/scripts/wallpaper-daemon.sh` (hyprpaper; video wallpapers were dropped,
+they made the desktop sluggish with an external monitor) starts the daemon at
+session login and after every change.
 
 One accent colour is derived from the wallpaper by **matugen** and pushed into
 quickshell, hyprland, hyprlock, kitty, starship, GTK and neovim. Change
 wallpaper and
 accent together with `SUPER+D` then `w` (or `hypr/scripts/set-wallpaper.sh`), which takes
-images and videos alike -- for a video it pulls a frame with ffmpeg and themes
-from that. `SUPER+D` then `w` is a carousel: arrow keys step through the wallpapers and
+JPEG/PNG/WebP. `SUPER+D` then `w` is a carousel: arrow keys step through the wallpapers and
 each one is shown with the palette it would generate, asked of matugen itself
 (`set-wallpaper.sh --palette`, cached under `~/.cache/wallpaper-palettes`), so
 the swatches are the real scheme rather than a guess at it. Never edit the generated `colors.*` files, edit `matugen/templates/`
@@ -264,8 +261,7 @@ literal hex of its own. The two consumers outside matugen read it directly:
 * GTK3/GTK4 are configured in `gtk-3.0/` and `gtk-4.0/`; libadwaita and the GTK
   portal only read gsettings, which `hypr/scripts/gsettings-theme.sh` sets at
   session start.
-* The SDDM greeter follows the desktop wallpaper -- video included, the
-  astronaut theme plays mp4/webm natively -- via `sudo sddm/sync-wallpaper.sh`
+* The SDDM greeter follows the desktop wallpaper via `sudo sddm/sync-wallpaper.sh`
   (called automatically from `set-wallpaper.sh` when passwordless sudo is
   available, and from `sddm/install.sh`).
 * `nvim/colors.lua` is matugen-generated, imported by `nvim/init.lua`; unlike

@@ -191,7 +191,7 @@ services() {
 		"Claude usage meter|SVC_CLAUDE_USAGE"
 		"GPU stats (nvidia-smi poller)|SVC_GPU"
 		"hypridle: idle dim / auto-lock (next login)|AUTOSTART_HYPRIDLE"
-		"Video wallpaper daemon (next login)|AUTOSTART_WALLPAPER"
+		"Wallpaper daemon (next login)|AUTOSTART_WALLPAPER"
 	)
 	local o key def on=()
 	for o in "${opts[@]}"; do

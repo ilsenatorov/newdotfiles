@@ -15,8 +15,8 @@ import "../ui"
 // still owns the launcher, clipboard, power, exit and monitor menus; with a
 // handful of wallpapers a search box earned nothing here.
 //
-// The script keeps everything that matters -- the ffmpeg frame-grab for
-// video wallpapers, the matugen run, the mpvpaper/swww handoff -- and also
+// The script keeps everything that matters -- the matugen run, the
+// hyprpaper handoff -- and also
 // owns the file listing behind `--list` and the swatches behind `--palette`.
 // That is deliberate: the set of wallpaper extensions is one list, in the
 // script, and the colourbar is the real scheme matugen would generate rather
@@ -309,9 +309,8 @@ Item {
                         Image {
                             anchors.fill: parent
                             // The thumbnail comes from --palette, never built
-                            // from a path spliced together here: a video has
-                            // no frame QML can show, and WALLDIR is the
-                            // script's to know. Until it arrives the slide is
+                            // from a path spliced together here: WALLDIR is
+                            // the script's to know. Until it arrives the slide is
                             // an empty surface, which is a fraction of a
                             // second for anything already cached.
                             source: slide.entry ? "file://" + slide.entry.thumb : ""

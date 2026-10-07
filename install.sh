@@ -3,7 +3,7 @@
 #
 #   ./install.sh                 packages + links + shell + theme
 #   ./install.sh --no-packages   only links, shell and theme (no pacman/AUR)
-#   ./install.sh --no-aur        skip the AUR step (mpvpaper -> no wallpaper daemon)
+#   ./install.sh --no-aur        skip the AUR step (optional extras only)
 #   ./install.sh --sddm          also install the SDDM theme (needs sudo)
 #   ./install.sh --minimal       core desktop only: no ranger previews, no extras
 #   ./install.sh --reconfigure   redo hardware detection: back up and rewrite
@@ -109,7 +109,7 @@ command -v pacman >/dev/null || die "this installer is Arch/Manjaro only (no pac
 # Repo packages. Split so --minimal can drop the tail groups.
 PKGS_DESKTOP=(
 	# compositor + session
-	hyprland uwsm hyprlock hypridle hyprsunset hyprshot hyprpolkitagent
+	hyprland uwsm hyprlock hypridle hyprsunset hyprshot hyprpolkitagent hyprpaper
 	xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit
 	# bar, notifications, menus, dashboard -- all quickshell now
 	# (see quickshell/); rofi is gone, its last six menus were ported
@@ -154,16 +154,14 @@ PKGS_SDDM=(sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative)
 PKGS_CLI=(neovim eza bat fd zoxide ripgrep git-delta lazygit)
 PKGS_LINT=(shellcheck shfmt luacheck)
 
-# AUR. mpvpaper is the wallpaper daemon (stills and video); adw-gtk3 is optional
-# polish the GTK config picks up on its own if present.
-AUR_REQUIRED=(mpvpaper)
+# AUR. adw-gtk3 is optional polish the GTK config picks up on its own if present.
 AUR_OPTIONAL=(adw-gtk3)
 
 if [ "$LIST_PACKAGES" -eq 1 ]; then
 	printf '%s\n' \
 		"${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}" \
 		"${PKGS_RANGER[@]}" "${PKGS_LINT[@]}" "${PKGS_SDDM[@]}" \
-		"${AUR_REQUIRED[@]}" "${AUR_OPTIONAL[@]}"
+		"${AUR_OPTIONAL[@]}"
 	exit 0
 fi
 
@@ -185,12 +183,10 @@ if [ "$NO_PACKAGES" -eq 0 ]; then
 		done
 		if [ -n "$helper" ]; then
 			say "installing AUR packages with $helper"
-			"$helper" -S --needed --noconfirm "${AUR_REQUIRED[@]}" "${AUR_OPTIONAL[@]}" ||
-				warn "AUR install failed; mpvpaper is required for the wallpaper"
+			"$helper" -S --needed --noconfirm "${AUR_OPTIONAL[@]}" ||
+				warn "AUR install failed (optional: ${AUR_OPTIONAL[*]})"
 		else
-			warn "no AUR helper found (yay/paru/trizen/pacaur)."
-			warn "install manually, or the wallpaper daemon will not start:"
-			warn "  ${AUR_REQUIRED[*]}  (optional: ${AUR_OPTIONAL[*]})"
+			warn "no AUR helper found (yay/paru/trizen/pacaur); skipping optional ${AUR_OPTIONAL[*]}"
 		fi
 	fi
 fi
@@ -349,8 +345,7 @@ fi
 # link.sh), so anything written there would sync verbatim to every machine.
 # 20-va.conf lives in ~/.config/environment.d instead, is never overwritten
 # once present (hand-edit it freely), and is read both by the systemd user
-# environment (LIBVA_DRIVER_NAME, for VAAPI apps in general) and directly by
-# hypr/scripts/wallpaper-daemon.sh (MPV_HWDEC / MPV_HWDEC_INTEROP).
+# environment (LIBVA_DRIVER_NAME, for VAAPI apps in general).
 if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
 	if echo "$gpus" | grep -qi intel; then
 		# Intel iGPU present: on a laptop (Optimus or not) it is what actually
@@ -358,26 +353,16 @@ if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
 		# dGPU alongside it for offload -- and forcing LIBVA_DRIVER_NAME=iHD
 		# keeps VAAPI off that dGPU entirely.
 		driver=iHD
-		hwdec=auto
-		interop=auto
 	elif echo "$gpus" | grep -qi nvidia; then
-		# NVIDIA and no Intel (this box): NVIDIA's bundled nvidia_drv_video.so
-		# VAAPI shim SIGFPEs on vaInitialize, so route mpv straight through
-		# NVDEC/CUDA and skip VAAPI for the wallpaper entirely. LIBVA_DRIVER_NAME
-		# is deliberately left unset -- there's no known-good VAAPI driver here
-		# to steer other apps to (nvidia-vaapi-driver would need to be
-		# installed separately; not attempted by this script).
+		# NVIDIA and no Intel: NVIDIA's bundled nvidia_drv_video.so VAAPI shim
+		# SIGFPEs on vaInitialize, so LIBVA_DRIVER_NAME is deliberately left
+		# unset -- there's no known-good VAAPI driver here to steer apps to
+		# (nvidia-vaapi-driver would need to be installed separately).
 		driver=""
-		hwdec=nvdec
-		interop=cuda
 	elif echo "$gpus" | grep -Eqi 'amd|ati|radeon'; then
 		driver=radeonsi
-		hwdec=auto
-		interop=auto
 	else
 		driver=""
-		hwdec=auto
-		interop=auto
 	fi
 
 	{
@@ -386,10 +371,8 @@ if [ ! -f "${HOME}/.config/environment.d/20-va.conf" ]; then
 		echo "# Not re-generated once this file exists -- edit freely, or delete"
 		echo "# and re-run install.sh to redetect."
 		[ -n "$driver" ] && echo "LIBVA_DRIVER_NAME=${driver}"
-		echo "MPV_HWDEC=${hwdec}"
-		echo "MPV_HWDEC_INTEROP=${interop}"
 	} >"${HOME}/.config/environment.d/20-va.conf"
-	echo "WROTE   ~/.config/environment.d/20-va.conf (hwdec=${hwdec} interop=${interop}${driver:+ driver=${driver}})"
+	echo "WROTE   ~/.config/environment.d/20-va.conf${driver:+ (driver=${driver})}"
 else
 	echo "OK      ~/.config/environment.d/20-va.conf"
 fi
@@ -550,14 +533,13 @@ if [ -n "$wall" ] && [ -f "$wall" ]; then
 	echo "OK      $wall"
 elif [ -d "${HOME}/Pictures/Wallpapers" ] &&
 	found=$(find "${HOME}/Pictures/Wallpapers" -type f \
-		\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \
-		-o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' \) | sort | head -1) &&
+		\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort | head -1) &&
 	[ -n "$found" ]; then
 	echo "PICK    $found"
 	"${DOTS}/hypr/scripts/set-wallpaper.sh" "$found" ||
 		warn "set-wallpaper.sh failed; run it by hand after login (SUPER+D, w)"
 else
-	warn "no wallpaper found. Put an image or video in ~/Pictures/Wallpapers and"
+	warn "no wallpaper found. Put an image in ~/Pictures/Wallpapers and"
 	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+D, w)"
 	warn "The committed colors.* files are used until then."
 fi
