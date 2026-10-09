@@ -10,8 +10,9 @@
 #                        newest .bak-* for each if one exists
 
 # Dirs that are not ~/.config configs. sddm's theme goes to /usr/share and /etc
-# (see sddm/install.sh), and graphify-out is generated output.
-skip="sddm graphify-out"
+# (see sddm/install.sh), claude/ is linked into ~/.claude by install.sh, and
+# graphify-out is generated output.
+skip="sddm claude graphify-out"
 
 # Restore the newest backup for $1 (a full path, e.g. ~/.config/hypr) if one
 # exists, after $1 itself has been removed. Used by --unlink so backing out

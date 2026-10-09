@@ -266,6 +266,37 @@ else
 	warn "pi not found in PATH; pi/ config linked but packages not installed"
 fi
 
+# -------------------------------------------------------------- claude -----
+# Same contract as pi: ~/.claude is mostly machine state (credentials,
+# sessions, projects/, plugin caches), left alone. claude/ holds what is worth
+# sharing and is symlinked in: CLAUDE.md, settings.json (Claude Code rewrites
+# it in place, so /config changes show up dirty in git) and skills/graphify.
+# settings.json's env block points CLAUDE_CODE_PLUGIN_DIRS at
+# claude/plugins/kitty-images, so that mod loads straight from the repo.
+say "claude code config (~/.claude)"
+mkdir -p "${HOME}/.claude/skills"
+for f in CLAUDE.md settings.json skills/graphify; do
+	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
+done
+
+# enabledPlugins only names plugins; install them (and their marketplaces) so
+# a fresh box has the same set. Both commands are idempotent.
+if command -v claude >/dev/null && command -v jq >/dev/null; then
+	while IFS=$'\t' read -r name repo; do
+		claude plugin marketplace add "$repo" >/dev/null 2>&1 ||
+			warn "claude marketplace add failed for $name ($repo)"
+	done < <(jq -r '.extraKnownMarketplaces // {} | to_entries[] | [.key, .value.source.repo] | @tsv' "${DOTS}/claude/settings.json")
+	while IFS= read -r plugin; do
+		if claude plugin install "$plugin" >/dev/null 2>&1; then
+			echo "OK      claude plugin $plugin"
+		else
+			warn "claude plugin install failed for $plugin (no network? re-run install.sh once it's reachable)"
+		fi
+	done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "${DOTS}/claude/settings.json")
+else
+	warn "claude or jq not found; claude/ config linked but plugins not installed"
+fi
+
 # ------------------------------------------------------------------ zsh ----
 # .zshrc sources oh-my-zsh and lists zsh-autosuggestions / zsh-syntax-highlighting
 # as oh-my-zsh plugins, which means they have to be clones under $ZSH_CUSTOM --

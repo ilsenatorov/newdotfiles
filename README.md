@@ -36,6 +36,8 @@ it, and the installer refuses to run from anywhere else.
 1. symlinks the pi agent's shared config into `~/.pi/agent` (`pi/` in this
    repo) and `pi install`s every package listed in `pi/settings.json` -- see
    **The pi coding agent** below;
+1. does the same for Claude Code: symlinks `claude/` into `~/.claude` and
+   installs the plugins `claude/settings.json` enables -- see **Claude Code** below;
 1. enables `hyprpolkitagent.service` as a user unit;
 1. sets the wallpaper and derives the accent with matugen, if one is found.
 
@@ -88,6 +90,25 @@ commit it to push that change to every machine.
 fresh box gets the same extensions -- but it does not install pi itself. If
 `pi` isn't in PATH the installer just warns: grab the binary with the official
 installer and re-run.
+
+### Claude Code
+
+Same contract as pi. `install.sh` symlinks these into `~/.claude`; everything
+else there (credentials, sessions, `projects/` memory, plugin caches) is
+machine-local and left alone:
+
+| `~/.claude/...` | Source / contents |
+|---|---|
+| `CLAUDE.md` | `claude/CLAUDE.md` -- global instructions |
+| `settings.json` | `claude/settings.json` -- model, theme, enabled plugins, marketplaces |
+| `skills/graphify` | `claude/skills/graphify` -- the graphify skill |
+
+Plugins in `enabledPlugins` are `claude plugin install`ed (marketplaces from
+`extraKnownMarketplaces` first). The `kitty-images` mod (draws images Claude
+reads inline in kitty) lives in `claude/plugins/` and loads straight from the
+repo through `CLAUDE_CODE_PLUGIN_DIRS` in the settings' `env` block -- edit it
+in place and a running session hot-reloads it. Changes made with `/config`
+land in the repo file; commit them to share.
 
 ## Per-machine config
 
