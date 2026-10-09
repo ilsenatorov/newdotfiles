@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import "../.."
@@ -25,12 +26,11 @@ Text {
     font.pixelSize: Theme.fsBar
     color: Theme.blueGray
 
-    // "English (US)" -> "us", "Russian" -> "ru" -- best-effort short code,
-    // same abbreviation waybar's {short} format produced.
+    // "English (US)" -> "us", "Russian" -> "ru", "English (Graphite)" -> "gr"
+    // -- best-effort two-letter code.
     function shortName(name: string): string {
         const m = /\(([^)]+)\)/.exec(name);
-        if (m) return m[1].toLowerCase();
-        return name.slice(0, 2).toLowerCase();
+        return (m ? m[1] : name).slice(0, 2).toLowerCase();
     }
 
     Process {
@@ -56,6 +56,16 @@ Text {
         // Hyprland or exotic setups).
         const kb = keyboards.filter(k => k.main === true)[0] ?? keyboards[0];
         if (kb.active_keymap) root.layout = kb.active_keymap;
+    }
+
+    // Left click: next layout, right click: previous. switchxkblayout is a
+    // plain hyprctl request, not a dispatcher, so the Lua config doesn't
+    // mangle it; the activelayout event below updates the label.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: mouse => Quickshell.execDetached(["hyprctl", "switchxkblayout", "current",
+            mouse.button === Qt.RightButton ? "prev" : "next"])
     }
 
     Connections {
