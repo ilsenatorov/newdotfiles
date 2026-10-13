@@ -293,6 +293,15 @@ if command -v claude >/dev/null && command -v jq >/dev/null; then
 			warn "claude plugin install failed for $plugin (no network? re-run install.sh once it's reachable)"
 		fi
 	done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "${DOTS}/claude/settings.json")
+	# Local mods need no install, but one that fails validation (e.g. a lost
+	# .claude-plugin/plugin.json) is silently not loaded -- say so here.
+	for mod in "${DOTS}"/claude/plugins/*/; do
+		if claude plugin validate "$mod" >/dev/null 2>&1; then
+			echo "OK      claude mod $(basename "$mod")"
+		else
+			warn "claude mod $(basename "$mod") fails validation: claude plugin validate $mod"
+		fi
+	done
 else
 	warn "claude or jq not found; claude/ config linked but plugins not installed"
 fi
