@@ -270,12 +270,12 @@ fi
 # Same contract as pi: ~/.claude is mostly machine state (credentials,
 # sessions, projects/, plugin caches), left alone. claude/ holds what is worth
 # sharing and is symlinked in: CLAUDE.md, settings.json (Claude Code rewrites
-# it in place, so /config changes show up dirty in git) and skills/graphify.
+# it in place, so /config changes show up dirty in git).
 # settings.json's env block points CLAUDE_CODE_PLUGIN_DIRS at
 # claude/plugins/kitty-images, so that mod loads straight from the repo.
 say "claude code config (~/.claude)"
-mkdir -p "${HOME}/.claude/skills"
-for f in CLAUDE.md settings.json skills/graphify; do
+mkdir -p "${HOME}/.claude"
+for f in CLAUDE.md settings.json; do
 	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
 done
 

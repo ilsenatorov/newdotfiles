@@ -101,7 +101,6 @@ machine-local and left alone:
 |---|---|
 | `CLAUDE.md` | `claude/CLAUDE.md` -- global instructions |
 | `settings.json` | `claude/settings.json` -- model, theme, enabled plugins, marketplaces |
-| `skills/graphify` | `claude/skills/graphify` -- the graphify skill |
 
 Plugins in `enabledPlugins` are `claude plugin install`ed (marketplaces from
 `extraKnownMarketplaces` first). The `kitty-images` mod (draws images Claude

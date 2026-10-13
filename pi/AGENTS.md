@@ -31,7 +31,7 @@
 - The system aims to be mouseless. New widgets and scripts should be driven by keybinds as much as possible: a Hyprland bind (`hl.bind` in `hypr/hyprland.lua`, with a `description`) to open them, and keys for every action inside.
 - All new or changed Quickshell interfaces must be fully usable with the keyboard alone, including navigation, selection, editing, saving, and dismissal.
 - Provide predictable focus order, visible focus indicators, and on-screen key hints. Mouse support is optional, never the only way to perform an action.
-- Avoid QtQuick.Controls widgets whose keyboard behaviour is surprising (ComboBox applies on a bare arrow key, Button ignores Enter); prefer plain items with explicit `Keys` handlers, like `ui/Picker.qml`.
+- Avoid QtQuick.Controls widgets whose keyboard behaviour is surprising (ComboBox applies on a bare arrow key, Button ignores Enter); prefer plain items with explicit `Keys` handlers, like `quickshell/ui/Picker.qml`.
 
 ## Reporting
 

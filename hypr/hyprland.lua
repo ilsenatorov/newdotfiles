@@ -65,6 +65,8 @@ local terminal    = "kitty"
 local dotfiles    = os.getenv("HOME") .. "/dotfiles"
 
 
+local kb_layout = (C.KB_LAYOUT ~= "" and C.KB_LAYOUT) or "us,ru,graphite"
+
 local function app(cmd)
     hl.exec_cmd("uwsm app -- " .. cmd)
 end
@@ -73,6 +75,16 @@ hl.on("hyprland.start", function()
     -- GTK4/libadwaita and the GTK portal read gsettings, not gtk-4.0/settings.ini.
     -- Without this, file dialogs and GNOME apps stay light on a dark desktop.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
+
+    -- Type in graphite by default; us stays first in kb_layout for the binds.
+    local i = 0
+    for name in kb_layout:gmatch("[^,]+") do
+        if name == "graphite" then
+            hl.exec_cmd("hyprctl switchxkblayout all " .. i)
+            break
+        end
+        i = i + 1
+    end
 
     app("qs -d -n")
     if conf_bool("AUTOSTART_WALLPAPER", true) then
@@ -205,7 +217,7 @@ hl.config({
     input = {
         -- graphite: xkb/symbols/graphite (not in xkeyboard-config). us stays
         -- first so binds resolve by qwerty position on every layout.
-        kb_layout  = (C.KB_LAYOUT ~= "" and C.KB_LAYOUT) or "us,ru,graphite",
+        kb_layout  = kb_layout,
         kb_options = "grp:shifts_toggle",
 
         follow_mouse = 1,
