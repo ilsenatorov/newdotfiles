@@ -4,7 +4,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+D. One menu for everything that used to have its own SUPER+<letter>
+// SUPER+T. One menu for everything that used to have its own SUPER+<letter>
 // before the top row went to workspaces (see hypr/hyprland.lua): a grid of
 // tiles, each with a live one-line status, your most-used apps under it, and
 // a search (d) over apps, pages, toggles and power (panels/Launcher.qml).
@@ -119,7 +119,7 @@ Item {
                 event.accepted = true;
                 return;
             }
-            // d: the search -- so launching a program is SUPER+D, d, type.
+            // d: the search -- so launching a program is SUPER+T, d, type.
             if (event.text.toLowerCase() === "d") {
                 root.selected("launcher");
                 event.accepted = true;

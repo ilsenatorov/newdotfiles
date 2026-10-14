@@ -28,9 +28,9 @@ Item {
         .sort((a, b) => a.id - b.id)
 
     // Workspace id -> the SUPER+<key> that focuses it -- must match wsKeys
-    // in hypr/hyprland.lua (Q is 1 ... P is 10). Ids past the row fall back
+    // in hypr/hyprland.lua (B is 1 ... J is 10). Ids past the row fall back
     // to the number.
-    readonly property var wsKeys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"]
+    readonly property var wsKeys: ["B", "L", "D", "W", "Z", ";", "F", "O", "U", "J"]
 
     function keyLabel(ws: var): string {
         return ws.id >= 1 && ws.id <= wsKeys.length ? wsKeys[ws.id - 1] : ws.name;
@@ -44,8 +44,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Math.round(2 * Theme.s)
 
-        // The SUPER+D hub for mouse-only use. Same IPC call as the keybind,
-        // so a second click (or SUPER+D) closes it again.
+        // The SUPER+T hub for mouse-only use. Same IPC call as the keybind,
+        // so a second click (or SUPER+T) closes it again.
         Text {
             anchors.verticalCenter: parent.verticalCenter
             width: implicitWidth + Math.round(8 * Theme.s)

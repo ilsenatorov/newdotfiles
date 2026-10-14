@@ -21,11 +21,11 @@ ShellRoot {
         reloadableId: "dashboardState"
 
         property bool expanded: false
-        // SUPER+K layout cheat sheet (ui/KeymapOverlay.qml).
+        // SUPER+A layout cheat sheet (ui/KeymapOverlay.qml).
         property bool keymap: false
     }
 
-    // qs ipc call keymap toggle|shape -- SUPER+K / SUPER+SHIFT+K in hypr/hyprland.lua.
+    // qs ipc call keymap toggle|shape -- SUPER+A / SUPER+SHIFT+A in hypr/hyprland.lua.
     IpcHandler {
         target: "keymap"
 
@@ -46,7 +46,7 @@ ShellRoot {
         function status(): string { return state.expanded ? "expanded" : "collapsed" }
     }
 
-    // SUPER+D i ask-a-quick-question overlay -- not persisted, like activePanel
+    // SUPER+T i ask-a-quick-question overlay -- not persisted, like activePanel
     // below (transient, resets each open; AskService is what actually
     // remembers conversations across opens/closes -- see services/AskService.qml).
     property bool askOpen: false
@@ -66,7 +66,7 @@ ShellRoot {
         shell.activeMenu = "hub";
     }
 
-    // qs ipc call ask toggle -- opened from the SUPER+D hub (i). Opening
+    // qs ipc call ask toggle -- opened from the SUPER+T hub (i). Opening
     // always starts a brand-new conversation -- AskService.switchTo lets you
     // get back to an old one (Tab/Shift+Tab inside the overlay) once it's open.
     IpcHandler {
@@ -103,9 +103,9 @@ ShellRoot {
     }
 
     // qs ipc call panel toggle <name> -- for keybinds that used to launch a
-    // GTK/rofi tool directly. Unbound now -- the bar and the SUPER+D hub open
+    // GTK/rofi tool directly. Unbound now -- the bar and the SUPER+T hub open
     // these -- but kept for scripts.
-    // Bluetooth/audio are pages of the SUPER+D hub now (menuWin below).
+    // Bluetooth/audio are pages of the SUPER+T hub now (menuWin below).
     IpcHandler {
         target: "panel"
 
@@ -135,7 +135,7 @@ ShellRoot {
     property string shownMenu: ""
     onActiveMenuChanged: if (activeMenu !== "") shownMenu = activeMenu
 
-    // Pages under the current one, for Esc to step back through: the SUPER+D
+    // Pages under the current one, for Esc to step back through: the SUPER+T
     // hub pushes itself before opening a page, so every page it reaches
     // backs out to it instead of closing. Opening a menu by keybind starts
     // a fresh (empty) stack.
@@ -146,7 +146,7 @@ ShellRoot {
     property bool menuForward: true
     // The hub tile last opened, restored when a page backs out to the hub.
     property int hubIndex: 0
-    // The SUPER+D search's query and cursor, restored when a page it opened
+    // The SUPER+T search's query and cursor, restored when a page it opened
     // backs out to it. Cleared whenever the search is entered fresh.
     property string paletteQuery: ""
     property int paletteIndex: 0
@@ -218,11 +218,11 @@ ShellRoot {
         }
     }
 
-    // qs ipc call menu toggle <name> -- bound to SUPER+D (hub) and SUPER+V
+    // qs ipc call menu toggle <name> -- bound to SUPER+T (hub) and SUPER+V
     // (clipboard) in hypr/hyprland.lua. These six were the last things still shelling out
     // to rofi; see quickshell/ui/Picker.qml. The keybinds use `toggle`, not
     // `open`: every overlay in this file closes on its own keybind the way the
-    // panels and the dashboard do (rofi died on a second SUPER+D too, since
+    // panels and the dashboard do (rofi died on a second SUPER+T too, since
     // the bind re-ran a one-shot process). `open` stays for scripts that want
     // an idempotent open.
     IpcHandler {
@@ -230,7 +230,7 @@ ShellRoot {
 
         function open(name: string): void { shell.openMenu(name); }
         // A page reached from the hub counts as the hub being open, so a
-        // second SUPER+D closes the whole menu from any depth.
+        // second SUPER+T closes the whole menu from any depth.
         function toggle(name: string): void {
             const here = shell.activeMenu === name || (shell.activeMenu !== "" && shell.menuStack[0] === name);
             if (here)
@@ -238,7 +238,7 @@ ShellRoot {
             else
                 shell.openMenu(name);
         }
-        // Opens the SUPER+D search with `query` already typed, e.g.
+        // Opens the SUPER+T search with `query` already typed, e.g.
         // `qs ipc call menu search "=2^10"`.
         function search(query: string): void {
             // Already showing: the Loader won't rebuild it, so set it live.
@@ -485,7 +485,7 @@ ShellRoot {
         }
     }
 
-    // SUPER+K keyboard cheat sheet. Like the OSD: Overlay layer, empty input
+    // SUPER+A keyboard cheat sheet. Like the OSD: Overlay layer, empty input
     // mask, no focus -- it sits there while you type through it.
     PanelWindow {
         visible: keymapReveal.live
@@ -605,7 +605,7 @@ ShellRoot {
         }
     }
 
-    // SUPER+D i quick-question overlay. Same shape as dashboardWin above:
+    // SUPER+T i quick-question overlay. Same shape as dashboardWin above:
     // centered (no anchors), Overlay layer, OnDemand focus, Escape closes.
     PanelWindow {
         id: askWin
@@ -785,7 +785,7 @@ ShellRoot {
     Component { id: monitorMenu;   MonitorPlace { onCloseRequested: shell.closeMenu() } }
     Component { id: keybindsMenu;  Keybinds     { onCloseRequested: shell.closeMenu() } }
 
-    // SUPER+D and the bar panels it hosts as its own pages (ui/Sheet.qml).
+    // SUPER+T and the bar panels it hosts as its own pages (ui/Sheet.qml).
     Component {
         id: hubMenu
         Hub {

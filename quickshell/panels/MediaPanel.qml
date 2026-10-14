@@ -7,7 +7,7 @@ import "../ui"
 
 // Now playing: cover, track, scrubber, transport, the player's own volume and
 // synced lyrics (services/Lyrics.qml, fetched only while this is open).
-// Hosted both as the bar dropdown (click the media pill) and as a SUPER+D
+// Hosted both as the bar dropdown (click the media pill) and as a SUPER+T
 // page (s), like AudioPanel.
 //
 // Keys: Space play/pause, ←/→ seek 5s, ↑/↓ app volume, n/p next/previous,

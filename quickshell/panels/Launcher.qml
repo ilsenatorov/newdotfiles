@@ -4,7 +4,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+D, d. The search half of the SUPER+D menu: apps, every hub page,
+// SUPER+T, d. The search half of the SUPER+T menu: apps, every hub page,
 // toggles that flip in place, recording, power, plus two prefix modes --
 // `=` is a calculator, `?` searches the keybind list.
 //

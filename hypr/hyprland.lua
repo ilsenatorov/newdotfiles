@@ -65,7 +65,7 @@ local terminal    = "kitty"
 local dotfiles    = os.getenv("HOME") .. "/dotfiles"
 
 
-local kb_layout = (C.KB_LAYOUT ~= "" and C.KB_LAYOUT) or "us,ru,graphite"
+local kb_layout = (C.KB_LAYOUT ~= "" and C.KB_LAYOUT) or "graphite,us,ru"
 
 local function app(cmd)
     hl.exec_cmd("uwsm app -- " .. cmd)
@@ -75,16 +75,6 @@ hl.on("hyprland.start", function()
     -- GTK4/libadwaita and the GTK portal read gsettings, not gtk-4.0/settings.ini.
     -- Without this, file dialogs and GNOME apps stay light on a dark desktop.
     hl.exec_cmd(dotfiles .. "/hypr/scripts/gsettings-theme.sh")
-
-    -- Type in graphite by default; us stays first in kb_layout for the binds.
-    local i = 0
-    for name in kb_layout:gmatch("[^,]+") do
-        if name == "graphite" then
-            hl.exec_cmd("hyprctl switchxkblayout all " .. i)
-            break
-        end
-        i = i + 1
-    end
 
     app("qs -d -n")
     if conf_bool("AUTOSTART_WALLPAPER", true) then
@@ -215,8 +205,9 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 1.94, bezier = "almo
 
 hl.config({
     input = {
-        -- graphite: xkb/symbols/graphite (not in xkeyboard-config). us stays
-        -- first so binds resolve by qwerty position on every layout.
+        -- graphite: xkb/symbols/graphite (not in xkeyboard-config). The first
+        -- layout is both the default and where binds resolve on every layout,
+        -- so us/ru keep graphite's bind positions.
         kb_layout  = kb_layout,
         kb_options = "grp:shifts_toggle",
 
@@ -241,7 +232,7 @@ local mainMod = "SUPER"
 ---- Launchers and terminal -------------------------------------------------
 hl.bind(mainMod .. " + Return",  hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
 hl.bind(mainMod .. " + End",     hl.dsp.exec_cmd(terminal),   { description = "Terminal" })
-hl.bind(mainMod .. " + X", hl.dsp.window.close(),     { description = "Close window" })
+hl.bind(mainMod .. " + M", hl.dsp.window.close(),     { description = "Close window" })
 
 -- SUPER+Z (rofi's `run` mode) is deliberately gone: it went unused, and the
 -- launcher covers what it was for.
@@ -249,13 +240,13 @@ hl.bind(mainMod .. " + X", hl.dsp.window.close(),     { description = "Close win
 -- The top row (Q..P) is workspaces, so what used to live there -- bluetooth,
 -- audio, wallpaper, ask, resize, reload -- plus monitors, media, power and
 -- the app launcher is one quickshell menu (quickshell/panels/Hub.qml):
--- SUPER+D, then a letter; `d` again searches apps, settings and actions
+-- SUPER+T, then a letter; `d` searches apps, settings and actions
 -- (quickshell/panels/Launcher.qml), 1-9, 0 launch the most-used apps.
 -- `qs ipc call menu toggle launcher` still opens the search directly.
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call menu toggle hub"), {
 	description = "Menu (d search apps, 1-9/0 recent, letters open pages)",
 })
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("qs ipc call menu toggle power"), {
 	description = "Power menu",
 })
 -- Network/bluetooth/audio now open the quickshell panels instead of
@@ -263,13 +254,13 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("qs ipc call menu toggle powe
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("qs ipc call dashboard toggle"), {
 	description = "Toggle system info overlay",
 })
-hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("qs ipc call keymap toggle"), {
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("qs ipc call keymap toggle"), {
 	description = "Toggle keyboard layout cheat sheet",
 })
-hl.bind(mainMod .. " + SHIFT + K", hl.dsp.exec_cmd("qs ipc call keymap shape"), {
+hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("qs ipc call keymap shape"), {
 	description = "Cheat sheet: switch between normal and TOTEM shape",
 })
--- Also on the SUPER+D hub (c); the Lua API has no reload dispatcher.
+-- Also on the SUPER+T hub (c); the Lua API has no reload dispatcher.
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprctl reload"), {
 	description = "Reload Hyprland config",
 })
@@ -282,10 +273,10 @@ for _, dir in ipairs({ "left", "down", "up", "right" }) do
 end
 
 ---- Layout -----------------------------------------------------------------
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen(),                { description = "Fullscreen" })
-hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
-hl.bind(mainMod .. " + A", hl.dsp.group.prev(), { description = "Previous in group" })
-hl.bind(mainMod .. " + S", hl.dsp.group.toggle(), { description = "Toggle group" })
+hl.bind(mainMod .. " + S", hl.dsp.window.fullscreen(),                { description = "Fullscreen" })
+hl.bind(mainMod .. " + H", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
+hl.bind(mainMod .. " + N", hl.dsp.group.prev(), { description = "Previous in group" })
+hl.bind(mainMod .. " + R", hl.dsp.group.toggle(), { description = "Toggle group" })
 local function merge_into(dir)
 	return function()
 		local a = hl.get_active_window()
@@ -336,17 +327,17 @@ for _, dir in ipairs({ "left", "right", "up", "down" }) do
     hl.bind(mainMod .. " + CTRL + " .. dir, merge_into(dir),
         { description = "Merge window into group (" .. dir .. ")" })
 end
-hl.bind(mainMod .. " + SHIFT + A",    hl.dsp.window.move({ out_of_group = true }), {
+hl.bind(mainMod .. " + SHIFT + N",    hl.dsp.window.move({ out_of_group = true }), {
 	description = "Move out of group",
 })
 
 ---- Workspaces -------------------------------------------------------------
 -- The letter row, not the number row: on a 38-key board the numbers sit
 -- behind a layer, so SUPER+number was a three-key chord. Workspaces keep
--- their numeric ids (Q is 1 ... P is 10), so the workspace rules below are
+-- their numeric ids (B is 1 ... J is 10), so the workspace rules below are
 -- unchanged; the bar pills show the letter (wsKeys in
 -- quickshell/bar/modules/Workspaces.qml -- keep the two in sync).
-local wsKeys = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" }
+local wsKeys = { "B", "L", "D", "W", "Z", "semicolon", "F", "O", "U", "J" }
 for i, key in ipairs(wsKeys) do
     local ws = i
     hl.bind(mainMod .. " + " .. key,            hl.dsp.focus({ workspace = ws }),
@@ -357,8 +348,8 @@ for i, key in ipairs(wsKeys) do
         { description = "Move window to workspace " .. ws })
 end
 
-hl.bind(mainMod .. " + B",         hl.dsp.focus({ workspace = "previous" }), { description = "Back and forth" })
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.window.move({ workspace = "previous" }),
+hl.bind(mainMod .. " + Q",         hl.dsp.focus({ workspace = "previous" }), { description = "Back and forth" })
+hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.move({ workspace = "previous" }),
     { description = "Move window to previous workspace" })
 
 hl.bind(mainMod .. " + Tab",         hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
@@ -378,7 +369,7 @@ hl.bind("Escape", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), {
 })
 
 ---- Resize submap (i3's `mode "resize"`) -----------------------------------
--- Entered from the SUPER+D menu (r); SUPER+R is workspace 4 now.
+-- Entered from the SUPER+T menu (r); SUPER+W is workspace 4.
 hl.define_submap("resize", function()
     hl.bind("left",  hl.dsp.window.resize({ x = -10, y = 0, relative = true }),
         { repeating = true, description = "Narrower" })

@@ -4,7 +4,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// Replaces rofi-bluetooth (SUPER+D, b). Live Bluez state via
+// Replaces rofi-bluetooth (SUPER+T, b). Live Bluez state via
 // Quickshell.Bluetooth -- no bluetoothctl scraping -- and everything
 // bluetoothctl itself does: power, scan, discoverable, pairable, pair /
 // cancel, trust, block, wake, connect / disconnect, remove, device alias,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Prints "<evdev keycode> <1|0>" on every key press/release, for the SUPER+K
+# Prints "<evdev keycode> <1|0>" on every key press/release, for the SUPER+A
 # cheat sheet (ui/KeymapOverlay.qml) -- it has no keyboard focus, so it can't
 # see keys itself. Needs read access to /dev/input (the `input` group).
 # Quickshell only runs this while the overlay is shown.

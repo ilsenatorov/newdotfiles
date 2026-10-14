@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Launch counts for the SUPER+D launcher, so the list opens on what you
+// Launch counts for the SUPER+T launcher, so the list opens on what you
 // actually run instead of whatever sorts first alphabetically. rofi had this
 // built in (its drun history file); this is the replacement for it.
 //

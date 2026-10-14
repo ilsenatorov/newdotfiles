@@ -7,7 +7,7 @@ import "../ui"
 // History of every notification since it was last cleared, grouped by app,
 // newest first -- the part mako never had. Toasts vanish after a few
 // seconds; this is where they end up. Also the Do Not Disturb switch.
-// Hosted as the bar dropdown (click the bell) and as a SUPER+D page (o).
+// Hosted as the bar dropdown (click the bell) and as a SUPER+T page (o).
 //
 // Keys: ↑/↓ move, Delete remove, d toggle DND, Shift+C clear all. Esc falls
 // through to shell.qml.

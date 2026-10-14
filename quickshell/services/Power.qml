@@ -3,8 +3,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Session/power commands, shared by the power menu (SUPER+D, p)
-// (panels/PowerMenu.qml) and the SUPER+D search. The commands are carried over
+// Session/power commands, shared by the power menu (SUPER+T, p)
+// (panels/PowerMenu.qml) and the SUPER+T search. The commands are carried over
 // verbatim from the old rofi/powermenu-hypr.sh.
 //
 // execDetached, not Process: the menu that triggers these is torn down the

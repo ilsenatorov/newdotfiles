@@ -3,7 +3,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+D q. The switches that don't deserve a page each: night light (with
+// SUPER+T q. The switches that don't deserve a page each: night light (with
 // its temperature), caffeine, Do Not Disturb, and screen recording.
 //
 // Keys: ↑/↓ pick a row, Space/Enter toggle or start, ←/→ move the night-light

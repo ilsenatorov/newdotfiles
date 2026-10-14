@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// The one-line live status under each SUPER+D hub tile, shared with the
+// The one-line live status under each SUPER+T hub tile, shared with the
 // search palette (panels/Launcher.qml) so a page reads the same in both.
 // Plain bindings over the other services: whatever calls statusFor() inside
 // a binding re-evaluates when the underlying state moves.

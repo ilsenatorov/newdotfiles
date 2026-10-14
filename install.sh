@@ -121,11 +121,11 @@ PKGS_DESKTOP=(
 	# clipboard + screenshots + screen recording
 	cliphist wl-clipboard wl-clip-persist grim slurp swappy wf-recorder
 	# media / hardware keys -- pavucontrol dropped, the quickshell Audio
-	# panel (SUPER+D, a) replaces its default-sink slider
+	# panel (SUPER+T, a) replaces its default-sink slider
 	mpv playerctl brightnessctl libpulse
 	pipewire pipewire-pulse wireplumber
 	# network + bluetooth -- network-manager-applet dropped, the bar's
-	# network module + Network panel (SUPER+D, n) replace it
+	# network module + Network panel (SUPER+T, n) replace it
 	# blueman: its applet (XDG autostart, started by uwsm) is the Bluetooth
 	# agent that answers PIN/passkey prompts for the Bluetooth panel
 	networkmanager bluez bluez-utils blueman
@@ -472,7 +472,7 @@ ${probed:-# (nothing -- every default fits)
 # SVC_GPU=1
 # SYSMON_INTERVAL_FAST=2000
 # SYSMON_INTERVAL_SLOW=10000
-# KB_LAYOUT=us,ru,graphite     # first = where Hyprland shortcuts sit
+# KB_LAYOUT=graphite,us,ru     # first = where Hyprland shortcuts sit
 # AUTOSTART_HYPRIDLE=0         # next login
 # AUTOSTART_WALLPAPER=1
 # WALLPAPER=                   # seeds hypr/wallpaper.conf on first run
@@ -532,7 +532,7 @@ if [ "$first_configure" -eq 1 ] || [ "$RECONFIGURE" -eq 1 ]; then
 fi
 
 # Fresh clone: seed the generated theme files from their committed snapshot so
-# the desktop is themed before the wallpaper step below (or SUPER+D, w) ever
+# the desktop is themed before the wallpaper step below (or SUPER+T, w) ever
 # runs matugen. Never overwrites a file that already exists -- those are this
 # machine's actual last-set theme, not stale defaults.
 say "generated theme defaults"
@@ -577,10 +577,10 @@ elif [ -d "${HOME}/Pictures/Wallpapers" ] &&
 	[ -n "$found" ]; then
 	echo "PICK    $found"
 	"${DOTS}/hypr/scripts/set-wallpaper.sh" "$found" ||
-		warn "set-wallpaper.sh failed; run it by hand after login (SUPER+D, w)"
+		warn "set-wallpaper.sh failed; run it by hand after login (SUPER+T, w)"
 else
 	warn "no wallpaper found. Put an image in ~/Pictures/Wallpapers and"
-	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+D, w)"
+	warn "run: ~/dotfiles/hypr/scripts/set-wallpaper.sh <file>   (or SUPER+T, w)"
 	warn "The committed colors.* files are used until then."
 fi
 
@@ -599,7 +599,7 @@ say "done"
 cat <<EOF
 Next:
   * log out and pick "Hyprland (uwsm-managed)" in the display manager
-  * SUPER+D menu (d search, w wallpaper+accent, p power), SUPER+V clipboard
+  * SUPER+T menu (d search, w wallpaper+accent, p power), SUPER+V clipboard
   * SDDM theme (optional):  ./install.sh --sddm
   * after a git pull:       ./install.sh   (idempotent)
 EOF

@@ -4,7 +4,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+D, p. Replaces rofi/powermenu-hypr.sh, which was
+// SUPER+T, p. Replaces rofi/powermenu-hypr.sh, which was
 // `rofi -theme powermenu.rasi -dmenu -selected-row 0` over five lines plus a
 // case statement. The option order and every command are carried over
 // verbatim from that script -- this is a re-skin, not a redesign.
@@ -18,7 +18,7 @@ Picker {
     searchable: false
     cardWidth: Theme.menuNarrowW
 
-    // Commands and glyphs live in services/Power.qml, shared with the SUPER+D
+    // Commands and glyphs live in services/Power.qml, shared with the SUPER+T
     // search.
     items: Power.items
 

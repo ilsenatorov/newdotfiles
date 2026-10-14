@@ -7,8 +7,8 @@ import Quickshell.Io
 // Every Hyprland bind, read live from `hyprctl binds -j` so it can never drift
 // from hypr/hyprland.lua. With the Lua config, Hyprland only reports binds
 // that carry a `description` -- which is why every hl.bind there has one.
-// Feeds the cheatsheet (panels/Keybinds.qml, `?` in the SUPER+D hub) and the `?` mode of the
-// SUPER+D search.
+// Feeds the cheatsheet (panels/Keybinds.qml, `?` in the SUPER+T hub) and the `?` mode of the
+// SUPER+T search.
 Singleton {
     id: root
 

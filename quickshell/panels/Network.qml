@@ -4,7 +4,7 @@ import ".."
 import "../services"
 import "../ui"
 
-// SUPER+D, n (or the bar's network module). Replaces the old
+// SUPER+T, n (or the bar's network module). Replaces the old
 // networkmanager_dmenu rofi menu. Ethernet and Wi-Fi in
 // one list: Ethernet state via Net's nmcli monitor, Wi-Fi live via
 // Quickshell.Networking; joins that need more than a saved profile (open,

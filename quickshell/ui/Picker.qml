@@ -41,7 +41,7 @@ Item {
     // missing tool reads as an explanation instead of an empty card.
     property string emptyText: "No matches"
     // Replaces filter() below when set: function(items, query) -> items. The
-    // SUPER+D search uses it for ranking and its `=`/`?` prefix modes.
+    // SUPER+T search uses it for ranking and its `=`/`?` prefix modes.
     property var filterFn: null
     // Query to start with (applied once, on creation) -- how the search
     // gets its text back when Esc returns to it from a page it opened.
@@ -50,7 +50,7 @@ Item {
     property alias currentIndex: list.currentIndex
     // >= 0: hang the card this far from the window's top instead of
     // centring it, so the input box stays put while the results grow and
-    // shrink under it (the SUPER+D search, lined up with the hub's pill).
+    // shrink under it (the SUPER+T search, lined up with the hub's pill).
     property real topPin: -1
     // Room the card may use: the window minus shadow headroom (and the pin).
     readonly property real cardRoom: root.topPin >= 0 ? root.height - root.topPin - Theme.inset : root.height - Theme.inset * 2
@@ -105,7 +105,7 @@ Item {
         const count = root.filtered.length;
         // Esc is left unaccepted: it falls through to shell.qml's menu
         // window, which closes the menu -- or, for a page opened from the
-        // SUPER+D hub, steps back to the hub.
+        // SUPER+T hub, steps back to the hub.
         if (event.key === Qt.Key_Escape) {
             // A typed query is the innermost layer: Esc clears it first,
             // and only an empty box lets Esc close / step back.

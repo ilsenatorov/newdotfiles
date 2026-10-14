@@ -5,7 +5,7 @@ import ".."
 import Quickshell.Io
 import "../ui"
 
-// SUPER+D, w. Replaces the `rofi -dmenu -i -p Wallpaper` prompt that used to
+// SUPER+T, w. Replaces the `rofi -dmenu -i -p Wallpaper` prompt that used to
 // live inside hypr/scripts/set-wallpaper.sh.
 //
 // A carousel rather than the ui/Picker.qml list every other ported menu
@@ -152,7 +152,7 @@ Item {
     // ---- input ------------------------------------------------------------
     // Left/Right and h/l step; the arrows are what the eye reaches for and
     // hjkl is what the rest of this setup is driven with. Enter applies;
-    // Escape falls through to shell.qml (close, or back to the SUPER+D hub)
+    // Escape falls through to shell.qml (close, or back to the SUPER+T hub)
     // -- same contract every other menu has.
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {

@@ -138,7 +138,7 @@ display() {
 keyboard() {
 	local cur picked
 	cur=$(get KB_LAYOUT "")
-	cur=${cur:-us,ru,graphite}
+	cur=${cur:-graphite,us,ru}
 	# graphite is ours (xkb/symbols/graphite); the rest ship with xkeyboard-config.
 	picked=$(printf '%s\n' us graphite ru ua de fr es it pl gb | current_first "$cur" |
 		pick --no-limit --selected="$cur" \
@@ -220,7 +220,7 @@ summary() {
 	gum style --border rounded --padding "0 1" --border-foreground 6 \
 		"UI_SCALE      $(get UI_SCALE 1.0)" \
 		"MONITORS      $(hyprctl monitors -j 2>/dev/null | jq -r '[.[] | "\(.name)=\(.scale)"] | join(" ")' 2>/dev/null)${MON[*]:+ (scale change pending)}" \
-		"KB_LAYOUT     $(get KB_LAYOUT us,ru,graphite)" \
+		"KB_LAYOUT     $(get KB_LAYOUT graphite,us,ru)" \
 		"BAR           $(get BAR_LEFT workspaces,clock,battery) | $(get BAR_CENTER media) | $(get BAR_RIGHT network,bluetooth,audio,notifications,status,language)" \
 		"$(for k in SVC_WEATHER SVC_CLAUDE_USAGE SVC_GPU AUTOSTART_HYPRIDLE AUTOSTART_WALLPAPER; do
 			printf '%s=%s ' "${k#*_}" "$(get "$k" -)"

@@ -3,7 +3,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import ".."
 
-// SUPER+K cheat sheet: the active layout's letter keys, drawn as a
+// SUPER+A cheat sheet: the active layout's letter keys, drawn as a
 // see-through keyboard so you can keep typing underneath it (learning
 // Graphite). Follows layout switches live, same activelayout source as
 // bar/modules/Language.qml. shell.qml hosts it click-through.
@@ -22,7 +22,7 @@ Item {
     property string layout: ""
     // Hyprland's main keyboard, i.e. the one last typed on.
     property string keyboard: ""
-    // SUPER+SHIFT+K pins the other shape until the shell restarts.
+    // SUPER+SHIFT+A pins the other shape until the shell restarts.
     property var forceTotem: null
     readonly property bool totem: forceTotem ?? /totem/i.test(keyboard)
     function flip() { forceTotem = !totem }
