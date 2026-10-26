@@ -172,48 +172,59 @@ style = "bold fg:on_hue bg:hue_green"
 format = '[$state( $progress_current/$progress_total) ]($style)'
 
 # --- language slot --------------------------------------------------------
-# The preset's blue segment. Every one of these is off by default because p10k
-# never showed toolchain versions -- it listed the *env managers (pyenv, nvm,
-# rbenv, ...) and none of them are installed here. They are wired into `format`
-# already, so uncommenting a block is all it takes.
+# The preset's blue segment. Every one of these is off because p10k never
+# showed toolchain versions -- it listed the *env managers (pyenv, nvm, rbenv,
+# ...) and none of them are installed here. Starship itself turns them ON by
+# default, unstyled, so each needs its explicit `disabled = true`. They are
+# wired into `format` already: drop that line and uncomment the rest to enable.
 
-# [c]
+[c]
+disabled = true
 # symbol = " "
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [cpp]
+[cpp]
+disabled = true
 # symbol = " "
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [rust]
+[rust]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [golang]
+[golang]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [nodejs]
+[nodejs]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [bun]
+[bun]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [php]
+[php]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [java]
+[java]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [kotlin]
+[kotlin]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'
-# [haskell]
+[haskell]
+disabled = true
 # symbol = ""
 # style = "bg:hue_cyan"
 # format = '[[ $symbol( $version) ](fg:on_hue bg:hue_cyan)]($style)'

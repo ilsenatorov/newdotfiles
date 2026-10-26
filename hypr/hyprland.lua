@@ -24,7 +24,8 @@ do
     if f then
         for line in f:lines() do
             local k, v = line:match("^%s*([%w_]+)%s*=%s*(.-)%s*$")
-            if k then C[k] = v end
+            -- "KEY=val   # note": the template's own lines carry trailing comments.
+            if k then C[k] = v:gsub("%s+#.*$", "") end
         end
         f:close()
     end

@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import ".."
+import "../services"
 
 // One toast. Geometry/behavior ported 1:1 from mako/config: 380 wide, radius
 // 12, border 2, padding 10/14, markup+icons on, left-click dismiss,
@@ -68,7 +69,8 @@ Rectangle {
             // usually corrects that by raising its own window.
             const win = ToplevelManager.toplevels.values.find(t => {
                 const id = t.appId.toLowerCase();
-                return want.some(n => id === n || id.endsWith("." + n) || n.includes(id));
+                // an empty appId would match everything via n.includes("")
+                return id !== "" && want.some(n => id === n || id.endsWith("." + n) || n.includes(id));
             });
             if (win) win.activate();
         }
@@ -85,8 +87,8 @@ Rectangle {
 
         Image {
             id: icon
-            visible: notification.image !== "" || notification.appIcon !== ""
-            source: notification.image !== "" ? notification.image : notification.appIcon
+            visible: source != "" && status !== Image.Error
+            source: Notifications.iconFor(notification)
             width: Theme.notifIconSize
             height: Theme.notifIconSize
             anchors.top: parent.top

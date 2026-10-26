@@ -50,7 +50,7 @@ get() {
 	v=$(awk -v k="$1" '
 		{ line = $0; sub(/^[ \t]+/, "", line) }
 		index(line, k "=") == 1 { val = substr(line, length(k) + 2); found = 1 }
-		END { if (found) { sub(/[ \t]+$/, "", val); print "=" val } }' "$CONF")
+		END { if (found) { sub(/[ \t]+#.*$/, "", val); sub(/[ \t]+$/, "", val); print "=" val } }' "$CONF")
 	if [ -n "$v" ]; then printf '%s' "${v#=}"; else printf '%s' "${2:-}"; fi
 }
 
@@ -113,7 +113,7 @@ display() {
 	cur=$(get UI_SCALE 1.0)
 	s=$(pick --header "Shell UI scale (bar, panels, fonts) -- now ${cur}" \
 		--selected="$cur" 0.8 0.9 1.0 1.1 1.25 1.5 1.75 2.0) || return 0
-	set_ UI_SCALE "$s"
+	[ "$s" = "$cur" ] || set_ UI_SCALE "$s"
 
 	if ! command -v hyprctl >/dev/null || ! command -v jq >/dev/null ||
 		! mons=$(hyprctl monitors all -j 2>/dev/null) || [ -z "$mons" ]; then
@@ -153,10 +153,11 @@ keyboard() {
 		first=$(lines "$picked" | pick --selected="$first" \
 			--header "First layout -- Hyprland shortcuts follow its key positions") || first="${picked%%,*}"
 	fi
-	set_ KB_LAYOUT "$( (
+	picked=$( (
 		echo "$first"
 		lines "$picked" | grep -vxF -- "$first"
-	) | commas)"
+	) | commas)
+	[ "$picked" = "$cur" ] || set_ KB_LAYOUT "$picked"
 }
 
 # ---------------------------------------------------------------- bar ----
@@ -179,7 +180,7 @@ bar() {
 		picked=$(current_first "$cur" <<<"$modules" | grep -xF -f <(echo "$modules") |
 			pick --no-limit --selected="$cur" \
 				--header "Bar ${section} section (x toggles; none = hide that pill)" | commas) || continue
-		set_ "$key" "$picked"
+		[ "$picked" = "$cur" ] || set_ "$key" "$picked"
 	done
 }
 
@@ -208,9 +209,15 @@ services() {
 			echo "${on[*]}"
 		)" \
 		--header "Services (x toggles)") || return 0
+	# Only flipped toggles are written: an untouched default stays absent.
+	local was want
 	for o in "${opts[@]}"; do
 		key=${o#*|}
-		if grep -qxF -- "$key" <<<"$picked"; then set_ "$key" 1; else set_ "$key" 0; fi
+		was=1
+		grep -qxF -- "${o%|*}" < <(printf '%s\n' "${on[@]}") || was=0
+		want=0
+		grep -qxF -- "$key" <<<"$picked" && want=1
+		[ "$want" = "$was" ] || set_ "$key" "$want"
 	done
 }
 

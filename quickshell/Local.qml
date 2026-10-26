@@ -79,7 +79,8 @@ Singleton {
                 if (t === "" || t.startsWith("#")) continue;
                 const eq = t.indexOf("=");
                 if (eq < 0) continue;
-                out[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
+                // "KEY=val   # note": the template's own lines carry trailing comments.
+                out[t.slice(0, eq).trim()] = t.slice(eq + 1).replace(/\s+#.*$/, "").trim();
             }
         }
         root.values = out;

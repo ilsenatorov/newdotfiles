@@ -136,13 +136,14 @@ STATEFILE
 # starship is the one config that is built rather than imported: its TOML has no
 # include directive, so the generated palette has to be concatenated onto the
 # hand-written base. starship re-reads its config on every prompt, so this
-# recolours already-open shells with no restart -- same as kitty.
+# recolours already-open shells with no restart.
 "${DOTS}/starship/build.sh" || echo "starship rebuild failed (non-fatal)" >&2
 
 hyprctl reload >/dev/null 2>&1 || true
 # No reload signal needed for the bar/notifications/panels any more --
 # quickshell watches quickshell/Colors.qml itself and hot-reloads on write.
-# kitty re-reads its config on save, so open terminals recolour themselves;
+# kitty does not watch its config; SIGUSR1 makes open terminals reload it.
+pkill -USR1 -x kitty || true
 # hyprlock picks it up on next lock.
 # GTK apps re-read gtk.css only on restart.
 
@@ -163,4 +164,5 @@ if [ -f /usr/share/sddm/themes/sddm-astronaut-theme/Themes/main.conf ]; then
 fi
 
 accent=$(grep -oE '#[0-9a-fA-F]{6}' "${DOTS}/quickshell/Colors.qml" | head -1)
-notify-send "Wallpaper set" "$(basename "$wall")\nAccent ${accent}"
+# no notification daemon (install.sh, outside a session) is not a failure
+notify-send "Wallpaper set" "$(basename "$wall")\nAccent ${accent}" || true

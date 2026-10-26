@@ -151,7 +151,8 @@ PKGS_SDDM=(sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative)
 # Terminal/dev tooling that .zshrc, git/config and nvim/ assume is present.
 # The linters (shellcheck, shfmt, luacheck) are only needed to run check.sh;
 # dropped by --minimal along with the ranger preview tools.
-PKGS_CLI=(neovim eza bat fd zoxide ripgrep git-delta lazygit)
+# tree-sitter-cli: nvim-treesitter (main branch) builds parsers with it.
+PKGS_CLI=(neovim tree-sitter-cli eza bat fd zoxide ripgrep git-delta lazygit)
 PKGS_LINT=(shellcheck shfmt luacheck)
 
 # AUR. adw-gtk3 is optional polish the GTK config picks up on its own if present.
@@ -220,6 +221,10 @@ git_email=""
 if [ -n "$gitconfig_bak" ] && [ -f "$gitconfig_bak" ]; then
 	git_name=$(git config -f "$gitconfig_bak" user.name 2>/dev/null || true)
 	git_email=$(git config -f "$gitconfig_bak" user.email 2>/dev/null || true)
+elif [ -f "${HOME}/.config/git/config.local" ]; then
+	# Later runs (--reconfigure): ~/.gitconfig is long gone, keep the current identity.
+	git_name=$(git config -f "${HOME}/.config/git/config.local" user.name 2>/dev/null || true)
+	git_email=$(git config -f "${HOME}/.config/git/config.local" user.email 2>/dev/null || true)
 fi
 git_local_content="# Per-machine git identity, included from the end of ~/.config/git/config.
 # Generated once by install.sh, never overwritten after that -- hand-edit freely.
@@ -315,9 +320,11 @@ if [ ! -d "${HOME}/.oh-my-zsh" ]; then
 	# warn rather than die: a CI smoke-test container may have no network
 	# egress or a $HOME oh-my-zsh can't write to; the rest of the install
 	# (links, theme, per-machine config) is still worth completing.
-	RUNZSH=no KEEP_ZSHRC=yes sh -c \
-		"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" ||
+	# Fetched first: `sh -c "$(curl ...)"` runs an empty script (exit 0) when offline.
+	if ! omz=$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh) ||
+		! RUNZSH=no KEEP_ZSHRC=yes sh -c "$omz"; then
 		warn "oh-my-zsh install failed (no network? re-run install.sh once it's reachable)"
+	fi
 else
 	echo "OK      oh-my-zsh"
 fi
@@ -567,10 +574,14 @@ wall=""
 [ -f "${DOTS}/hypr/wallpaper.conf" ] &&
 	wall=$(sed -n 's/^WALLPAPER=//p' "${DOTS}/hypr/wallpaper.conf" | tail -1)
 [ -z "$wall" ] && [ -f "${HOME}/.config/dotfiles/local.conf" ] &&
-	wall=$(sed -n 's/^WALLPAPER=//p' "${HOME}/.config/dotfiles/local.conf" | tail -1)
+	wall=$(sed -nE 's/^WALLPAPER=//; T; s/[[:space:]]+#.*$//; p' "${HOME}/.config/dotfiles/local.conf" | tail -1)
 
 if [ -n "$wall" ] && [ -f "$wall" ]; then
 	echo "OK      $wall"
+	# WALLPAPER= in local.conf seeds the wallpaper on a machine that has none yet.
+	[ -f "${DOTS}/hypr/wallpaper.conf" ] ||
+		"${DOTS}/hypr/scripts/set-wallpaper.sh" "$wall" ||
+		warn "set-wallpaper.sh failed; run it by hand after login (SUPER+T, w)"
 elif [ -d "${HOME}/Pictures/Wallpapers" ] &&
 	found=$(find "${HOME}/Pictures/Wallpapers" -type f \
 		\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort | head -1) &&

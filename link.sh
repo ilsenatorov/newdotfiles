@@ -54,6 +54,9 @@ if [ "$1" = "--unlink" ]; then
 	exit 0
 fi
 
+# `for i in */` below must walk the repo, not whatever dir install.sh was run from.
+cd "$(dirname "$0")" || exit 1
+
 stamp=$(date +%Y%m%d-%H%M%S)
 
 # a freshly-provisioned user has no ~/.config yet; ln -s below would fail

@@ -88,14 +88,6 @@ Column {
         return Math.floor(s / 86400) + "d";
     }
 
-    function iconFor(e: var): string {
-        if (e.image) return e.image;
-        if (!e.appIcon) return "";
-        if (e.appIcon.startsWith("/")) return "file://" + e.appIcon;
-        if (e.appIcon.includes("://")) return e.appIcon;
-        return Quickshell.iconPath(e.appIcon, true);
-    }
-
     // ---- header: DND + clear ----------------------------------------------
     Item {
         width: parent.width
@@ -228,7 +220,7 @@ Column {
 
                     Image {
                         id: icon
-                        readonly property string src: root.iconFor(row.modelData)
+                        readonly property string src: Notifications.iconFor(row.modelData)
                         visible: src !== "" && status !== Image.Error
                         source: src
                         width: Math.round(28 * Theme.s)

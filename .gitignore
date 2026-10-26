@@ -31,3 +31,8 @@ graphify-out/
 # pi-web-access fetched-page cache; machine-local state.
 /pi/web-search-cache/
 __pycache__
+
+# Backups install.sh/configure.sh leave next to a file -- some land in here
+# through the ~/.config symlinks (git/config.local.bak-*) -- and build temp files.
+*.bak-*
+*.tmp

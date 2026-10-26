@@ -24,7 +24,7 @@ Item {
 
     // Special workspaces have negative ids; only numbered ones get a pill.
     readonly property var sortedWorkspaces: Hyprland.workspaces.values
-        .filter(w => w.id > 0 && w.monitor && w.monitor.name === root.screen.name)
+        .filter(w => w.id > 0 && w.monitor && root.screen && w.monitor.name === root.screen.name)
         .sort((a, b) => a.id - b.id)
 
     // Workspace id -> the SUPER+<key> that focuses it -- must match wsKeys

@@ -36,7 +36,8 @@ Column {
     }
     Keys.onUpPressed: {
         const count = Audio.sinks.length;
-        if (count > 0) root.currentIndex = (root.currentIndex - 1 + count) % count;
+        // from -1 (no active sink) Up wraps to the last entry
+        if (count > 0) root.currentIndex = ((root.currentIndex < 0 ? count : root.currentIndex) - 1 + count) % count;
     }
     Keys.onReturnPressed: root.activateCurrent()
     Keys.onEnterPressed: root.activateCurrent()

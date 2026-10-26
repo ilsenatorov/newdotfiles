@@ -7,6 +7,12 @@ return {
 		build = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter").setup({})
+			-- The main branch installs nothing by itself (and :TSUpdate only updates
+			-- what is there); nvim bundles just lua/vim/markdown. No-op once present.
+			-- Building needs tree-sitter-cli (install.sh); without it, skip quietly.
+			if vim.fn.executable("tree-sitter") == 1 then
+				require("nvim-treesitter").install({ "bash", "python", "qmljs", "json" })
+			end
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = { "lua", "sh", "python", "qml", "json", "markdown", "vim", "help" },
 				callback = function()

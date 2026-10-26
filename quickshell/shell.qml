@@ -308,6 +308,16 @@ ShellRoot {
                 enabled: Caffeine.enabled && shell.primaryBar === bar
             }
 
+            // The primary bar's screen went away: a surviving bar takes over,
+            // or caffeine's inhibitor and the panel origin go with it. Deferred
+            // so the dying bar (whose onDestruction fired this) is gone first.
+            Connections {
+                target: shell
+                function onPrimaryBarChanged() {
+                    if (!shell.primaryBar) Qt.callLater(() => { if (!shell.primaryBar && bar) shell.primaryBar = bar; });
+                }
+            }
+
             Bar {
                 id: bar
                 anchors.fill: parent

@@ -416,7 +416,8 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        interval: root.fast ? Local.sysmonIntervalFast : Local.sysmonIntervalSlow
+        // floor: a 0 from local.conf would be a busy loop, not "off"
+        interval: Math.max(250, root.fast ? Local.sysmonIntervalFast : Local.sysmonIntervalSlow)
         onTriggered: {
             statView.reload();
             root.sampleCpu();

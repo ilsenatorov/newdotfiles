@@ -36,6 +36,16 @@ Singleton {
     readonly property string path: Quickshell.env("HOME") + "/.local/state/quickshell-notifications/state.json"
     property int seq: 0
 
+    // Icon URL for a live Notification or a history entry: image wins, then
+    // appIcon, which is usually a theme icon name rather than a path.
+    function iconFor(e: var): string {
+        if (e.image) return e.image;
+        if (!e.appIcon) return "";
+        if (e.appIcon.startsWith("/")) return "file://" + e.appIcon;
+        if (e.appIcon.includes("://")) return e.appIcon;
+        return Quickshell.iconPath(e.appIcon, true);
+    }
+
     function dismissAll(): void {
         const notifications = Array.from(server.trackedNotifications.values);
         for (const notification of notifications) notification.dismiss();

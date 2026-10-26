@@ -84,7 +84,7 @@ jobs:
         run: |
           su - runner -c '
             cd ~/dotfiles
-            out=$(./install.sh --no-packages --no-aur)
+            out=$(./install.sh --no-packages --no-aur) || { echo "$out"; echo "second run failed"; exit 1; }
             echo "$out"
             echo "$out" | grep -q "^BACKUP" && { echo "second run produced a BACKUP -- not idempotent"; exit 1; }
             exit 0
