@@ -51,4 +51,11 @@ install -m 644 "$REPO/etc/sddm.conf" /etc/sddm.conf
 install -d /etc/sddm.conf.d
 install -m 644 "$REPO/etc/sddm.conf.d/virtualkbd.conf" /etc/sddm.conf.d/
 
+# The greeter's X server only reads /usr/share/X11/xkb and the system keymap
+# (localectl), never ~/.config/xkb -- so graphite has to be installed there too.
+install -m 644 "$REPO/../xkb/symbols/graphite" /usr/share/X11/xkb/symbols/graphite
+CONF="$(getent passwd "${SUDO_USER:-root}" | cut -d: -f6)/.config/dotfiles/local.conf"
+LAYOUT=$(sed -n 's/^KB_LAYOUT=//p' "$CONF" 2>/dev/null)
+localectl --no-convert set-x11-keymap "${LAYOUT:-graphite,us,ru}" "" "" grp:shifts_toggle
+
 echo "installed. preview with: sddm-greeter-qt6 --test-mode --theme $DST"
