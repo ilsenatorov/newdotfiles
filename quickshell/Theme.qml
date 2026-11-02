@@ -86,10 +86,8 @@ Singleton {
     readonly property int menuMaxH: Math.round(520 * s)
     readonly property int menuRowH: Math.round(38 * s)
     readonly property int menuIconSize: Math.round(26 * s)
-    // One tile in the SUPER+T m monitor diagram (Left/Right/Above/Below
-    // around the anchor). Wide and short, so a tile reads as a screen.
-    readonly property int menuTileW: Math.round(104 * s)
-    readonly property int menuTileH: Math.round(58 * s)
+    // The SUPER+T m display map; every output is scaled to fit inside it.
+    readonly property int menuMapH: Math.round(260 * s)
 
     // SUPER+T w's wallpaper carousel is the one menu that is not a list of
     // rows: it shows a 16:9 slide with its neighbours peeking in at the
