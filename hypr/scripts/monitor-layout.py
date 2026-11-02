@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Remember display layouts locally; save and restore named snapshots."""
+"""Remember display layouts locally; save and restore named snapshots.
+
+--current prints the live layout plus what quickshell/panels/MonitorPlace.qml
+needs to draw it; --set applies the layout that panel edited.
+"""
 
 import argparse
 import fcntl
@@ -46,9 +50,8 @@ def snapshot(monitors, previous):
             entry = dict(old[identity], disabled=True)
         else:
             width, height = monitor["width"], monitor["height"]
+            # hyprctl reports the unrotated mode size, which is what mode= wants.
             transform = monitor.get("transform", 0)
-            if transform % 2:
-                width, height = height, width
             mode = (
                 f"{width}x{height}@{monitor['refreshRate']:.5f}"
                 if width and height else "preferred"
@@ -64,6 +67,18 @@ def snapshot(monitors, previous):
             }
         layout.append(entry)
     return layout
+
+
+FIELDS = ("identity", "mode", "position", "scale", "transform", "disabled", "mirror")
+
+
+def describe(entry, monitor):
+    """Entry plus name, description and unrotated logical size (w, h)."""
+    mode = entry["mode"] if entry["mode"] != "preferred" else (monitor.get("availableModes") or ["0x0@0"])[0]
+    width, height = (int(v) for v in mode.split("@")[0].split("x"))
+    scale = entry["scale"] or 1
+    return dict(entry, name=monitor["name"], description=monitor.get("description", ""),
+                w=round(width / scale), h=round(height / scale))
 
 
 def lua(value):
@@ -121,6 +136,8 @@ def main():
     action.add_argument("--apply", metavar="NAME")
     action.add_argument("--restore", action="store_true")
     action.add_argument("--list", action="store_true")
+    action.add_argument("--current", action="store_true")
+    action.add_argument("--set", metavar="JSON")
     args = parser.parse_args()
 
     if args.restore:
@@ -143,8 +160,14 @@ def main():
             raise ValueError("No connected displays.")
         key = topology(monitors)
         previous = data["last"].get(key, [])
-        if args.apply is not None or args.restore:
-            if args.apply is not None:
+        if args.current:
+            layout = snapshot(monitors, previous)
+            print(json.dumps([describe(e, m) for e, m in zip(layout, monitors)], ensure_ascii=False))
+            return
+        if args.apply is not None or args.restore or args.set is not None:
+            if args.set is not None:
+                layout = [{field: entry[field] for field in FIELDS} for entry in json.loads(args.set)]
+            elif args.apply is not None:
                 if args.apply not in data["profiles"]:
                     raise ValueError("No saved layout named " + args.apply)
                 layout = data["profiles"][args.apply]

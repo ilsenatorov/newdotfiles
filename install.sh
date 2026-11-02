@@ -283,6 +283,11 @@ mkdir -p "${HOME}/.claude"
 for f in CLAUDE.md settings.json; do
 	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
 done
+# skills one by one: ~/.claude/skills also holds synced and hand-installed ones
+mkdir -p "${HOME}/.claude/skills"
+for s in "${DOTS}"/claude/skills/*/; do
+	link_file "${s%/}" "${HOME}/.claude/skills/$(basename "$s")"
+done
 
 # enabledPlugins only names plugins; install them (and their marketplaces) so
 # a fresh box has the same set. Both commands are idempotent.

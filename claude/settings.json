@@ -65,5 +65,6 @@
       "**Org-specific CLIs**: None configured — personal hardware/system CLIs observed (journalctl, btmon, bluetoothctl, busctl, hyprctl, upower) are routine local system tools, not org-specific"
     ]
   },
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "remoteControlAtStartup": true
 }
