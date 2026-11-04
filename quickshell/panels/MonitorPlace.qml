@@ -9,15 +9,17 @@ import ".."
 import "../ui"
 import "../services"
 
-// SUPER+T, m. Keyboard-only by design: every action is a key in one of
-// four modes, and the hint line always lists the keys for the current mode.
+// SUPER+T, m. Every action is a key in one of four modes, and the hint line
+// always lists the keys for the current mode.
 //   arrange    -- a scaled map of every output. Arrows/hjkl select a screen,
 //                 Shift+arrows step it to the next edge/centre of the others,
-//                 r/R rotate, m cycles mirroring, d disables. Edits stay a
-//                 draft until Enter applies them all at once; Esc reverts.
+//                 or drag it with the mouse to the nearest of them. r/R rotate,
+//                 m cycles mirroring, d disables. Edits stay a draft until
+//                 Enter applies them all at once; Esc reverts.
 //   workspaces -- same map and draft. Arrows select a screen (no hjkl: L and J
 //                 are workspace letters), a workspace's SUPER letter pulls it
-//                 onto that screen.
+//                 onto that screen, or drag its letter onto one with the mouse.
+//                 r drops the assignment for the default split right away.
 //   layouts    -- saved layouts; Up/Down pick, Enter restores
 //   save       -- type a name, Enter saves the current layout
 // Tab / Shift+Tab (or w, / and s from arrange) switch modes; Esc backs out to
@@ -39,6 +41,8 @@ Item {
     property string appliedJson: ""
     property var draft: []
     property int selIndex: 0
+    // Workspace id whose letter is being dragged, 0 for none.
+    property int dragWorkspace: 0
     property var savedLayouts: []
     property int layoutIndex: 0
     property string error: ""
@@ -104,23 +108,37 @@ Item {
         if (best >= 0) root.selIndex = best;
     }
 
-    // Step to the closest snap stop in that direction: flush outside either
-    // edge of another screen, aligned with either edge, or centred on it.
+    // Snap stops for the selection along one axis: flush outside either edge
+    // of another screen, aligned with either edge, or centred on it.
+    function stops(horizontal: bool): var {
+        const len = horizontal ? root.size(root.sel).w : root.size(root.sel).h;
+        const all = [];
+        for (const o of root.others()) {
+            const start = horizontal ? o.x : o.y;
+            const olen = horizontal ? root.size(o).w : root.size(o).h;
+            all.push(start - len, start, start + Math.round((olen - len) / 2), start + olen - len, start + olen);
+        }
+        return all;
+    }
+
+    // Step to the closest stop in that direction.
     function move(dx: int, dy: int): void {
         if (!root.sel) return;
         const horizontal = dx !== 0, dir = dx + dy;
         const pos = horizontal ? root.sel.x : root.sel.y;
-        const len = horizontal ? root.size(root.sel).w : root.size(root.sel).h;
         let best = null;
-        for (const o of root.others()) {
-            const start = horizontal ? o.x : o.y;
-            const olen = horizontal ? root.size(o).w : root.size(o).h;
-            for (const c of [start - len, start, start + Math.round((olen - len) / 2), start + olen - len, start + olen]) {
-                if ((c - pos) * dir > 0 && (best === null || Math.abs(c - pos) < Math.abs(best - pos)))
-                    best = c;
-            }
+        for (const c of root.stops(horizontal)) {
+            if ((c - pos) * dir > 0 && (best === null || Math.abs(c - pos) < Math.abs(best - pos)))
+                best = c;
         }
         if (best !== null) root.edit(horizontal ? { x: best } : { y: best });
+    }
+
+    // The stop nearest to wanted, or home: where a drag started may not be a
+    // stop, and a click's jitter shouldn't move the screen off it.
+    function snap(horizontal: bool, home: real, wanted: real): real {
+        return root.stops(horizontal).reduce((best, c) =>
+            Math.abs(c - wanted) < Math.abs(best - wanted) ? c : best, home);
     }
 
     // 90° clockwise (step 1) or counter-clockwise (-1), keeping any flip bit.
@@ -163,6 +181,17 @@ Item {
                 workspaces: m === target ? m.workspaces.concat(id).sort((a, b) => a - b)
                     : m.workspaces.filter(w => w !== id)
             }));
+    }
+
+    // Applied at once: no pins left means Lua's split follows the screens again.
+    // Discards unapplied workspace moves, but not unapplied screen edits.
+    function resetWorkspaces(): void {
+        if (!root.sel) return;
+        const geometry = list => JSON.stringify(list.map(m => Object.assign({}, m, { workspaces: [] })));
+        if (geometry(root.draft) !== geometry(JSON.parse(root.appliedJson)))
+            root.error = "Apply (Enter) or revert (Esc) the screen changes first.";
+        else
+            root.run(["python3", root.layoutScript, "--reset-workspaces"], "Workspaces reset to default");
     }
 
     function apply(): void {
@@ -260,6 +289,7 @@ Item {
         case Qt.Key_Right: root.navigate(1, 0); return true;
         case Qt.Key_Up: root.navigate(0, -1); return true;
         case Qt.Key_Down: root.navigate(0, 1); return true;
+        case Qt.Key_R: root.resetWorkspaces(); return true;
         case Qt.Key_Return: case Qt.Key_Enter: root.apply(); return true;
         }
         const i = Theme.wsKeys.indexOf(event.text.toUpperCase());
@@ -285,6 +315,7 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
+                    root.dragWorkspace = 0;
                     const keep = root.sel?.identity;
                     const list = JSON.parse(text).map(m => {
                         const [x, y] = m.position.split("x").map(Number);
@@ -412,7 +443,8 @@ Item {
         MouseArea { anchors.fill: parent }
 
         Keys.onPressed: event => {
-            if (root.busy) { event.accepted = true; return; }
+            // A drag's chip must outlive the drag, so nothing edits the draft meanwhile.
+            if (root.busy || root.dragWorkspace || map.frozenBox) { event.accepted = true; return; }
             event.accepted = root.commonKey(event)
                 || (root.mode === "arrange" && root.arrangeKey(event))
                 || (root.mode === "workspaces" && root.workspacesKey(event))
@@ -445,8 +477,12 @@ Item {
                 border.color: Theme.divider
 
                 readonly property int margin: Math.round(14 * Theme.s)
+                // Set while a screen is dragged: rescaling the map under the
+                // cursor would make the screen run away from it.
+                property var frozenBox: null
                 // Bounding box of every output in layout coordinates.
                 readonly property var box: {
+                    if (map.frozenBox) return map.frozenBox;
                     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
                     for (const m of root.draft) {
                         const s = root.size(m);
@@ -460,6 +496,19 @@ Item {
                 readonly property real k: Math.min((width - 2 * margin) / box.w, (height - 2 * margin) / box.h)
                 readonly property real ox: (width - box.w * k) / 2
                 readonly property real oy: (height - box.h * k) / 2
+                property point dragPos
+
+                // Index of the tile under a map point, -1 for none. Off and
+                // mirroring screens can share space with one holding workspaces,
+                // which wins.
+                function screenAt(px: real, py: real): int {
+                    const x = (px - map.ox) / map.k + map.box.x, y = (py - map.oy) / map.k + map.box.y;
+                    const hits = root.draft.map((m, i) => i).filter(i => {
+                        const m = root.draft[i], s = root.size(m);
+                        return x >= m.x && x < m.x + s.w && y >= m.y && y < m.y + s.h;
+                    });
+                    return hits.find(i => root.independent(root.draft[i])) ?? hits[0] ?? -1;
+                }
 
                 // Indexed by count, not by the array, so delegates survive
                 // edits and the Behaviors below animate each move.
@@ -493,6 +542,7 @@ Item {
 
                         Column {
                             anchors.centerIn: parent
+                            z: 1 // Above the tile's MouseArea, for the letters' own.
                             width: parent.width - Math.round(6 * Theme.s)
                             spacing: 1
                             Text {
@@ -516,27 +566,133 @@ Item {
                                 font.family: Theme.font
                                 font.pixelSize: Theme.fsLabel
                             }
-                            Text {
-                                width: parent.width
-                                visible: text !== ""
-                                horizontalAlignment: Text.AlignHCenter
-                                wrapMode: Text.Wrap
-                                text: (screen.m.workspaces ?? []).map(w => Theme.wsKeys[w - 1] ?? w).join(" ")
-                                color: root.mode === "workspaces" ? Colors.accent : Theme.dim
-                                font.family: Theme.font
-                                font.pixelSize: Theme.fsLabel
-                                font.bold: root.mode === "workspaces"
+                            Flow {
+                                id: letters
+                                readonly property var ids: screen.m.workspaces ?? []
+                                readonly property int chipSize: Theme.fsLabel + Math.round(8 * Theme.s)
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                visible: letters.ids.length > 0
+                                width: Math.min(parent.width, letters.ids.length * (letters.chipSize + letters.spacing))
+                                spacing: Math.round(2 * Theme.s)
+
+                                Repeater {
+                                    model: letters.ids
+
+                                    delegate: Rectangle {
+                                        id: chip
+                                        required property int modelData
+                                        readonly property bool active: root.mode === "workspaces"
+                                        width: letters.chipSize
+                                        height: letters.chipSize
+                                        radius: Math.round(3 * Theme.s)
+                                        color: "transparent"
+                                        border.width: chip.active ? 1 : 0
+                                        border.color: Colors.accent
+                                        opacity: root.dragWorkspace === chip.modelData ? 0.3 : 1
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: Theme.wsKeys[chip.modelData - 1] ?? chip.modelData
+                                            color: chip.active ? Colors.accent : Theme.dim
+                                            font.family: Theme.font
+                                            font.pixelSize: Theme.fsLabel
+                                            font.bold: chip.active
+                                        }
+
+                                        MouseArea {
+                                            id: chipArea
+                                            anchors.fill: parent
+                                            enabled: chip.active && !root.busy
+                                            cursorShape: chipArea.pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
+                                            // Selecting the tile under the cursor outlines it and
+                                            // lights the real screen, so that's the hover feedback.
+                                            function track(mouse: var): int {
+                                                map.dragPos = chipArea.mapToItem(map, mouse.x, mouse.y);
+                                                const i = map.screenAt(map.dragPos.x, map.dragPos.y);
+                                                if (i >= 0) root.selIndex = i;
+                                                return i;
+                                            }
+
+                                            onPressed: mouse => {
+                                                root.dragWorkspace = chip.modelData;
+                                                chipArea.track(mouse);
+                                            }
+                                            onPositionChanged: mouse => chipArea.track(mouse)
+                                            onCanceled: root.dragWorkspace = 0
+                                            onReleased: mouse => {
+                                                root.dragWorkspace = 0;
+                                                if (chipArea.track(mouse) >= 0) root.pullWorkspace(chip.modelData);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
                         MouseArea {
+                            id: tileArea
+                            // Where the drag started, on screen and on the map.
+                            property var grab: null
                             anchors.fill: parent
                             enabled: !root.busy
+                            cursorShape: root.mode !== "arrange" ? Qt.ArrowCursor
+                                : tileArea.pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
+                            function begin(mouse: var): void {
+                                if (root.mode !== "arrange") return;
+                                root.selIndex = screen.index;
+                                map.frozenBox = map.box;
+                                const p = tileArea.mapToItem(map, mouse.x, mouse.y);
+                                tileArea.grab = { x: screen.m.x, y: screen.m.y, px: p.x, py: p.y };
+                            }
+                            function dragTo(mouse: var): void {
+                                const g = tileArea.grab;
+                                if (!g) return;
+                                const p = tileArea.mapToItem(map, mouse.x, mouse.y);
+                                root.edit({
+                                    x: root.snap(true, g.x, g.x + (p.x - g.px) / map.k),
+                                    y: root.snap(false, g.y, g.y + (p.y - g.py) / map.k)
+                                });
+                            }
+                            function end(): void {
+                                tileArea.grab = null;
+                                map.frozenBox = null;
+                            }
+
+                            onPressed: mouse => tileArea.begin(mouse)
+                            onPositionChanged: mouse => tileArea.dragTo(mouse)
+                            onReleased: tileArea.end()
+                            onCanceled: tileArea.end()
                             onClicked: {
                                 if (!root.onMap) root.setMode("arrange");
                                 root.selIndex = screen.index;
                             }
                         }
+                    }
+                }
+
+                // The letter being dragged, following the cursor above the tiles.
+                Rectangle {
+                    visible: root.dragWorkspace > 0
+                    z: 2
+                    width: ghostLabel.implicitWidth + Math.round(12 * Theme.s)
+                    height: ghostLabel.implicitHeight + Math.round(6 * Theme.s)
+                    x: map.dragPos.x - width / 2
+                    y: map.dragPos.y - height / 2
+                    radius: Math.round(3 * Theme.s)
+                    color: Theme.barPill
+                    border.width: 2
+                    border.color: Colors.accent
+
+                    Text {
+                        id: ghostLabel
+                        anchors.centerIn: parent
+                        text: Theme.wsKeys[root.dragWorkspace - 1] ?? root.dragWorkspace
+                        color: Colors.accent
+                        font.family: Theme.font
+                        font.pixelSize: Theme.fsValue
+                        font.bold: true
                     }
                 }
             }
@@ -679,9 +835,9 @@ Item {
                     switch (root.mode) {
                     case "layouts": return [["↑↓", "pick"], ["↵", "restore"], ["tab", "next"], ["esc", "back"]];
                     case "save": return [["↵", "save"], ["tab", "next"], ["esc", "back"]];
-                    case "workspaces": return [["←→↑↓", "screen"], ["letter", "pull here"], ["↵", "apply"],
-                        ["tab", "next"], ["esc", "back"]];
-                    default: return [["←→↑↓", "select"], ["shift+←→↑↓", "move"], ["r/R", "rotate"],
+                    case "workspaces": return [["←→↑↓", "screen"], ["letter/drag", "pull here"], ["r", "reset"],
+                        ["↵", "apply"], ["tab", "next"], ["esc", "back"]];
+                    default: return [["←→↑↓", "select"], ["shift+←→↑↓/drag", "move"], ["r/R", "rotate"],
                         ["m", "mirror"], ["d", "disable"], ["↵", "apply"],
                         ["esc", root.dirty ? "revert" : "close"], ["w", "workspaces"], ["/", "layouts"], ["s", "save"]];
                     }

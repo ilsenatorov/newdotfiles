@@ -161,6 +161,7 @@ def main():
     action.add_argument("--list", action="store_true")
     action.add_argument("--current", action="store_true")
     action.add_argument("--set", metavar="JSON")
+    action.add_argument("--reset-workspaces", action="store_true")
     args = parser.parse_args()
 
     if args.restore:
@@ -190,6 +191,11 @@ def main():
                 dict(describe(e, m), workspaces=sorted(int(w) for w, i in owners.items() if i == e["identity"]))
                 for e, m in zip(layout, monitors)
             ], ensure_ascii=False))
+            return
+        if args.reset_workspaces:
+            pin_workspaces({}, monitors)
+            data.get("workspaces", {}).pop(key, None)
+            write_state(data)
             return
         if args.apply is not None or args.restore or args.set is not None:
             pins = None
