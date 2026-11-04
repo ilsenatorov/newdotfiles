@@ -42,9 +42,25 @@ it, and the installer refuses to run from anywhere else.
 1. sets the wallpaper and derives the accent with matugen, if one is found.
 
 Flags: `--no-packages` (links and theme only), `--no-aur`, `--minimal` (skips
-ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
+ranger's preview tools), `--server` (no desktop, see **Headless server** below),
+`--sddm` (installs the greeter theme, needs sudo),
 `--reconfigure` (redo hardware detection: backs up and rewrites `local.conf`,
 `local.lua` and `~/.zshrc.local`, then runs `./configure.sh`).
+
+### Headless server
+
+```sh
+./install.sh --server
+```
+
+installs only the terminal setup: zsh with oh-my-zsh and starship, the CLI tools,
+and the `git`, `nvim`, `ranger` and `starship` configs. It skips the desktop
+packages and links, `local.conf`/`local.lua`, `environment.d`, the wallpaper and
+the pi and Claude Code config. It can't be combined with `--sddm`.
+
+Pass `--server` on every re-run: plain `./install.sh` installs the whole desktop.
+`make doctor` checks the desktop package list, so on a server it reports those
+packages and files as missing.
 
 ### After it finishes
 

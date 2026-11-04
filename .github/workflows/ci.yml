@@ -89,3 +89,48 @@ jobs:
             echo "$out" | grep -q "^BACKUP" && { echo "second run produced a BACKUP -- not idempotent"; exit 1; }
             exit 0
           '
+
+  smoke-server:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: create a non-root user
+        run: |
+          pacman-key --init && pacman-key --populate archlinux
+          useradd -m runner
+          echo 'runner ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+          pacman -Syu --noconfirm sudo git
+      - name: place the repo at ~runner/dotfiles
+        run: |
+          cp -a "$GITHUB_WORKSPACE" /home/runner/dotfiles
+          chown -R runner:runner /home/runner/dotfiles
+      - name: run install.sh --server --no-packages
+        run: |
+          su - runner -c 'cd ~/dotfiles && ./install.sh --server --no-packages'
+      - name: assert only the terminal configs were installed
+        run: |
+          su - runner -c '
+            set -e
+            for d in git nvim ranger starship; do
+              [ "$(readlink ~/.config/$d)" = "$HOME/dotfiles/$d" ] || { echo "$d not linked"; exit 1; }
+            done
+            for d in hypr quickshell kitty gtk-3.0 gtk-4.0 matugen pi xkb; do
+              [ ! -e ~/.config/$d ] || { echo "$d should not be linked"; exit 1; }
+            done
+            [ "$(readlink ~/.zshrc)" = "$HOME/dotfiles/.zshrc" ] || { echo ".zshrc not linked"; exit 1; }
+            [ -f ~/.config/git/config.local ] || { echo "git config.local missing"; exit 1; }
+            [ ! -e ~/.config/dotfiles/local.conf ] || { echo "local.conf should not exist"; exit 1; }
+            [ -f ~/dotfiles/nvim/colors.lua ] || { echo "nvim colours not seeded"; exit 1; }
+            [ -f ~/dotfiles/starship/starship.toml ] || { echo "starship.toml not built"; exit 1; }
+            echo "all assertions passed"
+          '
+      - name: re-run is a no-op
+        run: |
+          su - runner -c '
+            cd ~/dotfiles
+            out=$(./install.sh --server --no-packages) || { echo "$out"; echo "second run failed"; exit 1; }
+            echo "$out"
+            echo "$out" | grep -q "^BACKUP" && { echo "second run produced a BACKUP -- not idempotent"; exit 1; }
+            exit 0
+          '

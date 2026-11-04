@@ -6,12 +6,17 @@
 # left alone. That matters because ~/.config/hypr can hold a live config.
 #
 #   ./link.sh            link every dir (see below), prune dangling links
+#   ./link.sh --server   same, but only the dirs a headless box can use
 #   ./link.sh --unlink   remove every symlink this repo owns, restoring the
 #                        newest .bak-* for each if one exists
 
 # Dirs that are not ~/.config configs. sddm's theme goes to /usr/share and /etc
 # (see sddm/install.sh), claude/ is linked into ~/.claude by install.sh.
 skip="sddm claude"
+
+# Empty means every dir; --server narrows it to the terminal configs.
+only=""
+[ "$1" = "--server" ] && only="git nvim ranger starship"
 
 # Restore the newest backup for $1 (a full path, e.g. ~/.config/hypr) if one
 # exists, after $1 itself has been removed. Used by --unlink so backing out
@@ -71,6 +76,15 @@ for i in */; do
 			continue
 			;;
 	esac
+	if [ -n "$only" ]; then
+		case " $only " in
+			*" $bas "*) ;;
+			*)
+				echo "SKIP    $bas"
+				continue
+				;;
+		esac
+	fi
 	src="$HOME/dotfiles/$bas"
 	dst="$HOME/.config/$bas"
 
