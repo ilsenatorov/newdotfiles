@@ -124,3 +124,10 @@ export PATH="$HOME/.local/bin:$PATH"
 # other two. Lives outside the repo -- install.sh seeds it once, never
 # overwrites it, and never tracks it.
 [ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
+
+# Status board on SSH login, or `motd` any time. tmux panes are login shells that
+# inherit SSH_TTY, hence the $TMUX check: one board per connection, not per pane.
+alias motd="$HOME/dotfiles/motd.sh"
+if [[ -o login && -n $SSH_TTY && -z $TMUX && -x $HOME/dotfiles/motd.sh ]]; then
+	"$HOME/dotfiles/motd.sh"
+fi

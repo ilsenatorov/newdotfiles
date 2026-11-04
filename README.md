@@ -62,6 +62,20 @@ Pass `--server` on every re-run: plain `./install.sh` installs the whole desktop
 `make doctor` checks the desktop package list, so on a server it reports those
 packages and files as missing.
 
+SSH logins print a status board (`motd.sh`, or run `motd` any time): uptime, load,
+memory, disks, enabled services, containers, tailnet peers, pending updates and
+recent logins, with anything wrong listed at the top. Services are discovered
+from what's `systemctl enable`d, so there's nothing to configure.
+
+`./motd-alert.sh --setup` makes those same checks push to your phone through
+[ntfy](https://ntfy.sh), every 5 minutes, including while nobody is logged in. It
+is opt-in per machine, and creates a random topic in `~/.config/dotfiles/ntfy-url`
+(outside the repo: the topic name is the only thing protecting it). Subscribe to
+that topic in the ntfy app, then check it with `./motd-alert.sh --test`. A problem
+has to show up on two checks in a row before it alerts, and you get one message
+when it starts and one when it clears. Turn it off with
+`systemctl --user disable --now motd-alert.timer`.
+
 ### After it finishes
 
 * **Wallpaper**: not in git (too large). Drop an image into
