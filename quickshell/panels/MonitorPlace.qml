@@ -10,14 +10,17 @@ import "../ui"
 import "../services"
 
 // SUPER+T, m. Keyboard-only by design: every action is a key in one of
-// three modes, and the hint line always lists the keys for the current mode.
-//   arrange -- a scaled map of every output. Arrows/hjkl select a screen,
-//              Shift+arrows step it to the next edge/centre of the others,
-//              r/R rotate, m cycles mirroring, d disables. Edits stay a draft
-//              until Enter applies them all at once; Esc reverts.
-//   layouts -- saved layouts; Up/Down pick, Enter restores
-//   save    -- type a name, Enter saves the current layout
-// Tab / Shift+Tab (or / and s from arrange) switch modes; Esc backs out to
+// four modes, and the hint line always lists the keys for the current mode.
+//   arrange    -- a scaled map of every output. Arrows/hjkl select a screen,
+//                 Shift+arrows step it to the next edge/centre of the others,
+//                 r/R rotate, m cycles mirroring, d disables. Edits stay a
+//                 draft until Enter applies them all at once; Esc reverts.
+//   workspaces -- same map and draft. Arrows select a screen (no hjkl: L and J
+//                 are workspace letters), a workspace's SUPER letter pulls it
+//                 onto that screen.
+//   layouts    -- saved layouts; Up/Down pick, Enter restores
+//   save       -- type a name, Enter saves the current layout
+// Tab / Shift+Tab (or w, / and s from arrange) switch modes; Esc backs out to
 // arrange, then closes. monitor-layout.py does the reading (--current) and
 // applying (--set), and remembers what was applied for this display set.
 Item {
@@ -27,8 +30,10 @@ Item {
 
     readonly property string layoutScript: Quickshell.shellPath("../hypr/scripts/monitor-layout.py")
     readonly property bool busy: MonitorLayouts.busy
-    readonly property var modes: ["arrange", "layouts", "save"]
+    readonly property var modes: ["arrange", "workspaces", "layouts", "save"]
     property string mode: "arrange"
+    // Both draw the screen map as live: selection outlined, real screen lit.
+    readonly property bool onMap: root.mode === "arrange" || root.mode === "workspaces"
     // The live layout as JSON, and the copy being edited. Entries are
     // monitor-layout.py --current's, with position split into numeric x/y.
     property string appliedJson: ""
@@ -140,11 +145,32 @@ Item {
         root.edit({ mirror: i + 1 < sources.length ? sources[i + 1] : "", disabled: false });
     }
 
+    // Move workspace id onto the selected screen. Hyprland would invent a new
+    // workspace for a screen left with none, so the last one has to stay.
+    function pullWorkspace(id: int): void {
+        root.error = "";
+        const target = root.sel;
+        if (!target) return;
+        const from = root.draft.find(m => m.workspaces.includes(id));
+        if (!root.independent(target))
+            root.error = target.name + " is " + (target.disabled ? "off" : "mirroring") + ", so it can't hold workspaces.";
+        else if (from === target)
+            return;
+        else if (from?.workspaces.length === 1)
+            root.error = from.name + " has to keep at least one workspace.";
+        else
+            root.draft = root.draft.map(m => Object.assign({}, m, {
+                workspaces: m === target ? m.workspaces.concat(id).sort((a, b) => a - b)
+                    : m.workspaces.filter(w => w !== id)
+            }));
+    }
+
     function apply(): void {
         if (!root.dirty) return;
         const layout = root.draft.map(m => ({
             identity: m.identity, mode: m.mode, position: m.x + "x" + m.y,
-            scale: m.scale, transform: m.transform, disabled: m.disabled, mirror: m.mirror
+            scale: m.scale, transform: m.transform, disabled: m.disabled, mirror: m.mirror,
+            workspaces: m.workspaces
         }));
         root.run(["python3", root.layoutScript, "--set", JSON.stringify(layout)], "Layout applied");
     }
@@ -219,11 +245,26 @@ Item {
         case Qt.Key_M: root.cycleMirror(); break;
         case Qt.Key_D: root.edit({ disabled: !root.sel?.disabled, mirror: "" }); break;
         case Qt.Key_O: if (root.draft.length) root.selIndex = (root.selIndex + 1) % root.draft.length; break;
+        case Qt.Key_W: root.setMode("workspaces"); break;
         case Qt.Key_S: root.setMode("save"); break;
         case Qt.Key_Slash: root.setMode("layouts"); break;
         case Qt.Key_Return: case Qt.Key_Enter: root.apply(); break;
         default: return false;
         }
+        return true;
+    }
+
+    function workspacesKey(event: var): bool {
+        switch (event.key) {
+        case Qt.Key_Left: root.navigate(-1, 0); return true;
+        case Qt.Key_Right: root.navigate(1, 0); return true;
+        case Qt.Key_Up: root.navigate(0, -1); return true;
+        case Qt.Key_Down: root.navigate(0, 1); return true;
+        case Qt.Key_Return: case Qt.Key_Enter: root.apply(); return true;
+        }
+        const i = Theme.wsKeys.indexOf(event.text.toUpperCase());
+        if (i < 0) return false;
+        root.pullWorkspace(i + 1);
         return true;
     }
 
@@ -299,7 +340,7 @@ Item {
     // selected. Overlay layer, no focus, empty input mask -- like the OSD.
     PanelWindow {
         id: highlight
-        readonly property string target: root.mode === "arrange" ? (root.sel?.name ?? "") : ""
+        readonly property string target: root.onMap ? (root.sel?.name ?? "") : ""
         readonly property var targetScreen: Quickshell.screens.find(s => s.name === highlight.target) ?? null
         screen: highlight.targetScreen
         visible: highlight.targetScreen !== null
@@ -374,6 +415,7 @@ Item {
             if (root.busy) { event.accepted = true; return; }
             event.accepted = root.commonKey(event)
                 || (root.mode === "arrange" && root.arrangeKey(event))
+                || (root.mode === "workspaces" && root.workspacesKey(event))
                 || (root.mode === "layouts" && root.layoutsKey(event));
         }
         Component.onCompleted: card.forceActiveFocus()
@@ -386,10 +428,11 @@ Item {
             anchors.margins: Theme.pad / 2
             spacing: Math.round(8 * Theme.s)
 
-            // ---- arrange ----
+            // ---- arrange / workspaces ----
             SectionLabel {
-                modeName: "arrange"
-                text: "Arrange displays" + (root.dirty ? "  ·  unapplied changes" : "")
+                modeName: root.mode === "workspaces" ? "workspaces" : "arrange"
+                text: (root.mode === "workspaces" ? "Assign workspaces" : "Arrange displays")
+                    + (root.dirty ? "  ·  unapplied changes" : "")
             }
 
             Rectangle {
@@ -441,7 +484,7 @@ Item {
                         opacity: screen.m.disabled ? 0.45 : screen.m.mirror ? 0.7 : 1
                         border.width: screen.picked ? 2 : 1
                         border.color: root.overlapping.includes(screen.m.name) ? Theme.red
-                            : screen.picked && root.mode === "arrange" ? Colors.accent : Theme.rule
+                            : screen.picked && root.onMap ? Colors.accent : Theme.rule
 
                         Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
                         Behavior on y { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
@@ -473,13 +516,24 @@ Item {
                                 font.family: Theme.font
                                 font.pixelSize: Theme.fsLabel
                             }
+                            Text {
+                                width: parent.width
+                                visible: text !== ""
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.Wrap
+                                text: (screen.m.workspaces ?? []).map(w => Theme.wsKeys[w - 1] ?? w).join(" ")
+                                color: root.mode === "workspaces" ? Colors.accent : Theme.dim
+                                font.family: Theme.font
+                                font.pixelSize: Theme.fsLabel
+                                font.bold: root.mode === "workspaces"
+                            }
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             enabled: !root.busy
                             onClicked: {
-                                root.setMode("arrange");
+                                if (!root.onMap) root.setMode("arrange");
                                 root.selIndex = screen.index;
                             }
                         }
@@ -625,9 +679,11 @@ Item {
                     switch (root.mode) {
                     case "layouts": return [["↑↓", "pick"], ["↵", "restore"], ["tab", "next"], ["esc", "back"]];
                     case "save": return [["↵", "save"], ["tab", "next"], ["esc", "back"]];
+                    case "workspaces": return [["←→↑↓", "screen"], ["letter", "pull here"], ["↵", "apply"],
+                        ["tab", "next"], ["esc", "back"]];
                     default: return [["←→↑↓", "select"], ["shift+←→↑↓", "move"], ["r/R", "rotate"],
                         ["m", "mirror"], ["d", "disable"], ["↵", "apply"],
-                        ["esc", root.dirty ? "revert" : "close"], ["/", "layouts"], ["s", "save"]];
+                        ["esc", root.dirty ? "revert" : "close"], ["w", "workspaces"], ["/", "layouts"], ["s", "save"]];
                     }
                 }
             }
