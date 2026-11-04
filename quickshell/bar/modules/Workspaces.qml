@@ -27,13 +27,9 @@ Item {
         .filter(w => w.id > 0 && w.monitor && root.screen && w.monitor.name === root.screen.name)
         .sort((a, b) => a.id - b.id)
 
-    // Workspace id -> the SUPER+<key> that focuses it -- must match wsKeys
-    // in hypr/hyprland.lua (B is 1 ... J is 10). Ids past the row fall back
-    // to the number.
-    readonly property var wsKeys: ["B", "L", "D", "W", "Z", ";", "F", "O", "U", "J"]
-
+    // Ids past the letter row fall back to the number.
     function keyLabel(ws: var): string {
-        return ws.id >= 1 && ws.id <= wsKeys.length ? wsKeys[ws.id - 1] : ws.name;
+        return ws.id >= 1 && ws.id <= Theme.wsKeys.length ? Theme.wsKeys[ws.id - 1] : ws.name;
     }
 
     implicitWidth: row.implicitWidth

@@ -88,6 +88,9 @@ Singleton {
     readonly property int menuIconSize: Math.round(26 * s)
     // The SUPER+T m display map; every output is scaled to fit inside it.
     readonly property int menuMapH: Math.round(260 * s)
+    // Workspace id -> the SUPER+<key> that focuses it -- must match wsKeys
+    // in hypr/hyprland.lua (B is 1 ... J is 10).
+    readonly property var wsKeys: ["B", "L", "D", "W", "Z", ";", "F", "O", "U", "J"]
 
     // SUPER+T w's wallpaper carousel is the one menu that is not a list of
     // rows: it shows a 16:9 slide with its neighbours peeking in at the

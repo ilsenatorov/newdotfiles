@@ -190,7 +190,9 @@ return {
 
 Any key (or the whole file) can be omitted; `hypr/hyprland.lua` falls back to
 its generic defaults (`eDP-1` + catch-all monitor; workspaces 1-10 split across
-the connected screens in reading order, re-split on every hotplug).
+the connected screens in reading order, re-split on every hotplug). Without
+`workspaces` here, the displays panel (SUPER+T, m, then w) can reassign them,
+remembered per set of connected displays.
 
 Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 `hyprland.conf`, and Lua configs are a recent feature. Tested on 0.56.2.
