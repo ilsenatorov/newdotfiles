@@ -77,6 +77,12 @@ has to show up on two checks in a row before it alerts, and you get one message
 when it starts and one when it clears. Turn it off with
 `systemctl --user disable --now motd-alert.timer`.
 
+`./taildrop-setup.sh` makes files sent with Taildrop land in `~/Downloads` on their
+own, renaming any that clash with an existing file. It is opt-in per machine, works
+on the desktop too, and makes you the tailscale operator so the user service can
+read the inbox. Turn it off with
+`systemctl --user disable --now taildrop-receive.service`.
+
 ### After it finishes
 
 * **Wallpaper**: not in git (too large). Drop an image into

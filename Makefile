@@ -21,7 +21,7 @@ check:
 lint: check
 
 fmt:
-	shfmt -i 0 -ci -w install.sh configure.sh link.sh check.sh motd.sh motd-alert.sh starship/build.sh \
+	shfmt -i 0 -ci -w install.sh configure.sh link.sh check.sh motd.sh motd-alert.sh taildrop-setup.sh starship/build.sh \
 		sddm/install.sh sddm/sync-wallpaper.sh \
 		hypr/scripts/*.sh quickshell/scripts/*.sh
 
