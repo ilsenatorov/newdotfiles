@@ -349,8 +349,8 @@ symbol_threshold = 1
 # format = '[](fg:error)[ $symbol ]($style)'
 # symbol = "󰒃 "
 
-# Transient prompt: past prompts collapse to a bare ❯ so scrollback stays clean.
-# POWERLEVEL9K_TRANSIENT_PROMPT was `off`; turned ON here because the six
+# Transient prompt: past prompts collapse to the time and ❯ so scrollback stays
+# clean. POWERLEVEL9K_TRANSIENT_PROMPT was `off`; turned ON here because the six
 # segments always render, so every scrolled-back prompt is a full-width bar of
 # colour wrapped around a command you are trying to read. Only the prompt you
 # are typing at needs the bar.
@@ -359,7 +359,9 @@ symbol_threshold = 1
 # PowerShell -- NOT for zsh (check `starship init zsh --print-full-init`; as of
 # 1.26 the function is simply absent, and calling it errors on every startup).
 # So the accept-line widget that swaps the prompt lives in .zshrc, and this is
-# the profile it renders. Keep it to $character: anything wider defeats the
-# point, and anything that shells out makes every ENTER pay for it.
+# the profile it renders. The widget redraws on ENTER, so $time here is when the
+# command was launched and stays in scrollback -- read it after a tmux reattach.
+# Keep it to these two: anything wider defeats the point, and anything that
+# shells out makes every ENTER pay for it.
 [profiles]
-transient = "$character"
+transient = "$time $character"

@@ -42,9 +42,40 @@ it, and the installer refuses to run from anywhere else.
 1. sets the wallpaper and derives the accent with matugen, if one is found.
 
 Flags: `--no-packages` (links and theme only), `--no-aur`, `--minimal` (skips
-ranger's preview tools), `--sddm` (installs the greeter theme, needs sudo),
+ranger's preview tools), `--server` (no desktop, see **Headless server** below),
+`--sddm` (installs the greeter theme, needs sudo),
 `--reconfigure` (redo hardware detection: backs up and rewrites `local.conf`,
 `local.lua` and `~/.zshrc.local`, then runs `./configure.sh`).
+
+### Headless server
+
+```sh
+./install.sh --server
+```
+
+installs only the terminal setup: zsh with oh-my-zsh and starship, the CLI tools,
+and the `git`, `nvim`, `ranger` and `starship` configs. It skips the desktop
+packages and links, `local.conf`/`local.lua`, `environment.d`, the wallpaper and
+the pi and Claude Code config. It can't be combined with `--sddm`.
+
+Pass `--server` on every re-run: plain `./install.sh` installs the whole desktop.
+`make doctor` checks the desktop package list, so on a server it reports those
+packages and files as missing.
+
+SSH logins print a status board (`motd.sh`, or run `motd` any time): uptime, load,
+memory, disks, enabled services, containers, tailnet peers, pending updates and
+recent logins, with anything wrong listed at the top. Services are discovered
+from what's `systemctl enable`d, system units and user units under
+`default.target`, so there's nothing to configure.
+
+`./motd-alert.sh --setup` makes those same checks push to your phone through
+[ntfy](https://ntfy.sh), every 5 minutes, including while nobody is logged in. It
+is opt-in per machine, and creates a random topic in `~/.config/dotfiles/ntfy-url`
+(outside the repo: the topic name is the only thing protecting it). Subscribe to
+that topic in the ntfy app, then check it with `./motd-alert.sh --test`. A problem
+has to show up on two checks in a row before it alerts, and you get one message
+when it starts and one when it clears. Turn it off with
+`systemctl --user disable --now motd-alert.timer`.
 
 ### After it finishes
 
@@ -190,7 +221,10 @@ return {
 
 Any key (or the whole file) can be omitted; `hypr/hyprland.lua` falls back to
 its generic defaults (`eDP-1` + catch-all monitor; workspaces 1-10 split across
-the connected screens in reading order, re-split on every hotplug).
+the connected screens in reading order, re-split on every hotplug). Without
+`workspaces` here, the displays panel (SUPER+T, m, then w) can reassign them
+by key or by dragging their letters, remembered per set of connected displays;
+r there goes back to the default split.
 
 Requires **Hyprland 0.56+** -- the config is `hypr/hyprland.lua`, not
 `hyprland.conf`, and Lua configs are a recent feature. Tested on 0.56.2.

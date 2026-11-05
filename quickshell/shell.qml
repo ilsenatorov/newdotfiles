@@ -678,7 +678,7 @@ ShellRoot {
         // keystrokes, which is the case the fixed sizing above guards.
         // The hub's panel pages get the taller window too: Network's join
         // form grows the card well past a menu list.
-        readonly property bool tall: ["hub", "launcher", "wallpaper", "network", "bluetooth", "audio", "wifiqr", "media", "quick", "notifications"].includes(shell.shownMenu)
+        readonly property bool tall: ["hub", "launcher", "wallpaper", "network", "bluetooth", "audio", "wifiqr", "media", "quick", "notifications", "monitor"].includes(shell.shownMenu)
         implicitWidth: (shell.shownMenu === "wallpaper" ? Theme.menuWideW : Theme.menuW) + Theme.inset * 2
         implicitHeight: (menuWin.tall ? Theme.menuWideH : Theme.menuMaxH) + Theme.inset * 2
 

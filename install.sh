@@ -6,6 +6,8 @@
 #   ./install.sh --no-aur        skip the AUR step (optional extras only)
 #   ./install.sh --sddm          also install the SDDM theme (needs sudo)
 #   ./install.sh --minimal       core desktop only: no ranger previews, no extras
+#   ./install.sh --server        headless box: shell, nvim, git and ranger only,
+#                                 no desktop (pass it on every re-run too)
 #   ./install.sh --reconfigure   redo hardware detection: back up and rewrite
 #                                 ~/.config/dotfiles/{local.conf,local.lua} and
 #                                 ~/.zshrc.local from fresh probes, then run
@@ -24,6 +26,7 @@ NO_PACKAGES=0
 NO_AUR=0
 WITH_SDDM=0
 MINIMAL=0
+SERVER=0
 RECONFIGURE=0
 LIST_PACKAGES=0
 
@@ -33,10 +36,11 @@ for arg in "$@"; do
 		--no-aur) NO_AUR=1 ;;
 		--sddm) WITH_SDDM=1 ;;
 		--minimal) MINIMAL=1 ;;
+		--server) SERVER=1 ;;
 		--reconfigure) RECONFIGURE=1 ;;
 		--list-packages) LIST_PACKAGES=1 ;;
 		-h | --help)
-			sed -n '2,14p' "$0" | sed 's/^# \?//'
+			sed -n '2,16p' "$0" | sed 's/^# \?//'
 			exit 0
 			;;
 		*)
@@ -94,6 +98,25 @@ die() {
 	exit 1
 }
 
+# Fresh clone: seed the generated theme files from their committed snapshot so
+# the desktop is themed before the wallpaper step (or SUPER+T, w) ever runs
+# matugen. Never overwrites a file that already exists -- those are this
+# machine's actual last-set theme, not stale defaults.
+seed_theme_defaults() {
+	say "generated theme defaults"
+	while IFS= read -r -d '' src; do
+		rel="${src#"${DOTS}/matugen/defaults/"}"
+		dst="${DOTS}/${rel}"
+		if [ -f "$dst" ]; then
+			echo "OK      $rel"
+		else
+			mkdir -p "$(dirname "$dst")"
+			cp "$src" "$dst"
+			echo "SEEDED  $rel"
+		fi
+	done < <(find "${DOTS}/matugen/defaults" -type f -print0)
+}
+
 # ---------------------------------------------------------------- sanity ----
 [ "$(id -u)" -ne 0 ] || die "run as your normal user, not root (it sudos where needed)"
 
@@ -104,6 +127,12 @@ repo="$(cd "$(dirname "$0")" && pwd)"
 [ "$repo" = "$DOTS" ] || die "this repo must live at ${DOTS} (found: ${repo})"
 
 command -v pacman >/dev/null || die "this installer is Arch/Manjaro only (no pacman)"
+
+if [ "$SERVER" -eq 1 ]; then
+	[ "$WITH_SDDM" -eq 0 ] || die "--sddm is a desktop option; it can't be combined with --server"
+	# The only AUR package is GTK polish.
+	NO_AUR=1
+fi
 
 # ------------------------------------------------------------- packages ----
 # Repo packages. Split so --minimal can drop the tail groups.
@@ -154,11 +183,23 @@ PKGS_SDDM=(sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative)
 # tree-sitter-cli: nvim-treesitter (main branch) builds parsers with it.
 PKGS_CLI=(neovim tree-sitter-cli eza bat fd zoxide ripgrep git-delta lazygit)
 PKGS_LINT=(shellcheck shfmt luacheck)
+# --server: what the linked configs need on a box with no desktop.
+# npm and unzip: mason installs pyright/bashls and lua_ls with them.
+# kitty-terminfo: plain ssh from kitty, without the terminal package itself.
+PKGS_SERVER=(
+	"${PKGS_CLI[@]}"
+	git zsh starship fzf ranger highlight atool 7zip mediainfo
+	kitty-terminfo npm unzip
+)
 
 # AUR. adw-gtk3 is optional polish the GTK config picks up on its own if present.
 AUR_OPTIONAL=(adw-gtk3)
 
 if [ "$LIST_PACKAGES" -eq 1 ]; then
+	if [ "$SERVER" -eq 1 ]; then
+		printf '%s\n' "${PKGS_SERVER[@]}"
+		exit 0
+	fi
 	printf '%s\n' \
 		"${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}" \
 		"${PKGS_RANGER[@]}" "${PKGS_LINT[@]}" "${PKGS_SDDM[@]}" \
@@ -170,6 +211,7 @@ if [ "$NO_PACKAGES" -eq 0 ]; then
 	pkgs=("${PKGS_DESKTOP[@]}" "${PKGS_FONTS[@]}" "${PKGS_CLI[@]}")
 	[ "$MINIMAL" -eq 1 ] || pkgs+=("${PKGS_RANGER[@]}" "${PKGS_LINT[@]}")
 	[ "$WITH_SDDM" -eq 0 ] || pkgs+=("${PKGS_SDDM[@]}")
+	[ "$SERVER" -eq 0 ] || pkgs=("${PKGS_SERVER[@]}")
 
 	say "installing ${#pkgs[@]} repo packages"
 	sudo pacman -S --needed --noconfirm "${pkgs[@]}"
@@ -194,7 +236,11 @@ fi
 
 # ---------------------------------------------------------------- links ----
 say "linking configs into ~/.config"
-"${DOTS}/link.sh"
+if [ "$SERVER" -eq 1 ]; then
+	"${DOTS}/link.sh" --server
+else
+	"${DOTS}/link.sh"
+fi
 
 # .zshrc sits at the repo root, so link.sh (which only walks directories) does
 # not touch it.
@@ -233,88 +279,6 @@ git_local_content="# Per-machine git identity, included from the end of ~/.confi
 	email = ${git_email:-change-me@example.com}
 "
 write_local "${HOME}/.config/git/config.local" "$git_local_content"
-
-# ------------------------------------------------------------------ pi -----
-# The pi coding agent's user dir (~/.pi/agent) also holds auth.json,
-# models-store.json, npm/ (installed packages) and sessions/ -- all machine
-# state, left alone. The three files worth sharing live in this repo under
-# pi/: AGENTS.md (global instructions), settings.json (settings + package
-# list, see docs/packages.md) and models.json (custom providers / model
-# overrides, see docs/models.md). All are symlinked, not copied: pi reads
-# AGENTS.md, and rewrites settings.json/models.json in place (package
-# installs, /settings, /model Ctrl+S), so a machine that changed something
-# shows those files dirty until you commit -- that writes back to the repo
-# by design.
-say "pi agent config (~/.pi/agent)"
-mkdir -p "${HOME}/.pi/agent"
-for f in AGENTS.md settings.json models.json; do
-	link_file "${DOTS}/pi/$f" "${HOME}/.pi/agent/$f"
-done
-
-# Packages listed in settings.json are not auto-installed for the user scope
-# (that startup auto-install is project-scoped only), so make sure this
-# machine has them. pi install is idempotent.
-if command -v pi >/dev/null; then
-	if command -v jq >/dev/null; then
-		while IFS= read -r pkg; do
-			[ -z "$pkg" ] && continue
-			if pi install "$pkg" >/dev/null 2>&1; then
-				echo "OK      pi package $pkg"
-			else
-				warn "pi install failed for $pkg (no network? re-run install.sh once it's reachable)"
-			fi
-		done < <(jq -r '.packages[]?' "${DOTS}/pi/settings.json" 2>/dev/null)
-	else
-		warn "jq not installed; not verifying pi packages (missing ones show up on first pi run)"
-	fi
-else
-	warn "pi not found in PATH; pi/ config linked but packages not installed"
-fi
-
-# -------------------------------------------------------------- claude -----
-# Same contract as pi: ~/.claude is mostly machine state (credentials,
-# sessions, projects/, plugin caches), left alone. claude/ holds what is worth
-# sharing and is symlinked in: CLAUDE.md, settings.json (Claude Code rewrites
-# it in place, so /config changes show up dirty in git).
-# settings.json's env block points CLAUDE_CODE_PLUGIN_DIRS at
-# claude/plugins/kitty-images, so that mod loads straight from the repo.
-say "claude code config (~/.claude)"
-mkdir -p "${HOME}/.claude"
-for f in CLAUDE.md settings.json; do
-	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
-done
-# skills one by one: ~/.claude/skills also holds synced and hand-installed ones
-mkdir -p "${HOME}/.claude/skills"
-for s in "${DOTS}"/claude/skills/*/; do
-	link_file "${s%/}" "${HOME}/.claude/skills/$(basename "$s")"
-done
-
-# enabledPlugins only names plugins; install them (and their marketplaces) so
-# a fresh box has the same set. Both commands are idempotent.
-if command -v claude >/dev/null && command -v jq >/dev/null; then
-	while IFS=$'\t' read -r name repo; do
-		claude plugin marketplace add "$repo" >/dev/null 2>&1 ||
-			warn "claude marketplace add failed for $name ($repo)"
-	done < <(jq -r '.extraKnownMarketplaces // {} | to_entries[] | [.key, .value.source.repo] | @tsv' "${DOTS}/claude/settings.json")
-	while IFS= read -r plugin; do
-		if claude plugin install "$plugin" >/dev/null 2>&1; then
-			echo "OK      claude plugin $plugin"
-		else
-			warn "claude plugin install failed for $plugin (no network? re-run install.sh once it's reachable)"
-		fi
-	done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "${DOTS}/claude/settings.json")
-	# Local mods need no install, but one that fails validation (e.g. a lost
-	# .claude-plugin/plugin.json) is silently not loaded -- say so here.
-	for mod in "${DOTS}"/claude/plugins/*/; do
-		if claude plugin validate "$mod" >/dev/null 2>&1; then
-			echo "OK      claude mod $(basename "$mod")"
-		else
-			warn "claude mod $(basename "$mod") fails validation: claude plugin validate $mod"
-		fi
-	done
-else
-	warn "claude or jq not found; claude/ config linked but plugins not installed"
-fi
 
 # ------------------------------------------------------------------ zsh ----
 # .zshrc sources oh-my-zsh and lists zsh-autosuggestions / zsh-syntax-highlighting
@@ -355,9 +319,12 @@ fi
 say "per-machine shell tail (~/.zshrc.local)"
 zshrc_local_content="# Per-machine zsh tail, sourced from the end of ~/dotfiles/.zshrc. Generated
 # once by install.sh, never overwritten after that -- hand-edit freely.
-
+"
+if [ "$SERVER" -eq 0 ]; then
+	zshrc_local_content="${zshrc_local_content}
 export CLAUDE_OBSIDIAN_VAULT=\"\$HOME/Documents/MyKnowledgeVault\"
 "
+fi
 if [ "$has_nvidia" -eq 1 ]; then
 	zshrc_local_content="${zshrc_local_content}
 # VS Code: native Wayland backend segfaults on this NVIDIA setup; force XWayland
@@ -372,6 +339,21 @@ write_local "${HOME}/.zshrc.local" "$zshrc_local_content"
 if [ "${SHELL##*/}" != "zsh" ]; then
 	say "making zsh the login shell"
 	chsh -s /usr/bin/zsh || warn "chsh failed; run 'chsh -s /usr/bin/zsh' yourself"
+fi
+
+# ------------------------------------------------------------- server ------
+# A headless box stops here: everything below configures the desktop session or
+# the coding agents. nvim and starship still need their seeded colours.
+if [ "$SERVER" -eq 1 ]; then
+	seed_theme_defaults
+	"${DOTS}/starship/build.sh" || warn "starship build failed"
+	say "done"
+	cat <<EOF
+Next:
+  * log in again to get zsh
+  * after a git pull:       ./install.sh --server   (idempotent)
+EOF
+	exit 0
 fi
 
 # -------------------------------------------------------- session env ------
@@ -543,22 +525,89 @@ if [ "$first_configure" -eq 1 ] || [ "$RECONFIGURE" -eq 1 ]; then
 	"${DOTS}/configure.sh" || warn "configure.sh failed; rerun it later"
 fi
 
-# Fresh clone: seed the generated theme files from their committed snapshot so
-# the desktop is themed before the wallpaper step below (or SUPER+T, w) ever
-# runs matugen. Never overwrites a file that already exists -- those are this
-# machine's actual last-set theme, not stale defaults.
-say "generated theme defaults"
-while IFS= read -r -d '' src; do
-	rel="${src#"${DOTS}/matugen/defaults/"}"
-	dst="${DOTS}/${rel}"
-	if [ -f "$dst" ]; then
-		echo "OK      $rel"
+seed_theme_defaults
+
+# ------------------------------------------------------------------ pi -----
+# The pi coding agent's user dir (~/.pi/agent) also holds auth.json,
+# models-store.json, npm/ (installed packages) and sessions/ -- all machine
+# state, left alone. The three files worth sharing live in this repo under
+# pi/: AGENTS.md (global instructions), settings.json (settings + package
+# list, see docs/packages.md) and models.json (custom providers / model
+# overrides, see docs/models.md). All are symlinked, not copied: pi reads
+# AGENTS.md, and rewrites settings.json/models.json in place (package
+# installs, /settings, /model Ctrl+S), so a machine that changed something
+# shows those files dirty until you commit -- that writes back to the repo
+# by design.
+say "pi agent config (~/.pi/agent)"
+mkdir -p "${HOME}/.pi/agent"
+for f in AGENTS.md settings.json models.json; do
+	link_file "${DOTS}/pi/$f" "${HOME}/.pi/agent/$f"
+done
+
+# Packages listed in settings.json are not auto-installed for the user scope
+# (that startup auto-install is project-scoped only), so make sure this
+# machine has them. pi install is idempotent.
+if command -v pi >/dev/null; then
+	if command -v jq >/dev/null; then
+		while IFS= read -r pkg; do
+			[ -z "$pkg" ] && continue
+			if pi install "$pkg" >/dev/null 2>&1; then
+				echo "OK      pi package $pkg"
+			else
+				warn "pi install failed for $pkg (no network? re-run install.sh once it's reachable)"
+			fi
+		done < <(jq -r '.packages[]?' "${DOTS}/pi/settings.json" 2>/dev/null)
 	else
-		mkdir -p "$(dirname "$dst")"
-		cp "$src" "$dst"
-		echo "SEEDED  $rel"
+		warn "jq not installed; not verifying pi packages (missing ones show up on first pi run)"
 	fi
-done < <(find "${DOTS}/matugen/defaults" -type f -print0)
+else
+	warn "pi not found in PATH; pi/ config linked but packages not installed"
+fi
+
+# -------------------------------------------------------------- claude -----
+# Same contract as pi: ~/.claude is mostly machine state (credentials,
+# sessions, projects/, plugin caches), left alone. claude/ holds what is worth
+# sharing and is symlinked in: CLAUDE.md, settings.json (Claude Code rewrites
+# it in place, so /config changes show up dirty in git).
+# settings.json's env block points CLAUDE_CODE_PLUGIN_DIRS at
+# claude/plugins/kitty-images, so that mod loads straight from the repo.
+say "claude code config (~/.claude)"
+mkdir -p "${HOME}/.claude"
+for f in CLAUDE.md settings.json; do
+	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
+done
+# skills one by one: ~/.claude/skills also holds synced and hand-installed ones
+mkdir -p "${HOME}/.claude/skills"
+for s in "${DOTS}"/claude/skills/*/; do
+	link_file "${s%/}" "${HOME}/.claude/skills/$(basename "$s")"
+done
+
+# enabledPlugins only names plugins; install them (and their marketplaces) so
+# a fresh box has the same set. Both commands are idempotent.
+if command -v claude >/dev/null && command -v jq >/dev/null; then
+	while IFS=$'\t' read -r name repo; do
+		claude plugin marketplace add "$repo" >/dev/null 2>&1 ||
+			warn "claude marketplace add failed for $name ($repo)"
+	done < <(jq -r '.extraKnownMarketplaces // {} | to_entries[] | [.key, .value.source.repo] | @tsv' "${DOTS}/claude/settings.json")
+	while IFS= read -r plugin; do
+		if claude plugin install "$plugin" >/dev/null 2>&1; then
+			echo "OK      claude plugin $plugin"
+		else
+			warn "claude plugin install failed for $plugin (no network? re-run install.sh once it's reachable)"
+		fi
+	done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "${DOTS}/claude/settings.json")
+	# Local mods need no install, but one that fails validation (e.g. a lost
+	# .claude-plugin/plugin.json) is silently not loaded -- say so here.
+	for mod in "${DOTS}"/claude/plugins/*/; do
+		if claude plugin validate "$mod" >/dev/null 2>&1; then
+			echo "OK      claude mod $(basename "$mod")"
+		else
+			warn "claude mod $(basename "$mod") fails validation: claude plugin validate $mod"
+		fi
+	done
+else
+	warn "claude or jq not found; claude/ config linked but plugins not installed"
+fi
 
 # ---------------------------------------------------------- user units ----
 # hyprpolkitagent ships its own user unit (WantedBy=graphical-session.target);

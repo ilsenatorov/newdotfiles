@@ -333,8 +333,8 @@ hl.bind(mainMod .. " + SHIFT + N",    hl.dsp.window.move({ out_of_group = true }
 -- The letter row, not the number row: on a 38-key board the numbers sit
 -- behind a layer, so SUPER+number was a three-key chord. Workspaces keep
 -- their numeric ids (B is 1 ... J is 10), so the workspace rules below are
--- unchanged; the bar pills show the letter (wsKeys in
--- quickshell/bar/modules/Workspaces.qml -- keep the two in sync).
+-- unchanged; the bar pills and display panel show the letter (wsKeys in
+-- quickshell/Theme.qml -- keep the two in sync).
 local wsKeys = { "B", "L", "D", "W", "Z", "semicolon", "F", "O", "U", "J" }
 for i, key in ipairs(wsKeys) do
     local ws = i
@@ -436,6 +436,8 @@ if M.workspaces and #M.workspaces > 0 then
             hl.workspace_rule({ workspace = tostring(i), monitor = w[3] })
         end
     end
+    -- local.lua's pins win over the display panel's assignment.
+    function set_workspace_pins() end
 else
     -- 1-10 are split across the screens in reading order: rows top to bottom
     -- (screens whose vertical spans overlap share a row), left to right
@@ -443,7 +445,10 @@ else
     -- screens, so four in a square get 1-3 4-6 / 7-8 9-10. Rules only take a
     -- fixed monitor, so they are rebuilt (and existing workspaces moved) on
     -- every hotplug / layout change. Mirrors don't count as a separate screen.
-    local ws_rules = {}
+    -- ws_pins (workspace id -> monitor name) overrides the split; it comes from
+    -- the display panel through monitor-layout.py, and a pin on a screen that
+    -- isn't up falls back to the split.
+    local ws_rules, ws_pins = {}, {}
     local function distribute_workspaces()
         for _, rule in ipairs(ws_rules) do rule:set_enabled(false) end
         ws_rules = {}
@@ -464,10 +469,13 @@ else
             if row and s.y < row.b then row[#row + 1] = s
             else rows[#rows + 1] = { s, b = s.b } end
         end
-        local order = {}
+        local order, is_up = {}, {}
         for _, row in ipairs(rows) do
             table.sort(row, function(a, b) return a.x < b.x end)
-            for _, s in ipairs(row) do order[#order + 1] = s.name end
+            for _, s in ipairs(row) do
+                order[#order + 1] = s.name
+                is_up[s.name] = true
+            end
         end
 
         local n = #order
@@ -476,14 +484,20 @@ else
             local count = 10 // n + (i <= 10 % n and 1 or 0)
             for _ = 1, count do
                 local id = tostring(ws)
-                ws_rules[#ws_rules + 1] = hl.workspace_rule({ workspace = id, monitor = name })
+                local target = is_up[ws_pins[id]] and ws_pins[id] or name
+                ws_rules[#ws_rules + 1] = hl.workspace_rule({ workspace = id, monitor = target })
                 local existing = hl.get_workspace(id)
-                if existing and existing.monitor and existing.monitor.name ~= name then
-                    hl.dispatch(hl.dsp.workspace.move({ workspace = id, monitor = name }))
+                if existing and existing.monitor and existing.monitor.name ~= target then
+                    hl.dispatch(hl.dsp.workspace.move({ workspace = id, monitor = target }))
                 end
                 ws = ws + 1
             end
         end
+    end
+    -- Called by monitor-layout.py over `hyprctl eval`.
+    function set_workspace_pins(pins)
+        ws_pins = pins
+        distribute_workspaces()
     end
     -- Deferred so the event's layout (and monitor-layout.py --restore) settles first.
     local function schedule_distribute()

@@ -115,6 +115,29 @@ def apply(layout, monitors):
         raise ValueError(result)
 
 
+def assignment(monitors):
+    """Workspace id -> monitor identity, per each workspace's newest enabled rule."""
+    identities = {}
+    for monitor in monitors:
+        identities[monitor["name"]] = monitor["identity"]
+        identities["desc:" + monitor.get("description", "")] = monitor["identity"]
+    return {
+        rule["workspaceString"]: identities[rule["monitor"]]
+        for rule in json.loads(hyprctl("workspacerules", "-j"))
+        if rule.get("enabled") and rule.get("monitor") in identities
+        and rule["workspaceString"].isdigit()
+    }
+
+
+def pin_workspaces(pins, monitors):
+    names = {m["identity"]: m["name"] for m in monitors}
+    table = ",".join(
+        f"[{lua(workspace)}]={lua(names[identity])}"
+        for workspace, identity in pins.items() if identity in names
+    )
+    hyprctl("eval", "set_workspace_pins({" + table + "})")
+
+
 def write_state(data):
     with tempfile.NamedTemporaryFile(mode="w", dir=STATE, delete=False) as output:
         temporary = Path(output.name)
@@ -138,6 +161,7 @@ def main():
     action.add_argument("--list", action="store_true")
     action.add_argument("--current", action="store_true")
     action.add_argument("--set", metavar="JSON")
+    action.add_argument("--reset-workspaces", action="store_true")
     args = parser.parse_args()
 
     if args.restore:
@@ -162,20 +186,44 @@ def main():
         previous = data["last"].get(key, [])
         if args.current:
             layout = snapshot(monitors, previous)
-            print(json.dumps([describe(e, m) for e, m in zip(layout, monitors)], ensure_ascii=False))
+            owners = assignment(monitors)
+            print(json.dumps([
+                dict(describe(e, m), workspaces=sorted(int(w) for w, i in owners.items() if i == e["identity"]))
+                for e, m in zip(layout, monitors)
+            ], ensure_ascii=False))
+            return
+        if args.reset_workspaces:
+            pin_workspaces({}, monitors)
+            data.get("workspaces", {}).pop(key, None)
+            write_state(data)
             return
         if args.apply is not None or args.restore or args.set is not None:
+            pins = None
             if args.set is not None:
-                layout = [{field: entry[field] for field in FIELDS} for entry in json.loads(args.set)]
+                entries = json.loads(args.set)
+                layout = [{field: entry[field] for field in FIELDS} for entry in entries]
+                requested = {str(w): e["identity"] for e in entries for w in e["workspaces"]}
+                # Unchanged stays unpinned, so moving a screen can't freeze the auto split.
+                if requested != assignment(monitors):
+                    pins = requested
             elif args.apply is not None:
                 if args.apply not in data["profiles"]:
                     raise ValueError("No saved layout named " + args.apply)
                 layout = data["profiles"][args.apply]
+                pins = data.get("profile_workspaces", {}).get(args.apply)
             else:
+                # Always, even with nothing to restore: Lua's pins are for the
+                # previous display set, and a config reload clears them.
+                pin_workspaces(data.get("workspaces", {}).get(key, {}), monitors)
                 layout = previous
                 if not layout or snapshot(monitors, previous) == layout:
                     return
-            apply(layout, monitors)
+            # A workspace-only edit shouldn't modeset every screen.
+            if args.set is None or layout != snapshot(monitors, previous):
+                apply(layout, monitors)
+            if pins is not None:
+                data.setdefault("workspaces", {})[key] = pins
+                pin_workspaces(pins, monitors)
         else:
             layout = snapshot(monitors, previous)
         if args.save is not None:
@@ -185,6 +233,7 @@ def main():
             if name in data["profiles"]:
                 raise ValueError("That name is already saved; choose another name.")
             data["profiles"][name] = layout
+            data.setdefault("profile_workspaces", {})[name] = assignment(monitors)
         if not args.restore:
             data["last"][key] = layout
             write_state(data)
