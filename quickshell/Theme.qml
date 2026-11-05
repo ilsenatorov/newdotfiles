@@ -34,7 +34,10 @@ Singleton {
     // (GPU, weather and Claude tiles all present) so it never renegotiates
     // layer-shell geometry while open. The inset is headroom for the drop shadow.
     readonly property int cardW: Math.round(1040 * s)
-    readonly property int cardH: Math.round(860 * s)
+    // The forecast/Claude row (166 + one 12px gap, unscaled) is dropped when
+    // both services are off, so the card does not leave an empty strip.
+    readonly property bool dashBottom: Local.svcWeather || Local.svcClaudeUsage
+    readonly property int cardH: Math.round((dashBottom ? 860 : 860 - 178) * s)
 
     // SUPER+T i's ask-a-quick-question overlay. Fixed size like the dashboard,
     // sized to show a full back-and-forth conversation, not just one answer.

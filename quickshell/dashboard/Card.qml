@@ -539,7 +539,7 @@ Item {
 
                 readonly property bool weatherOn: Local.svcWeather
                 readonly property bool claudeOn: ClaudeUsage.valid
-                visible: weatherOn || claudeOn
+                visible: Theme.dashBottom
 
                 Tile {
                     visible: bottomRow.weatherOn
