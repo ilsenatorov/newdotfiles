@@ -138,6 +138,7 @@ machine-local and left alone:
 |---|---|
 | `CLAUDE.md` | `claude/CLAUDE.md` -- global instructions |
 | `settings.json` | `claude/settings.json` -- model, theme, enabled plugins, marketplaces |
+| `skills/<name>` | `claude/skills/<name>` -- linked one by one, including the 3D printing set (`print-part`, `freecad-render`, `slicer-estimate`) |
 
 Plugins in `enabledPlugins` are `claude plugin install`ed (marketplaces from
 `extraKnownMarketplaces` first). The `kitty-images` mod (draws images Claude
