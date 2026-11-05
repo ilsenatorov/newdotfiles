@@ -89,10 +89,10 @@ export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 eval "$(starship init zsh)"
 
 # Transient prompt: once a command is submitted, redraw the prompt it was typed
-# at as a bare ❯ (the `transient` profile in starship.base.toml) and drop the
-# right prompt, so scrollback is commands and output rather than a rainbow bar
-# per line. Starship has no `enable_transience` for zsh -- it ships one for
-# fish/bash/cmd/nu/pwsh only -- so the widget is ours.
+# at as its launch time and ❯ (the `transient` profile in starship.base.toml) and
+# drop the right prompt, so scrollback is commands and output rather than a
+# rainbow bar per line. Starship has no `enable_transience` for zsh -- it ships
+# one for fish/bash/cmd/nu/pwsh only -- so the widget is ours.
 #
 # It must come after the init above (which sets PROMPT/RPROMPT) and after
 # oh-my-zsh loads zsh-autosuggestions, which wraps accept-line: `zle -A` keeps
