@@ -124,3 +124,6 @@ export PATH="$HOME/.local/bin:$PATH"
 # other two. Lives outside the repo -- install.sh seeds it once, never
 # overwrites it, and never tracks it.
 [ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
+
+# home server: reattach to the same tmux session
+alias hs='mosh ilya@homeserver -- tmux new -A -s main'
