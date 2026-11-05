@@ -126,7 +126,7 @@ export PATH="$HOME/.local/bin:$PATH"
 [ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"
 
 # home server: reattach to the same tmux session
-alias hs='mosh ilya@homeserver -- tmux new -A -s main'
+alias hs='mosh ilya@100.114.56.9 -- tmux new -A -s main'
 
 # Status board on SSH login, or `motd` any time. tmux panes are login shells that
 # inherit SSH_TTY, hence the $TMUX check: one board per connection, not per pane.
