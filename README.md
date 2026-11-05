@@ -65,7 +65,8 @@ packages and files as missing.
 SSH logins print a status board (`motd.sh`, or run `motd` any time): uptime, load,
 memory, disks, enabled services, containers, tailnet peers, pending updates and
 recent logins, with anything wrong listed at the top. Services are discovered
-from what's `systemctl enable`d, so there's nothing to configure.
+from what's `systemctl enable`d, system units and user units under
+`default.target`, so there's nothing to configure.
 
 `./motd-alert.sh --setup` makes those same checks push to your phone through
 [ntfy](https://ntfy.sh), every 5 minutes, including while nobody is logged in. It

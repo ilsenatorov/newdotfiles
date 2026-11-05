@@ -5,8 +5,8 @@
 # everything is live and nothing here needs root or touches /etc. Problems go at
 # the top; a healthy box stays quiet.
 #
-# Services need no config: anything `systemctl enable`d is listed, minus the
-# plumbing filtered in the services section. Containers and tailnet peers are
+# Services need no config: anything `systemctl enable`d is listed, system or user,
+# minus the plumbing filtered in the services section. Containers and tailnet peers are
 # discovered the same way, and any section whose tool is missing is left out.
 #
 #   motd.sh                     print the board
@@ -179,26 +179,27 @@ done < <(timeout 1 df -l -B1 --output=source,size,used,avail,target \
 rows+=("")
 
 # --- services ---------------------------------------------------------------
-while read -r unit _; do
-	[ -n "$unit" ] && issues+=("$unit failed")
-done < <(systemctl list-units --state=failed --plain --no-legend --no-pager 2>/dev/null)
-
-# What `systemctl enable` creates, read directly: list-unit-files takes half a
-# second, which is most of a login's wait.
-wanted=()
-while read -r unit _; do
-	case $unit in
-		*@.service | systemd-* | getty* | dbus*) ;;
-		*) wanted+=("$unit") ;;
-	esac
-done < <(compgen -G '/etc/systemd/system/*.wants/*.service' | sed 's|.*/||' | sort -u)
+for scope in --system --user; do
+	while read -r unit _; do
+		[ -n "$unit" ] && issues+=("$unit failed")
+	done < <(systemctl "$scope" list-units --state=failed --plain --no-legend --no-pager 2>/dev/null)
+done
 
 services=()
 add_service() {
 	local name=${id%.service}
 	case $active in
 		active) services+=("ok:$name") ;;
-		activating | reloading) services+=("warn:$name") ;;
+		activating | reloading)
+			# Restart= keeps a crash loop out of "failed", so it has to be caught here.
+			# One restart isn't an alert: motd-alert.sh wants two checks in a row.
+			if [[ $sub == auto-restart* ]]; then
+				services+=("bad:$name")
+				issues+=("$name exited and is waiting to restart")
+			else
+				services+=("warn:$name")
+			fi
+			;;
 		failed) services+=("bad:$name") ;; # already an issue, via --state=failed
 		*)
 			# A oneshot that finished cleanly isn't down, it's done.
@@ -208,24 +209,41 @@ add_service() {
 			;;
 	esac
 }
-if ((${#wanted[@]})); then
-	id="" type="" active="" result=""
+# check_scope <--system|--user> <glob>: add the enabled units the glob matches.
+# The glob reads what `systemctl enable` creates directly: list-unit-files takes
+# half a second, which is most of a login's wait.
+check_scope() {
+	local scope=$1 glob=$2 unit key value id="" type="" active="" sub="" result=""
+	local wanted=()
+	while read -r unit _; do
+		case $unit in
+			*@.service | systemd-* | getty* | dbus*) ;;
+			*) wanted+=("$unit") ;;
+		esac
+	done < <(compgen -G "$glob" | sed 's|.*/||' | sort -u)
+	((${#wanted[@]})) || return 0
+
 	while IFS='=' read -r key value; do
 		case $key in
 			Id) id=$value ;;
 			Type) type=$value ;;
 			ActiveState) active=$value ;;
+			SubState) sub=$value ;;
 			Result) result=$value ;;
 			"") # a blank line ends each unit's block
 				[ -n "$id" ] && add_service
-				id="" type="" active="" result=""
+				id="" type="" active="" sub="" result=""
 				;;
 		esac
 	done < <(
-		systemctl show --property=Id,Type,ActiveState,Result "${wanted[@]}" 2>/dev/null
+		systemctl "$scope" show --property=Id,Type,ActiveState,SubState,Result "${wanted[@]}" 2>/dev/null
 		echo
 	)
-fi
+}
+check_scope --system '/etc/systemd/system/*.wants/*.service'
+# Only default.target for the user: units hanging off anything else, like wireplumber
+# off pipewire, start on demand, so being stopped says nothing is wrong.
+check_scope --user "${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/default.target.wants/*.service"
 ((${#services[@]})) && dots services "${services[@]}"
 
 # --- containers -------------------------------------------------------------
