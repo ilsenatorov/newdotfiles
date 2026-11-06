@@ -32,6 +32,10 @@
 [core]
 	excludesfile = ~/.config/git/ignore
 	pager = delta
+	# Syncthing copies .git between machines and keeps mtimes but not inodes or ctimes.
+	# Without these, each machine's git status rewrites the index and they fight over it.
+	checkStat = minimal
+	trustctime = false
 
 [interactive]
 	diffFilter = delta --color-only

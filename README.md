@@ -83,6 +83,20 @@ on the desktop too, and makes you the tailscale operator so the user service can
 read the inbox. Turn it off with
 `systemctl --user disable --now taildrop-receive.service`.
 
+`./sync-setup.sh <peer-name> <peer-id> <peer-ip>` keeps `~/Projects`, `~/Documents`,
+`~/Pictures`, `~/Videos` and `~/.claude/projects` matched between machines with
+Syncthing over Tailscale, with the homeserver as the hub. Run it on both sides;
+`syncthing device-id` prints a machine's id. Environments, build output and any file
+over 100 MB that git doesn't track stay on the machine that made them, so those files
+are not copied anywhere. Add your own patterns to `<folder>/.stignore-local`.
+
+`.git` syncs too, so use one machine at a time and give it about 20 seconds to finish
+before closing the lid. If two machines commit while apart, nothing is lost: the
+losing commit shows up as a `main.sync-conflict-*` branch to merge, `motd.sh` reports
+the conflict files, and you delete them once merged. If `git status` shows a change
+you didn't make right after switching machines, `git reset` refreshes the index.
+Turn it off with `systemctl --user disable --now syncthing sync-check.timer`.
+
 ### After it finishes
 
 * **Wallpaper**: not in git (too large). Drop an image into

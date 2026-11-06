@@ -185,6 +185,10 @@ for scope in --system --user; do
 	done < <(systemctl "$scope" list-units --state=failed --plain --no-legend --no-pager 2>/dev/null)
 done
 
+# Written by sync-setup.sh --check. A find across every synced folder is too slow here.
+read -r sync_conflicts 2>/dev/null <"${XDG_STATE_HOME:-$HOME/.local/state}/sync-check/conflicts" || sync_conflicts=0
+((${sync_conflicts:-0} > 0)) && issues+=("sync-conflict files need attention")
+
 services=()
 add_service() {
 	local name=${id%.service}
