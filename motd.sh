@@ -189,6 +189,12 @@ done
 read -r sync_conflicts 2>/dev/null <"${XDG_STATE_HOME:-$HOME/.local/state}/sync-check/conflicts" || sync_conflicts=0
 ((${sync_conflicts:-0} > 0)) && issues+=("sync-conflict files need attention")
 
+# Written by backup.sh after each good run. Only on machines that were set up for it.
+if [ -s "$HOME/.config/dotfiles/backup-repo" ]; then
+	read -r last_backup 2>/dev/null <"$HOME/.local/state/backup/last-success" || last_backup=0
+	((now - ${last_backup:-0} > 26 * 3600)) && issues+=("no good backup in over a day")
+fi
+
 services=()
 add_service() {
 	local name=${id%.service}

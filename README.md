@@ -97,6 +97,15 @@ the conflict files, and you delete them once merged. If `git status` shows a cha
 you didn't make right after switching machines, `git reset` refreshes the index.
 Turn it off with `systemctl --user disable --now syncthing sync-check.timer`.
 
+`./backup.sh --setup <repo> [hourly|daily]` installs encrypted restic backups to the USB
+drive on the homeserver: `/mnt/backup/restic` on the server, and
+`sftp:<user>@<server>:/mnt/backup/restic` everywhere else. Each machine needs
+`~/.config/dotfiles/restic-pass` and `backup-paths` first, and all of them must use the same
+password. Without it the backup can't be read, so keep a copy on paper. `motd.sh` reports
+a backup over 26 hours old, which is also how you'd hear about a missing drive. To restore,
+use `restic -r <repo> snapshots`, then `restic -r <repo> restore <id> --target <dir>`.
+The drive is in the same building as the server, so a fire or theft takes both.
+
 ### After it finishes
 
 * **Wallpaper**: not in git (too large). Drop an image into
