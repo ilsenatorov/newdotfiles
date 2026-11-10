@@ -44,7 +44,7 @@ check() {
 		# Only on change: Syncthing rescans the folder when its ignores change.
 		if cmp -s "$tmp" "$path/.stignore-big"; then rm -f "$tmp"; else mv "$tmp" "$path/.stignore-big"; fi
 		# Conflicts inside .git are the ones that matter, so this one looks there too.
-		conflicts=$((conflicts + $(find "$path" -xdev -name '*.sync-conflict-*' -not -path '*/node_modules/*' | wc -l)))
+		conflicts=$((conflicts + $(find "$path" -xdev -name '*.sync-conflict-*' -not -path '*/node_modules/*' -not -path '*/.stversions/*' | wc -l)))
 	done
 	mkdir -p "$state"
 	echo "$conflicts" >"$state/conflicts"
