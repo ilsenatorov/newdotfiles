@@ -19,3 +19,4 @@ singleton Recorder 1.0 Recorder.qml
 singleton HubStatus 1.0 HubStatus.qml
 singleton KeybindList 1.0 KeybindList.qml
 singleton Power 1.0 Power.qml
+singleton Sync 1.0 Sync.qml

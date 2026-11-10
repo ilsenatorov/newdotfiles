@@ -181,8 +181,9 @@ PKGS_SDDM=(sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-declarative)
 # The linters (shellcheck, shfmt, luacheck) are only needed to run check.sh;
 # dropped by --minimal along with the ranger preview tools.
 # tree-sitter-cli: nvim-treesitter (main branch) builds parsers with it.
-# syncthing, restic: sync-setup.sh and backups across machines.
-PKGS_CLI=(neovim tree-sitter-cli eza bat fd zoxide ripgrep git-delta lazygit syncthing restic)
+# syncthing, restic: sync-setup.sh and backups across machines; jq for its --status,
+# fuse3 for backup.sh --browse.
+PKGS_CLI=(neovim tree-sitter-cli eza bat fd zoxide ripgrep git-delta lazygit syncthing restic jq fuse3)
 PKGS_LINT=(shellcheck shfmt luacheck)
 # --server: what the linked configs need on a box with no desktop.
 # npm and unzip: mason installs pyright/bashls and lua_ls with them.

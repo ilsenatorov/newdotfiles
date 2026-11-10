@@ -4,6 +4,8 @@
 #
 #   sync-setup.sh <peer-name> <peer-id> <peer-ip>   link a peer, share the folders; safe to re-run
 #   sync-setup.sh --check                           refresh big-file ignores, count conflict files
+#   sync-setup.sh --status                          synced | syncing N | offline | off (exit 0 = safe to power off)
+#   sync-setup.sh --wait [secs]                     rescan, then wait until synced (default 120 s)
 #
 # `syncthing device-id` prints a machine's id. Machine-only ignore patterns go in
 # <folder>/.stignore-local. Undo: systemctl --user disable --now syncthing sync-check.timer
@@ -48,13 +50,72 @@ check() {
 	echo "$conflicts" >"$state/conflicts"
 }
 
-if [ "${1:-}" = "--check" ]; then
-	check
-	exit
-fi
+api() { curl -fsS --max-time 5 -H "X-API-Key: $key" "http://127.0.0.1:8384/rest/$1" "${@:2}"; }
+
+# One line, and exit 0 only when it's safe to turn this machine off:
+#   off (no syncthing here: nothing to wait for) | offline | syncing N | synced
+status() {
+	if ! systemctl --user -q is-active syncthing.service 2>/dev/null ||
+		! key=$(syncthing cli config gui apikey get 2>/dev/null); then
+		echo off
+		return 0
+	fi
+	local self peer need=0 conns
+	self=$(syncthing device-id)
+	conns=$(api system/connections) || {
+		echo off
+		return 0
+	}
+	# Clients link only to the hub, so every other device is the hub.
+	for peer in $(syncthing cli config devices list); do
+		[ "$peer" = "$self" ] && continue
+		[ "$(jq -r --arg p "$peer" '.connections[$p].connected' <<<"$conns")" = true ] || {
+			echo offline
+			return 1
+		}
+		# What the hub still lacks from us. needItems, not completion: 87 items rounds to 100.0%.
+		need=$((need + $(api "db/completion?device=$peer" | jq '.needItems + .needDeletes')))
+	done
+	# What we still lack from the hub, i.e. on arrival.
+	need=$((need + $(api db/completion | jq '.needItems + .needDeletes')))
+	if ((need > 0)); then
+		echo "syncing $need"
+		return 1
+	fi
+	echo synced
+}
+
+case "${1:-}" in
+	--check)
+		check
+		exit
+		;;
+	--status)
+		status
+		exit
+		;;
+	--wait)
+		deadline=$((SECONDS + ${2:-120}))
+		# A just-saved file sits in the watcher's ~10 s delay and would read as synced,
+		# so rescan first. Only then: mid-sync the scan queues behind the pull for minutes.
+		if [ "$(status)" = synced ]; then
+			key=$(syncthing cli config gui apikey get)
+			api db/scan -X POST --max-time 30 >/dev/null || true
+		fi
+		until line=$(status); do
+			((SECONDS < deadline)) || {
+				echo "$line" >&2
+				exit 1
+			}
+			sleep 2
+		done
+		echo "$line"
+		exit
+		;;
+esac
 
 if [ $# -ne 3 ]; then
-	sed -n '5,6p' "$0" >&2
+	sed -n '5,8p' "$0" >&2
 	exit 1
 fi
 peer_name=$1 peer_id=$2 peer_ip=$3

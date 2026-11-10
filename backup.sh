@@ -5,6 +5,7 @@
 #   backup.sh --setup <repo> [hourly|daily]   init the repo if needed, install the timer
 #   backup.sh                                 back up, then thin out this machine's old snapshots
 #   backup.sh --maintain                      prune and verify the repo (the server, weekly)
+#   backup.sh --browse                        mount every snapshot read-only at ~/Backups
 #
 # <repo> is /mnt/backup/restic on the server, sftp:ilya@<server>:/mnt/backup/restic elsewhere.
 # Per machine, in ~/.config/dotfiles: backup-repo, backup-paths (one per line), restic-pass.
@@ -117,6 +118,22 @@ export RESTIC_REPOSITORY=$repo
 if [[ $repo == "$mount"/* ]] && ! mountpoint -q "$mount"; then
 	echo "$mount is not mounted" >&2
 	exit 1
+fi
+
+if [ "${1:-}" = "--browse" ]; then
+	mkdir -p "$HOME/Backups"
+	echo "In ~/Backups: hosts/<machine>/latest, snapshots/<time>. Ctrl-C unmounts;" \
+		"don't leave it open, it holds up the weekly prune." >&2
+	exec restic mount "$HOME/Backups"
+fi
+
+# A laptop away from home: skip quietly rather than leave a failed unit. last-success
+# isn't touched, so motd.sh still reports a backup that has really stopped.
+# shellcheck disable=SC2016 # $0 is the host, expanded by the inner bash
+if [[ $repo =~ ^sftp:([^@]+@)?([^:/]+) ]] &&
+	! timeout 5 bash -c ': </dev/tcp/$0/22' "${BASH_REMATCH[2]}" 2>/dev/null; then
+	echo "${BASH_REMATCH[2]} is unreachable, skipping this run" >&2
+	exit 0
 fi
 
 if [ "${1:-}" = "--maintain" ]; then
