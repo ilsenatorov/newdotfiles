@@ -104,18 +104,18 @@ key=$("${cfg[@]}" gui apikey get)
 curl -fsS -o /dev/null -X PATCH -H "X-API-Key: $key" -d '{"crashReportingEnabled":false}' \
 	http://127.0.0.1:8384/rest/config/options
 
-"${cfg[@]}" devices list | grep -qx "$peer_id" ||
+"${cfg[@]}" devices list | grep -x "$peer_id" >/dev/null ||
 	"${cfg[@]}" devices add --device-id "$peer_id" --name "$peer_name" --addresses "tcp://$peer_ip:22000"
 for entry in "${folders[@]}"; do
 	id=${entry%%:*} path=${entry#*:}
-	"${cfg[@]}" folders list | grep -qx "$id" ||
+	"${cfg[@]}" folders list | grep -x "$id" >/dev/null ||
 		"${cfg[@]}" folders add --id "$id" --label "$id" --path "$path"
 	# The watcher misses edits in a folder that was deleted and recreated, and git can
 	# do that to .git/objects/xx. Rescans bound the delay; a walk of 90k files takes ~2s.
 	"${cfg[@]}" folders "$id" rescan-intervals set 120
 	# SYNC_FOLDER_TYPE: sendonly or receiveonly for a one-way first sync. Set before sharing.
 	"${cfg[@]}" folders "$id" type set "${SYNC_FOLDER_TYPE:-sendreceive}"
-	"${cfg[@]}" folders "$id" devices list | grep -qx "$peer_id" ||
+	"${cfg[@]}" folders "$id" devices list | grep -x "$peer_id" >/dev/null ||
 		"${cfg[@]}" folders "$id" devices add --device-id "$peer_id"
 done
 
