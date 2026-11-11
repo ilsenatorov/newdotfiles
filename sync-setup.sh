@@ -54,7 +54,7 @@ check() {
 
 api() { curl -fsS --max-time 5 -H "X-API-Key: $key" "http://127.0.0.1:8384/rest/$1" "${@:2}"; }
 
-# One line, and exit 0 only when it's safe to turn this machine off:
+# One line, and exit 0 only when it's safe (or the user chose) to turn this machine off:
 #   off (no syncthing here: nothing to wait for) | paused | offline | syncing N | synced
 status() {
 	if ! systemctl --user -q is-active syncthing.service 2>/dev/null ||
@@ -73,7 +73,7 @@ status() {
 		[ "$peer" = "$self" ] && continue
 		[ "$(syncthing cli config devices "$peer" paused get)" = true ] && {
 			echo paused
-			return 1
+			return 0 # deliberate: the user chose not to sync, so don't hold up shutdown
 		}
 		[ "$(jq -r --arg p "$peer" '.connections[$p].connected' <<<"$conns")" = true ] || {
 			echo offline
