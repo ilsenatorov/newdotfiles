@@ -12,6 +12,8 @@ Row {
 
     // Read by bar/ModuleRow.qml to hide the whole entry.
     readonly property bool shown: Caffeine.enabled || Recorder.recording || Sync.state !== "off"
+    signal syncRequested
+
     height: Theme.barHeight
     spacing: Math.round(8 * Theme.s)
 
@@ -23,8 +25,15 @@ Row {
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.font
         font.pixelSize: Theme.fsBar
-        text: Sync.state === "offline" ? "󰅤 offline" : "󰓦 " + (Sync.state.split(" ")[1] ?? "0")
-        color: Sync.state === "offline" ? Theme.red : Sync.state === "synced" ? Theme.green : Theme.yellow
+        text: Sync.state === "offline" ? "󰅤 offline" : Sync.paused ? "󰏤 paused" : "󰓦 " + (Sync.state.split(" ")[1] ?? "0")
+        color: Sync.state === "offline" ? Theme.red : Sync.paused ? Theme.dim : Sync.state === "synced" ? Theme.green : Theme.yellow
+
+        // Left: details panel. Right: pause / resume.
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: mouse => mouse.button === Qt.RightButton ? Sync.toggle() : root.syncRequested()
+        }
     }
 
     Text {

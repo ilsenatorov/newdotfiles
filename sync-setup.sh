@@ -4,7 +4,9 @@
 #
 #   sync-setup.sh <peer-name> <peer-id> <peer-ip>   link a peer, share the folders; safe to re-run
 #   sync-setup.sh --check                           refresh big-file ignores, count conflict files
-#   sync-setup.sh --status                          synced | syncing N | offline | off (exit 0 = safe to power off)
+#   sync-setup.sh --status                          synced | syncing N | paused | offline | off (exit 0 = safe to power off)
+#   sync-setup.sh --info                            JSON: per-folder items/bytes still to send and receive
+#   sync-setup.sh --pause | --resume                pause / resume syncing with the hub
 #   sync-setup.sh --wait [secs]                     rescan, then wait until synced (default 120 s)
 #
 # `syncthing device-id` prints a machine's id. Machine-only ignore patterns go in
@@ -53,7 +55,7 @@ check() {
 api() { curl -fsS --max-time 5 -H "X-API-Key: $key" "http://127.0.0.1:8384/rest/$1" "${@:2}"; }
 
 # One line, and exit 0 only when it's safe to turn this machine off:
-#   off (no syncthing here: nothing to wait for) | offline | syncing N | synced
+#   off (no syncthing here: nothing to wait for) | paused | offline | syncing N | synced
 status() {
 	if ! systemctl --user -q is-active syncthing.service 2>/dev/null ||
 		! key=$(syncthing cli config gui apikey get 2>/dev/null); then
@@ -69,6 +71,10 @@ status() {
 	# Clients link only to the hub, so every other device is the hub.
 	for peer in $(syncthing cli config devices list); do
 		[ "$peer" = "$self" ] && continue
+		[ "$(syncthing cli config devices "$peer" paused get)" = true ] && {
+			echo paused
+			return 1
+		}
 		[ "$(jq -r --arg p "$peer" '.connections[$p].connected' <<<"$conns")" = true ] || {
 			echo offline
 			return 1
@@ -85,7 +91,45 @@ status() {
 	echo synced
 }
 
+# JSON for the bar panel: what each folder still has to send to the hub (up) and
+# receive from it (down), in items and bytes.
+info() {
+	local self peer id out='[]' up down
+	key=$(syncthing cli config gui apikey get 2>/dev/null) || { echo '[]'; return 0; }
+	self=$(syncthing device-id)
+	peer=$(syncthing cli config devices list | grep -vx "$self" | head -1)
+	for id in $(syncthing cli config folders list); do
+		down=$(api "db/status?folder=$id" 2>/dev/null) || continue
+		up='{"needItems":0,"needBytes":0}'
+		[ -n "$peer" ] && up=$(api "db/completion?folder=$id&device=$peer" 2>/dev/null || echo "$up")
+		out=$(jq -c --arg id "$id" --argjson d "$down" --argjson u "$up" \
+			'. + [{id: $id, state: $d.state, downItems: ($d.needFiles + $d.needDeletes), downBytes: $d.needBytes,
+			       upItems: ($u.needItems + $u.needDeletes), upBytes: $u.needBytes}]' <<<"$out")
+	done
+	echo "$out"
+}
+
+setpaused() {
+	local self peer
+	self=$(syncthing device-id)
+	for peer in $(syncthing cli config devices list); do
+		[ "$peer" = "$self" ] || syncthing cli config devices "$peer" paused set "$1"
+	done
+}
+
 case "${1:-}" in
+	--info)
+		info
+		exit
+		;;
+	--pause)
+		setpaused true
+		exit
+		;;
+	--resume)
+		setpaused false
+		exit
+		;;
 	--check)
 		check
 		exit

@@ -31,7 +31,7 @@ Item {
     Component { id: languageC; Language {} }
     Component { id: mediaC; MediaModule { onClicked: root.panelRequested("media") } }
     Component { id: notificationsC; NotifModule { onClicked: root.panelRequested("notifications") } }
-    Component { id: statusC; StatusModule {} }
+    Component { id: statusC; StatusModule { onSyncRequested: root.panelRequested("sync") } }
 
     readonly property var registry: ({
         workspaces: workspacesC, clock: clockC,
@@ -45,7 +45,7 @@ Item {
     // hangs its opening droplet from that point. Measured from the right
     // because the dropdown window is right-anchored.
     function originFromRight(panel: string): real {
-        const mod = ({ calendar: "clock", wifiqr: "network" })[panel] ?? panel;
+        const mod = ({ calendar: "clock", wifiqr: "network", sync: "status" })[panel] ?? panel;
         const item = leftRow.find(mod) ?? centerRow.find(mod) ?? rightRow.find(mod);
         if (!item || !item.visible)
             return -1;

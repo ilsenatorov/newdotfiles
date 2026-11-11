@@ -425,6 +425,7 @@ ShellRoot {
                         case "audio": return audioPanelC;
                         case "media": return mediaPanelC;
                         case "notifications": return notificationsPanelC;
+                        case "sync": return syncPanelC;
                         default: return null;
                         }
                     }
@@ -456,6 +457,10 @@ ShellRoot {
     Component {
         id: mediaPanelC
         Panel { title: "Now playing"; MediaPanel {} }
+    }
+    Component {
+        id: syncPanelC
+        Panel { title: "Sync"; SyncPanel {} }
     }
     Component {
         id: notificationsPanelC
