@@ -22,10 +22,17 @@ Text {
     font.family: Theme.font
     font.pixelSize: Theme.fsBar
 
+    readonly property real secs: !laptop ? 0 : charging ? dev.timeToFull : dev.timeToEmpty
+    readonly property string eta: {
+        if (full || secs <= 0) return "";
+        const m = Math.round(secs / 60);
+        return " (" + Math.floor(m / 60) + "h" + String(m % 60).padStart(2, "0") + "m)";
+    }
+
     text: {
         if (full) return " Full";
-        if (charging) return "⚡ " + String(Math.round(pct)).padStart(3) + "%";
-        return icon() + " " + String(Math.round(pct)).padStart(3) + "%";
+        if (charging) return "⚡ " + String(Math.round(pct)).padStart(3) + "%" + eta;
+        return icon() + " " + String(Math.round(pct)).padStart(3) + "%" + eta;
     }
 
     color: {
