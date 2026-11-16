@@ -2,16 +2,17 @@ import QtQuick
 import ".."
 import "../services"
 
-// htop-style top processes: name, a CPU bar (scaled to one full core, so a
-// process pinning a core reads full whatever the core count), the percentage,
-// and resident memory.
+// htop-style top processes: what it is (script/binary name, then project dir
+// and arguments dimmed), a bar for the sort key, CPU percentage and resident
+// memory. The CPU bar is scaled to one full core, so a process pinning a core
+// reads full whatever the core count; the memory bar is a share of total RAM.
 Column {
     id: root
 
     spacing: Math.round(3 * Theme.s)
 
     readonly property int rowH: Math.round(22 * Theme.s)
-    readonly property int nameW: Math.round(width * 0.36)
+    readonly property int nameW: Math.round(width * 0.56)
     readonly property int pctW: Math.round(52 * Theme.s)
     readonly property int memW: Math.round(54 * Theme.s)
 
@@ -20,22 +21,43 @@ Column {
 
         Item {
             required property var modelData
-            readonly property real frac: Math.min(1, modelData.cpu / 100)
+            readonly property real frac: SysMon.procsByMem
+                ? Math.min(1, modelData.rss / Math.max(1, SysMon.ramTotalBytes))
+                : Math.min(1, modelData.cpu / 100)
             readonly property color hue: Theme.level(frac, 0.5, 0.9, Colors.green)
 
             width: root.width
             height: root.rowH
 
-            Text {
+            Item {
                 id: name
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 width: root.nameW
-                text: modelData.name
-                color: Theme.fg
-                font.family: Theme.font
-                font.pixelSize: Math.round(13 * Theme.s)
-                elide: Text.ElideRight
+                height: parent.height
+
+                Text {
+                    id: label
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, parent.width)
+                    text: modelData.name
+                    color: Theme.fg
+                    font.family: Theme.font
+                    font.pixelSize: Math.round(13 * Theme.s)
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    anchors.left: label.right
+                    anchors.leftMargin: Math.round(8 * Theme.s)
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: modelData.detail
+                    color: Theme.dim
+                    font.family: Theme.font
+                    font.pixelSize: Math.round(12 * Theme.s)
+                    elide: Text.ElideRight
+                }
             }
 
             Rectangle {
@@ -83,8 +105,8 @@ Column {
                 anchors.verticalCenter: parent.verticalCenter
                 width: root.memW
                 horizontalAlignment: Text.AlignRight
-                text: SysMon.fmtBytes(modelData.rssBytes)
-                color: Theme.dim
+                text: SysMon.fmtBytes(modelData.rss)
+                color: SysMon.procsByMem ? hue : Theme.dim
                 font.family: Theme.font
                 font.pixelSize: Math.round(13 * Theme.s)
             }

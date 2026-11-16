@@ -74,10 +74,15 @@ Singleton {
     // but staying warm means expanding never animates from stale values.
     property bool fast: false
 
-    // Only sampled while the SUPER+G dashboard overlay is actually open --
-    // ps is cheap but there's no reason to run it in the background.
+    // Only sampled while the SUPER+G dashboard overlay is actually open:
+    // scripts/topprocs.py runs for exactly that long.
     property bool procsActive: false
-    property var topProcesses: []     // [{name, cpu (% of one core), rssBytes}]
+    // Rows are {pid, name, detail, cpu (% of one core, last 2s), rss (bytes)};
+    // name/detail come from the command line, not the bare comm.
+    property var topByCpu: []
+    property var topByMem: []
+    property bool procsByMem: false   // which list the dashboard shows
+    readonly property var topProcesses: procsByMem ? topByMem : topByCpu
 
     // NVMe drive temperatures (C), from every hwmon named "nvme". Sampled
     // alongside the processes, i.e. only while the dashboard is open.
@@ -193,14 +198,17 @@ Singleton {
     }
 
     Process {
-        id: psProc
-        command: ["sh", "-c", "ps -eo comm,%cpu,rss --sort=-%cpu --no-headers | head -6"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.topProcesses = text.trim().split("\n").map(line => {
-                    const m = /^(.*\S)\s+([\d.]+)\s+(\d+)$/.exec(line.trim());
-                    return m ? { name: m[1], cpu: parseFloat(m[2]), rssBytes: Number(m[3]) * 1024 } : null;
-                }).filter(r => r !== null);
+        running: root.procsActive
+        command: ["python3", Qt.resolvedUrl("../scripts/topprocs.py").toString().replace("file://", "")]
+        stdout: SplitParser {
+            onRead: line => {
+                try {
+                    const d = JSON.parse(line);
+                    root.topByCpu = d.cpu;
+                    root.topByMem = d.mem;
+                } catch (e) {
+                    console.warn("topprocs: bad line", line);
+                }
             }
         }
     }
@@ -221,10 +229,7 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         interval: 2000
-        onTriggered: {
-            psProc.running = true;
-            nvmeProc.running = true;
-        }
+        onTriggered: nvmeProc.running = true
     }
 
     FileView {

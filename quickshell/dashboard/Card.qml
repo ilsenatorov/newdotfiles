@@ -393,12 +393,20 @@ Item {
                     width: content.span(2); height: parent.height
                     index: 6; shown: root.ready
                     icon: ""; title: "Processes"
-                    caption: "cpu · mem"
+                    // The sort key is the bright one; click the tile to flip it.
+                    caption: SysMon.procsByMem ? "cpu · <font color=\"" + Theme.fg + "\">mem</font>"
+                                               : "<font color=\"" + Theme.fg + "\">cpu</font> · mem"
                     captionColor: Theme.dim
 
                     ProcList {
                         anchors.left: parent.left
                         anchors.right: parent.right
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: SysMon.procsByMem = !SysMon.procsByMem
                     }
                 }
 
