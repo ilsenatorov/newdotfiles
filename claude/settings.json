@@ -67,5 +67,18 @@
       "**Org-specific CLIs**: None configured — personal hardware/system CLIs observed (journalctl, btmon, bluetoothctl, busctl, hyprctl, upower) are routine local system tools, not org-specific"
     ]
   },
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "python3 ~/dotfiles/claude/statusline.py",
+    "padding": 0
+  },
+  "pluginConfigs": {
+    "ponytail@ponytail": {
+      "options": {
+        "ledger": true,
+        "sendNames": true
+      }
+    }
+  }
 }
