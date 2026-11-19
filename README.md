@@ -54,9 +54,10 @@ ranger's preview tools), `--server` (no desktop, see **Headless server** below),
 ```
 
 installs only the terminal setup: zsh with oh-my-zsh and starship, the CLI tools,
-and the `git`, `nvim`, `ranger` and `starship` configs. It skips the desktop
-packages and links, `local.conf`/`local.lua`, `environment.d`, the wallpaper and
-the pi and Claude Code config. It can't be combined with `--sddm`.
+and the `git`, `nvim`, `ranger` and `starship` configs, plus the Claude Code
+config (`~/.claude` links and plugins). It skips the desktop packages and links,
+`local.conf`/`local.lua`, `environment.d`, the wallpaper and the pi config. It
+can't be combined with `--sddm`.
 
 Pass `--server` on every re-run: plain `./install.sh` installs the whole desktop.
 `make doctor` checks the desktop package list, so on a server it reports those

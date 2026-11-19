@@ -343,9 +343,55 @@ if [ "${SHELL##*/}" != "zsh" ]; then
 	chsh -s /usr/bin/zsh || warn "chsh failed; run 'chsh -s /usr/bin/zsh' yourself"
 fi
 
+# -------------------------------------------------------------- claude -----
+# Same contract as pi: ~/.claude is mostly machine state (credentials,
+# sessions, projects/, plugin caches), left alone. claude/ holds what is worth
+# sharing and is symlinked in: CLAUDE.md, settings.json (Claude Code rewrites
+# it in place, so /config changes show up dirty in git).
+# settings.json's env block points CLAUDE_CODE_PLUGIN_DIRS at
+# claude/plugins/kitty-images, so that mod loads straight from the repo.
+say "claude code config (~/.claude)"
+mkdir -p "${HOME}/.claude"
+for f in CLAUDE.md settings.json; do
+	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
+done
+# skills one by one: ~/.claude/skills also holds synced and hand-installed ones
+mkdir -p "${HOME}/.claude/skills"
+for s in "${DOTS}"/claude/skills/*/; do
+	link_file "${s%/}" "${HOME}/.claude/skills/$(basename "$s")"
+done
+
+# enabledPlugins only names plugins; install them (and their marketplaces) so
+# a fresh box has the same set. Both commands are idempotent.
+if command -v claude >/dev/null && command -v jq >/dev/null; then
+	while IFS=$'\t' read -r name repo; do
+		claude plugin marketplace add "$repo" >/dev/null 2>&1 ||
+			warn "claude marketplace add failed for $name ($repo)"
+	done < <(jq -r '.extraKnownMarketplaces // {} | to_entries[] | [.key, .value.source.repo] | @tsv' "${DOTS}/claude/settings.json")
+	while IFS= read -r plugin; do
+		if claude plugin install "$plugin" >/dev/null 2>&1; then
+			echo "OK      claude plugin $plugin"
+		else
+			warn "claude plugin install failed for $plugin (no network? re-run install.sh once it's reachable)"
+		fi
+	done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "${DOTS}/claude/settings.json")
+	# Local mods need no install, but one that fails validation (e.g. a lost
+	# .claude-plugin/plugin.json) is silently not loaded -- say so here.
+	for mod in "${DOTS}"/claude/plugins/*/; do
+		if claude plugin validate "$mod" >/dev/null 2>&1; then
+			echo "OK      claude mod $(basename "$mod")"
+		else
+			warn "claude mod $(basename "$mod") fails validation: claude plugin validate $mod"
+		fi
+	done
+else
+	warn "claude or jq not found; claude/ config linked but plugins not installed"
+fi
+
 # ------------------------------------------------------------- server ------
 # A headless box stops here: everything below configures the desktop session or
-# the coding agents. nvim and starship still need their seeded colours.
+# the pi agent; claude, above, runs on both. nvim and starship still need their
+# seeded colours.
 if [ "$SERVER" -eq 1 ]; then
 	seed_theme_defaults
 	"${DOTS}/starship/build.sh" || warn "starship build failed"
@@ -564,51 +610,6 @@ if command -v pi >/dev/null; then
 	fi
 else
 	warn "pi not found in PATH; pi/ config linked but packages not installed"
-fi
-
-# -------------------------------------------------------------- claude -----
-# Same contract as pi: ~/.claude is mostly machine state (credentials,
-# sessions, projects/, plugin caches), left alone. claude/ holds what is worth
-# sharing and is symlinked in: CLAUDE.md, settings.json (Claude Code rewrites
-# it in place, so /config changes show up dirty in git).
-# settings.json's env block points CLAUDE_CODE_PLUGIN_DIRS at
-# claude/plugins/kitty-images, so that mod loads straight from the repo.
-say "claude code config (~/.claude)"
-mkdir -p "${HOME}/.claude"
-for f in CLAUDE.md settings.json; do
-	link_file "${DOTS}/claude/$f" "${HOME}/.claude/$f"
-done
-# skills one by one: ~/.claude/skills also holds synced and hand-installed ones
-mkdir -p "${HOME}/.claude/skills"
-for s in "${DOTS}"/claude/skills/*/; do
-	link_file "${s%/}" "${HOME}/.claude/skills/$(basename "$s")"
-done
-
-# enabledPlugins only names plugins; install them (and their marketplaces) so
-# a fresh box has the same set. Both commands are idempotent.
-if command -v claude >/dev/null && command -v jq >/dev/null; then
-	while IFS=$'\t' read -r name repo; do
-		claude plugin marketplace add "$repo" >/dev/null 2>&1 ||
-			warn "claude marketplace add failed for $name ($repo)"
-	done < <(jq -r '.extraKnownMarketplaces // {} | to_entries[] | [.key, .value.source.repo] | @tsv' "${DOTS}/claude/settings.json")
-	while IFS= read -r plugin; do
-		if claude plugin install "$plugin" >/dev/null 2>&1; then
-			echo "OK      claude plugin $plugin"
-		else
-			warn "claude plugin install failed for $plugin (no network? re-run install.sh once it's reachable)"
-		fi
-	done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "${DOTS}/claude/settings.json")
-	# Local mods need no install, but one that fails validation (e.g. a lost
-	# .claude-plugin/plugin.json) is silently not loaded -- say so here.
-	for mod in "${DOTS}"/claude/plugins/*/; do
-		if claude plugin validate "$mod" >/dev/null 2>&1; then
-			echo "OK      claude mod $(basename "$mod")"
-		else
-			warn "claude mod $(basename "$mod") fails validation: claude plugin validate $mod"
-		fi
-	done
-else
-	warn "claude or jq not found; claude/ config linked but plugins not installed"
 fi
 
 # ---------------------------------------------------------- user units ----
