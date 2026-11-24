@@ -188,6 +188,8 @@ done
 # Written by sync-setup.sh --check. A find across every synced folder is too slow here.
 read -r sync_conflicts 2>/dev/null <"${XDG_STATE_HOME:-$HOME/.local/state}/sync-check/conflicts" || sync_conflicts=0
 ((${sync_conflicts:-0} > 0)) && issues+=("sync-conflict files need attention")
+# Also sync-setup.sh --check: folders deleted elsewhere that held this machine's ignored files.
+[ -n "$(ls -A "$HOME/sync-orphans" 2>/dev/null)" ] && issues+=("folders moved aside in ~/sync-orphans need sorting")
 
 # Written by backup.sh after each good run. Only on machines that were set up for it.
 if [ -s "$HOME/.config/dotfiles/backup-repo" ]; then

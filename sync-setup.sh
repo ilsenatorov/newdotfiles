@@ -3,7 +3,8 @@
 # always-on homeserver as the hub. Clients only ever link to the hub.
 #
 #   sync-setup.sh <peer-name> <peer-id> <peer-ip>   link a peer, share the folders; safe to re-run
-#   sync-setup.sh --check                           refresh big-file ignores, count conflict files
+#   sync-setup.sh --check                           refresh big-file ignores, count conflict files,
+#                                                   move stuck deleted-elsewhere folders to ~/sync-orphans
 #   sync-setup.sh --status                          synced | syncing N | paused | offline | off (exit 0 = safe to power off)
 #   sync-setup.sh --info                            JSON: per-folder items/bytes still to send and receive
 #   sync-setup.sh --pause | --resume                pause / resume syncing with the hub
@@ -24,13 +25,40 @@ skip_dirs=(.venv venv node_modules __pycache__ .next .ruff_cache .mypy_cache .py
 # SYNC_FOLDERS: "id:path id:path", to try this on a scratch folder first.
 read -ra folders <<<"${SYNC_FOLDERS:-projects:$HOME/Projects documents:$HOME/Documents pictures:$HOME/Pictures videos:$HOME/Videos claude-projects:$HOME/.claude/projects}"
 state="${XDG_STATE_HOME:-$HOME/.local/state}/sync-check"
+orphan_dir=${SYNC_ORPHANS:-$HOME/sync-orphans} # motd.sh reads this path too
 
 prune=()
 for d in "${skip_dirs[@]}"; do prune+=(-name "$d" -o); done
 prune+=(-name .git)
 
+# A folder deleted elsewhere that still holds files this machine ignores (its big files,
+# .stignore-local) can't be deleted here, and Syncthing retries forever. Move it aside
+# instead: nothing is lost, the error clears, and motd.sh nags until it's sorted.
+# Not (?d) on the big files: that would silently delete files no other machine has.
+orphans() {
+	local entry id path dir dst
+	key=$(syncthing cli config gui apikey get 2>/dev/null) || return 0
+	for entry in "${folders[@]}"; do
+		id=${entry%%:*} path=${entry#*:}
+		# sorted, so a parent goes first and takes its children with it
+		while IFS= read -r dir; do
+			[ -d "$path/$dir" ] || continue
+			# Only when the hub really has it deleted, not on a stale error.
+			[ "$(api "db/file?folder=$id&file=$(jq -rn --arg d "$dir" '$d|@uri')" |
+				jq -r '.global.deleted')" = true ] || continue
+			dst=$orphan_dir/$id/$dir
+			[ -e "$dst" ] && dst+=.$(date +%Y%m%d-%H%M%S)
+			mkdir -p "${dst%/*}"
+			mv -- "$path/$dir" "$dst"
+			echo "deleted elsewhere but held ignored files: moved $path/$dir to $dst"
+		done < <(api "folder/errors?folder=$id" 2>/dev/null |
+			jq -r '.errors[]? | select(.error | contains("contains ignored files")) | .path' | sort)
+	done
+}
+
 check() {
 	local entry path file rel top tmp conflicts=0
+	orphans # first, so the moved big files drop out of .stignore-big below
 	for entry in "${folders[@]}"; do
 		path=${entry#*:}
 		[ -d "$path" ] || continue
