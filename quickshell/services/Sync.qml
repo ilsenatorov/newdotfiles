@@ -30,6 +30,17 @@ Singleton {
         act.running = true;
     }
 
+    // Interactive, so its permission prompts still ask before it touches anything.
+    // The hub's address comes from Claude's memory: keep addresses out of this public repo.
+    function askClaude(): void {
+        Quickshell.execDetached(["kitty", "--directory", Quickshell.env("HOME") + "/dotfiles", "-e",
+            "claude", "--model", "haiku",
+            "Syncthing here is stuck: `./sync-setup.sh --status` says \"" + state + "\". " +
+            "Find the root cause with `./sync-setup.sh --info` and the Syncthing REST API, here and on the " +
+            "homeserver hub (check which machine you are on first). Fix it, asking me before deleting anything, " +
+            "then confirm --status says synced."]);
+    }
+
     function fmtBytes(b: real): string {
         if (b < 1024) return Math.round(b) + " B";
         const u = ["KB", "MB", "GB", "TB"];

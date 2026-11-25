@@ -32,6 +32,7 @@ Column {
 
         Text {
             width: parent.width - toggle.width - parent.spacing
+                - (fix.visible ? fix.width + parent.spacing : 0)
             height: toggle.height
             verticalAlignment: Text.AlignVCenter
             text: root.headline
@@ -39,6 +40,13 @@ Column {
             font.family: Theme.font
             font.pixelSize: Theme.fsLabel
             font.bold: true
+        }
+        Button {
+            id: fix
+            visible: Sync.state !== "synced" && Sync.state !== "off" && !Sync.paused
+            width: Math.round(100 * Theme.s)
+            label: "Fix with AI"
+            onClicked: Sync.askClaude()
         }
         Button {
             id: toggle
