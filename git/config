@@ -57,3 +57,6 @@
 
 [include]
 	path = config.local
+[safe]
+	directory = /srv/assistant/bot
+	directory = /srv/assistant/projects
