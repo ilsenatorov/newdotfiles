@@ -218,6 +218,12 @@ hl.config({
     },
 })
 
+-- Trackball. sensitivity: -1.0 (slowest) .. 1.0 (fastest).
+hl.device({
+    name        = "full-speed-mouse-full-speed-mouse",
+    sensitivity = -0.5,
+})
+
 hl.gesture({
     fingers   = 3,
     direction = "horizontal",

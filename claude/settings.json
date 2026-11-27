@@ -3,7 +3,7 @@
     "CLAUDE_CODE_PLUGIN_DIRS": "~/dotfiles/claude/plugins/kitty-images"
   },
   "includeCoAuthoredBy": false,
-  "model": "opus",
+  "model": "sonnet",
   "statusLine": {
     "type": "command",
     "command": "python3 ~/dotfiles/claude/statusline.py",
@@ -35,6 +35,7 @@
       "effortLevel": "high"
     }
   },
+  "advisorModel": "opus",
   "pluginConfigs": {
     "ponytail@ponytail": {
       "options": {
