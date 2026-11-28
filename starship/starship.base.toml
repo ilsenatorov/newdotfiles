@@ -65,6 +65,7 @@ $kotlin\
 $haskell\
 $python\
 [](fg:hue_cyan bg:surface_bright)\
+$conda\
 $docker_context\
 [](fg:surface_bright bg:surface_container)\
 $time\
@@ -243,10 +244,13 @@ detect_extensions = []
 detect_files = ["pyproject.toml", ".python-version", "requirements.txt", "setup.py", "Pipfile", "tox.ini"]
 
 # --- docker slot ----------------------------------------------------------
-# Was the docker/env slot: [conda] and [pixi] lived here too, carrying p10k's
-# POWERLEVEL9K_ANACONDA segment. Neither is installed any more -- uv handles
-# python environments, and $virtualenv in the cyan segment above reports them.
-# Put one back by re-adding its $module to `format` alongside $docker_context.
+# docker/env slot: conda and docker_context. (p10k's POWERLEVEL9K_ANACONDA lived here.)
+
+[conda]
+ignore_base = false
+symbol = ""
+style = "bg:surface_bright"
+format = '[[ $symbol( $environment) ](fg:on_surface bg:surface_bright)]($style)'
 
 [docker_context]
 symbol = ""
